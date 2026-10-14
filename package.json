@@ -1,0 +1,12 @@
+{
+  "name": "energy-planner",
+  "private": true,
+  "description": "Energy Planner em HTML, CSS e JS puro. O app em si não precisa de npm: o package.json é só para os testes.",
+  "scripts": {
+    "test": "node tests/run-all.mjs"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^30.1.2"
+  }
+}
