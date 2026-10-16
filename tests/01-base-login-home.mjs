@@ -19,7 +19,7 @@ const root = document.getElementById('app');
 renderLogin(root);
 ok(!!root.querySelector('#auth-form'), 'tela de login renderiza');
 root.querySelector('[data-tab="register"]').click();
-ok(!root.querySelector('#name-field').hidden, 'aba Cadastro mostra campo de nome');
+ok(root.querySelector('#name-wrap').dataset.open === 'true' && !root.querySelector('#name-wrap').hasAttribute('inert'), 'aba Cadastro mostra campo de nome');
 root.querySelector('#email').value = 'a@b.com';
 root.querySelector('#password').value = '123';
 root.querySelector('#auth-form').dispatchEvent(new w.Event('submit', { cancelable: true }));

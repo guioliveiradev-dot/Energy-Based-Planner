@@ -104,7 +104,7 @@ function mountApp(user) {
     outlet: root.querySelector('#outlet'),
     onRendered: (path, first) => {
       const label = NAV.find((n) => n.path === path)?.label || 'Home';
-      document.title = `${label} · Energy Planner`;
+      document.title = `${label} · Energy Based Planner`;
       if (!first) document.getElementById('route-announcer').textContent = label;
     },
     onChange: (path) => links.forEach((a) => {

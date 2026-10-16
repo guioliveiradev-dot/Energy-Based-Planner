@@ -595,3 +595,15 @@ html[data-theme="papel"] .category-creative { background: hsl(20 80% 55% / 0.14)
 html[data-theme="papel"] .category-study    { color: hsl(41 75% 24%); }
 html[data-theme="papel"] .category-personal { color: hsl(144 48% 24%); }
 html[data-theme="papel"] :is(.badge-ok, .pill-btn.success) { color: hsl(144 48% 24%); }
+
+/* ---------- Troca Login / Cadastro: indicador desliza e o campo de nome abre e fecha ---------- */
+.auth-card .tabs { position: relative; }
+.auth-card .tabs::before { content: ''; position: absolute; top: 0.25rem; bottom: 0.25rem; left: 0.25rem; width: calc((100% - 0.75rem) / 2); border-radius: 0.5rem; background: hsl(var(--card)); box-shadow: 0 1px 2px rgb(0 0 0 / 0.3); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.auth-card .tabs[data-mode="register"]::before { transform: translateX(calc(100% + 0.25rem)); }
+.auth-card .tab { position: relative; z-index: 1; transition: color 0.2s; }
+.auth-card .tab.active { background: transparent; box-shadow: none; color: hsl(var(--foreground)); }
+html[data-theme="papel"] .auth-card .tabs::before { box-shadow: 0 1px 2px rgb(28 26 25 / 0.15); }
+
+.collapse { display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden; margin-bottom: -1rem; transition: grid-template-rows 0.3s ease, opacity 0.2s ease, margin-bottom 0.3s ease, visibility 0s linear 0.3s; }
+.collapse[data-open="true"] { grid-template-rows: 1fr; opacity: 1; visibility: visible; margin-bottom: 0; transition: grid-template-rows 0.3s ease, opacity 0.25s ease 0.05s, margin-bottom 0.3s ease, visibility 0s; }
+.collapse-inner { overflow: hidden; min-height: 0; padding: 4px; margin: -4px; }   /* folga para o anel de foco não ser cortado */

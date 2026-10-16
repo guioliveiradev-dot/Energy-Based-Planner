@@ -1,4 +1,4 @@
-// Lê e valida um arquivo JSON exportado pelo Energy Planner (do Lovable ou deste app).
+// Lê e valida um arquivo JSON exportado pelo Energy Based Planner (do Lovable ou deste app).
 // Nada é gravado aqui: só devolve os dados limpos, ou { error }.
 
 import { FREE_THEMES, SHOP_THEMES, SHOP_PETS } from './themes.js';
@@ -27,12 +27,12 @@ export function parseImport(text) {
 
   // Arquivos sem schemaVersion vêm do Lovable ou de versões antigas e são aceitos normalmente.
   if (isNum(data.schemaVersion) && data.schemaVersion > DB_VERSION) {
-    return { error: 'Este arquivo foi criado por uma versão mais nova do Energy Planner. Atualize o app e tente de novo.' };
+    return { error: 'Este arquivo foi criado por uma versão mais nova do Energy Based Planner. Atualize o app e tente de novo.' };
   }
 
   const keys = ['tasks', 'routineBlocks', 'rewards', 'redemptionHistory'];
   if (!keys.some((k) => Array.isArray(data[k])) && !data.user) {
-    return { error: 'Este arquivo não parece ser uma exportação do Energy Planner.' };
+    return { error: 'Este arquivo não parece ser uma exportação do Energy Based Planner.' };
   }
 
   let skipped = 0;

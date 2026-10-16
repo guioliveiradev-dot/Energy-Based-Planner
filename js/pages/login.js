@@ -11,21 +11,25 @@ export function renderLogin(root) {
 
       <div class="auth-card">
         <div class="center" style="margin-bottom:2rem">
-          <div class="logo-mark logo-hero animate-float" role="img" aria-label="Logo do Energy Planner"></div>
-          <h1 class="neon-text" style="font-size:1.5rem;font-weight:700">Energy Planner</h1>
+          <div class="logo-mark logo-hero animate-float" role="img" aria-label="Logo do Energy Based Planner"></div>
+          <h1 class="neon-text" style="font-size:1.5rem;font-weight:700">Energy Based Planner</h1>
           <p class="muted small" style="margin-top:0.25rem">Gerencie tarefas pelo seu nível de energia</p>
         </div>
 
-        <div class="tabs" role="tablist" style="margin-bottom:1.5rem">
+        <div class="tabs" role="tablist" data-mode="login" style="margin-bottom:1.5rem">
           <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="login">Login</button>
           <button type="button" class="tab" role="tab" aria-selected="false" data-tab="register">Cadastro</button>
         </div>
 
         <form id="auth-form" class="stack" style="gap:1rem" novalidate>
-          <div class="field" id="name-field" hidden>
-            <label class="sr-only" for="name">Nome</label>
-            <span class="field-icon">${icon('user', 16)}</span>
-            <input class="input" id="name" placeholder="Seu nome" maxlength="50" autocomplete="name">
+          <div class="collapse" id="name-wrap" data-open="false" aria-hidden="true" inert>
+            <div class="collapse-inner">
+              <div class="field" id="name-field">
+                <label class="sr-only" for="name">Nome</label>
+                <span class="field-icon">${icon('user', 16)}</span>
+                <input class="input" id="name" placeholder="Seu nome" maxlength="50" autocomplete="name">
+              </div>
+            </div>
           </div>
 
           <div class="field">
@@ -56,7 +60,8 @@ export function renderLogin(root) {
 
   let isLogin = true;
   const $ = (sel) => root.querySelector(sel);
-  const nameField = $('#name-field');
+  const nameWrap = $('#name-wrap');
+  const tabs = $('.tabs');
   const errorEl = $('#auth-error');
   const passwordEl = $('#password');
 
@@ -67,8 +72,13 @@ export function renderLogin(root) {
       t.classList.toggle('active', on);
       t.setAttribute('aria-selected', String(on));
     });
-    nameField.hidden = login;
-    $('#submit-label').textContent = login ? 'Entrar' : 'Criar Conta';
+    tabs.dataset.mode = login ? 'login' : 'register';            // o indicador desliza (CSS)
+    nameWrap.dataset.open = String(!login);                       // o campo de nome abre e fecha (CSS)
+    nameWrap.toggleAttribute('inert', login);                     // fechado: sem foco e fora do leitor de tela
+    nameWrap.setAttribute('aria-hidden', String(login));
+    const label = $('#submit-label');
+    label.textContent = login ? 'Entrar' : 'Criar Conta';
+    label.animate?.([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'ease-out' });
     passwordEl.autocomplete = login ? 'current-password' : 'new-password';
     errorEl.textContent = '';
   }

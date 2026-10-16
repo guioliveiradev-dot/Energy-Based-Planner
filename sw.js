@@ -1,4 +1,4 @@
-// Service worker do Energy Planner: deixa o app instalável e funcionando sem internet.
+// Service worker do Energy Based Planner: deixa o app instalável e funcionando sem internet.
 //
 // Estratégia (pensada para quem edita o código):
 //  - Arquivos do próprio app: SEMPRE tenta a internet primeiro (você vê suas edições na hora)

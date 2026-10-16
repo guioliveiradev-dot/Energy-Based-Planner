@@ -117,7 +117,7 @@ cleanup(); root.innerHTML = '';
 let finished = false;
 const onb = showOnboarding({ onComplete: () => { finished = true; } });
 const o = () => document.querySelector('.onboarding');
-ok(o().textContent.includes('Bem-vindo ao Energy Planner!') && !o().querySelector('[data-act="back"]'), 'Onboarding: passo 1, sem Voltar');
+ok(o().textContent.includes('Bem-vindo ao Energy Based Planner!') && !o().querySelector('[data-act="back"]'), 'Onboarding: passo 1, sem Voltar');
 for (let i = 0; i < 5; i++) o().querySelector('[data-act="next"]').click();
 ok(o().textContent.includes('Conquistas') && o().querySelector('[data-act="next"]').textContent.includes('Começar!'), 'Onboarding: passo 6 mostra "Começar!"');
 o().querySelector('[data-act="back"]').click();

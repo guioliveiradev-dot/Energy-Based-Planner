@@ -5,7 +5,7 @@ import { icon } from '../icons.js';
 import { lockBackground, unlockBackground } from './modal.js';
 
 const STEPS = [
-  { icon: 'logo', title: 'Bem-vindo ao Energy Planner!',
+  { icon: 'logo', title: 'Bem-vindo ao Energy Based Planner!',
     description: 'Gerencie suas tarefas com base no seu nível de energia, não apenas no horário.',
     tip: 'Deslize para ver como funciona →', color: 'hsl(190, 100%, 50%)' },
   { icon: 'zap', title: 'Home — Gerar Missão',
