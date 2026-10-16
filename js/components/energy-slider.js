@@ -3,9 +3,9 @@
 import { icon } from '../icons.js';
 
 export function getEnergyConfig(value) {
-  if (value <= 3) return { color: 'hsl(0, 85%, 55%)',   colorDim: 'hsl(0, 85%, 55%, 0.3)',   label: '⚡ Exausto', iconName: 'battery-low' };
-  if (value <= 7) return { color: 'hsl(45, 100%, 55%)', colorDim: 'hsl(45, 100%, 55%, 0.3)', label: '⚡ Bem',     iconName: 'battery-medium' };
-  return            { color: 'hsl(150, 100%, 50%)', colorDim: 'hsl(150, 100%, 50%, 0.3)', label: '⚡ Focado!', iconName: 'battery-full' };
+  if (value <= 3) return { color: 'hsl(var(--energy-low))',   colorDim: 'hsl(var(--energy-low) / 0.3)',   label: '⚡ Exausto', iconName: 'battery-low' };
+  if (value <= 7) return { color: 'hsl(var(--energy-mid))', colorDim: 'hsl(var(--energy-mid) / 0.3)', label: '⚡ Bem',     iconName: 'battery-medium' };
+  return            { color: 'hsl(var(--energy-high))', colorDim: 'hsl(var(--energy-high) / 0.3)', label: '⚡ Focado!', iconName: 'battery-full' };
 }
 
 export function createEnergySlider({ value = 5, onChange = () => {} } = {}) {

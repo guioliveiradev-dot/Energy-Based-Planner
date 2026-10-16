@@ -76,8 +76,8 @@ root.querySelector('[data-tab="inventory"]').click();
 root.querySelector('[data-theme-id="sunset"]').click();
 ok(document.documentElement.getAttribute('data-theme') === 'sunset' && themes.getActiveTheme(uid) === 'sunset', 'Inventário: equipar tema aplica no <html>');
 ok(root.querySelector('[data-theme-id="sunset"]').classList.contains('active'), 'Inventário: tema marcado');
-root.querySelector('[data-theme-id="default"]').click();
-ok(!document.documentElement.hasAttribute('data-theme'), 'Inventário: voltar ao padrão');
+root.querySelector('[data-theme-id="papel"]').click();
+ok(document.documentElement.getAttribute('data-theme') === 'papel', 'Inventário: voltar ao tema Papel (padrão)');
 // regressão: com um tema ativo no <html>, clicar no pet deve equipar o PET (não o tema)
 root.querySelector('[data-theme-id="sunset"]').click();
 ok(document.documentElement.getAttribute('data-theme') === 'sunset', 'Regressão: tema ativo antes de escolher pet');

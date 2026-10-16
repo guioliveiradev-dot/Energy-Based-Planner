@@ -11,6 +11,9 @@ import { showCongratsModal } from '../components/congrats-modal.js';
 import { createModal } from '../components/modal.js';
 import { remainingSeconds } from '../task-time.js';
 import { pointsForTask, totalPoints, levelInfo, streakInfo } from '../progress.js';
+import {
+  WEEKDAYS, PRESETS, presetOf, repeatLabel, isRecurring, isAvailable, nextInstance, comesBackLabel,
+} from '../recurrence.js';
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
@@ -19,7 +22,7 @@ function getTaskStatus(task) {
   return remainingSeconds(task) <= 0 ? 'done' : 'running';     // pausada conta como "em andamento"
 }
 
-const energyColor = (v) => (v <= 3 ? 'hsl(0,85%,55%)' : v <= 7 ? 'hsl(45,100%,55%)' : 'hsl(150,100%,50%)');
+const energyColor = (v) => (v <= 3 ? 'hsl(var(--energy-low))' : v <= 7 ? 'hsl(var(--energy-mid))' : 'hsl(var(--energy-high))');
 
 export async function renderTasks(container) {
   const user = auth.state.user;
@@ -70,6 +73,20 @@ export async function renderTasks(container) {
         <input class="input" id="t-deadline" type="date">
       </div>
       <div>
+        <label class="label muted xs" for="t-repeat">Repetir</label>
+        <select class="input" id="t-repeat">
+          <option value="">Não repete</option>
+          <option value="daily">Todos os dias</option>
+          <option value="weekdays">Dias úteis (Seg a Sex)</option>
+          <option value="weekend">Fins de semana</option>
+          <option value="custom">Dias específicos...</option>
+        </select>
+        <fieldset class="days-fieldset" id="t-days" hidden>
+          <legend class="sr-only">Dias da semana</legend>
+          ${WEEKDAYS.map((d) => `<label class="day-check"><input type="checkbox" value="${d.value}"><span>${d.label}</span></label>`).join('')}
+        </fieldset>
+      </div>
+      <div>
         <label class="label muted xs" for="t-category">Categoria</label>
         <select class="input" id="t-category">
           ${Object.keys(CATEGORY_LABELS).map((c) => `<option value="${c}">${CATEGORY_EMOJI[c]} ${CATEGORY_LABELS[c]}</option>`).join('')}
@@ -82,6 +99,21 @@ export async function renderTasks(container) {
   const titleEl = f('#t-title'), energyEl = f('#t-energy'), energyLabel = f('#t-energy-label');
   const hoursEl = f('#t-hours'), minutesEl = f('#t-minutes');
   const deadlineEl = f('#t-deadline'), categoryEl = f('#t-category'), createBtn = f('#t-create');
+  const repeatEl = f('#t-repeat'), daysEl = f('#t-days');
+
+  // Dias escolhidos no formulário (lista ordenada) ou null se não repete
+  function getRepeatDays() {
+    if (repeatEl.value === 'custom') {
+      return [...daysEl.querySelectorAll('input:checked')].map((i) => Number(i.value)).sort((a, b) => a - b);
+    }
+    return repeatEl.value ? [...PRESETS[repeatEl.value]].sort((a, b) => a - b) : null;
+  }
+  function setRepeatDays(days) {
+    const preset = presetOf(days);
+    repeatEl.value = preset;
+    daysEl.hidden = preset !== 'custom';
+    daysEl.querySelectorAll('input').forEach((i) => { i.checked = preset === 'custom' && days.includes(Number(i.value)); });
+  }
 
   function paintEnergy() {
     const v = Number(energyEl.value);
@@ -93,6 +125,7 @@ export async function renderTasks(container) {
   function resetForm() {
     titleEl.value = ''; energyEl.value = '5'; hoursEl.value = '1'; minutesEl.value = '0';
     minutesEl.disabled = false; deadlineEl.value = ''; categoryEl.value = 'work';
+    setRepeatDays(null);
     createBtn.disabled = true;
     paintEnergy();
   }
@@ -113,6 +146,7 @@ export async function renderTasks(container) {
       minutesEl.disabled = hoursEl.value === '24';
       deadlineEl.value = task.deadline ? toDateInput(task.deadline) : '';
       categoryEl.value = task.category;
+      setRepeatDays(task.repeat?.days || null);
       heading.textContent = 'Editar Tarefa';
       createBtn.textContent = 'Salvar';
       createBtn.disabled = false;
@@ -138,6 +172,7 @@ export async function renderTasks(container) {
     if (hoursEl.value === '24') return;
     minutesEl.value = String(Math.max(0, Math.min(59, parseInt(minutesEl.value) || 0)));
   });
+  repeatEl.addEventListener('change', () => { daysEl.hidden = repeatEl.value !== 'custom'; });
   dialog.panel.querySelector('[data-role="close"]').addEventListener('click', () => dialog.close());
 
   createBtn.addEventListener('click', async () => {
@@ -151,10 +186,16 @@ export async function renderTasks(container) {
       const [y, m, d] = deadlineEl.value.split('-').map(Number);
       deadline = new Date(y, m - 1, d).getTime();   // meia-noite no horário local
     }
-    const fields = { title, energyCost: Number(energyEl.value), durationMinutes: dur, deadline, category: categoryEl.value };
+    const days = getRepeatDays();
+    if (repeatEl.value === 'custom' && days.length === 0) { toast('Escolha ao menos um dia da semana.', 'error'); return; }
+    const fields = {
+      title, energyCost: Number(energyEl.value), durationMinutes: dur, deadline, category: categoryEl.value,
+      repeat: days && days.length ? { days } : null,
+    };
     const existing = editingId && tasks.find((t) => t.id === editingId);
     if (existing) {
-      await updateTask({ ...existing, ...fields });
+      // sem repetição = não fica mais agendada para depois
+      await updateTask({ ...existing, ...fields, availableFrom: fields.repeat ? (existing.availableFrom ?? null) : null });
       toast('Tarefa atualizada!', 'success');
     } else {
       await createTask({
@@ -164,6 +205,7 @@ export async function renderTasks(container) {
         completed: false,
         completedAt: null,
         startedAt: null,
+        availableFrom: null,
         createdAt: Date.now(),
       });
       toast('Tarefa criada!', 'success');
@@ -177,9 +219,48 @@ export async function renderTasks(container) {
   container.querySelector('#fab').addEventListener('click', () => openDialog());
 
   // ---------- Lista ----------
+  // Chave das tarefas disponíveis agora: muda quando uma tarefa agendada "chega" (ex.: virou o dia)
+  const availableKey = () => tasks.filter((t) => !t.completed && isAvailable(t)).map((t) => t.id).join(',');
+  let lastAvailableKey = '';
+
+  function cardHTML(task, scheduled = false) {
+    const status = getTaskStatus(task);
+    let action;
+    const edit = status === 'idle'
+      ? `<button class="icon-btn neutral" data-action="edit" data-id="${task.id}" aria-label="Editar ${escapeHtml(task.title)}">${icon('pencil', 14)}</button>` : '';
+    if (scheduled) action = '';
+    else if (status === 'idle') action = `<button class="icon-btn primary" data-action="start" data-id="${task.id}" aria-label="Iniciar ${escapeHtml(task.title)}">${icon('play', 14)}</button>`;
+    else if (status === 'running') action = `<button class="pill-btn primary" data-action="continue" data-id="${task.id}">⏱ Continuar</button>`;
+    else action = `<button class="pill-btn success" data-action="collect" data-id="${task.id}">${icon('gift', 12)} Coletar</button>`;
+
+    return `
+      <div class="glass-card pad stack ${scheduled ? 'scheduled-card' : ''}" style="gap:0.5rem">
+        <div class="row-between" style="align-items:flex-start">
+          <div style="flex:1;min-width:0">
+            <h3 class="task-title">${escapeHtml(task.title)}</h3>
+            <div class="row task-meta">
+              <span class="badge category-${task.category}">${CATEGORY_LABELS[task.category] || ''}</span>
+              ${energyBadge(task.energyCost)}
+              <span class="muted tiny">${formatDuration(task.durationMinutes)}</span>
+              ${task.deadline ? `<span class="muted tiny">📅 ${pad2(new Date(task.deadline).getDate())}/${pad2(new Date(task.deadline).getMonth() + 1)}</span>` : ''}
+              ${isRecurring(task) ? `<span class="muted tiny">🔁 ${repeatLabel(task.repeat.days)}</span>` : ''}
+              ${scheduled ? `<span class="badge-soft">${comesBackLabel(task)}</span>` : ''}
+            </div>
+          </div>
+          <div class="row" style="gap:0.375rem;flex-shrink:0">
+            ${edit}${action}
+            <button class="icon-btn destructive" data-action="delete" data-id="${task.id}" aria-label="Excluir ${escapeHtml(task.title)}">${icon('trash', 14)}</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
   function renderList() {
-    const pending = tasks.filter((t) => !t.completed);
+    const open = tasks.filter((t) => !t.completed);
+    const pending = open.filter((t) => isAvailable(t));
+    const scheduled = open.filter((t) => !isAvailable(t));
     const done = tasks.filter((t) => t.completed);
+    lastAvailableKey = availableKey();
 
     if (filterCategory && !pending.some((t) => t.category === filterCategory)) filterCategory = null;
     const categories = [...new Set(pending.map((t) => t.category))];
@@ -193,37 +274,16 @@ export async function renderTasks(container) {
         ${categories.map((c) => `<button class="chip ${filterCategory === c ? `category-${c}` : ''}" data-filter="${c}" aria-pressed="${filterCategory === c}">${CATEGORY_EMOJI[c]} ${CATEGORY_LABELS[c]}</button>`).join('')}
       </div>` : '';
 
-    const cards = shown.map((task) => {
-      const status = getTaskStatus(task);
-      let action = '';
-      const edit = status === 'idle'
-        ? `<button class="icon-btn neutral" data-action="edit" data-id="${task.id}" aria-label="Editar ${escapeHtml(task.title)}">${icon('pencil', 14)}</button>` : '';
-      if (status === 'idle') action = `<button class="icon-btn primary" data-action="start" data-id="${task.id}" aria-label="Iniciar ${escapeHtml(task.title)}">${icon('play', 14)}</button>`;
-      else if (status === 'running') action = `<button class="pill-btn primary" data-action="continue" data-id="${task.id}">⏱ Continuar</button>`;
-      else action = `<button class="pill-btn success" data-action="collect" data-id="${task.id}">${icon('gift', 12)} Coletar</button>`;
-
-      return `
-        <div class="glass-card pad stack" style="gap:0.5rem">
-          <div class="row-between" style="align-items:flex-start">
-            <div style="flex:1;min-width:0">
-              <h3 class="task-title">${escapeHtml(task.title)}</h3>
-              <div class="row task-meta">
-                <span class="badge category-${task.category}">${CATEGORY_LABELS[task.category] || ''}</span>
-                ${energyBadge(task.energyCost)}
-                <span class="muted tiny">${formatDuration(task.durationMinutes)}</span>
-                ${task.deadline ? `<span class="muted tiny">📅 ${pad2(new Date(task.deadline).getDate())}/${pad2(new Date(task.deadline).getMonth() + 1)}</span>` : ''}
-              </div>
-            </div>
-            <div class="row" style="gap:0.375rem;flex-shrink:0">
-              ${edit}${action}
-              <button class="icon-btn destructive" data-action="delete" data-id="${task.id}" aria-label="Excluir ${escapeHtml(task.title)}">${icon('trash', 14)}</button>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
+    const cards = shown.map((task) => cardHTML(task)).join('');
 
     const empty = pending.length === 0
-      ? '<div class="center muted small" style="padding:2rem 0">Nenhuma tarefa pendente. Toque em + para criar.</div>' : '';
+      ? `<div class="center muted small" style="padding:2rem 0">${scheduled.length ? 'Nada para agora. As tarefas agendadas voltam no dia certo.' : 'Nenhuma tarefa pendente. Toque em + para criar.'}</div>` : '';
+
+    const scheduledList = scheduled.length > 0 ? `
+      <div class="stack" style="gap:0.75rem;padding-top:1rem">
+        <h2 class="section-title">Agendadas (${scheduled.length})</h2>
+        ${scheduled.map((t) => cardHTML(t, true)).join('')}
+      </div>` : '';
 
     const doneList = done.length > 0 ? `
       <div class="stack" style="gap:0.5rem;padding-top:1rem">
@@ -231,7 +291,7 @@ export async function renderTasks(container) {
         ${done.slice(0, 5).map((t) => `<div class="glass-card done-card"><span class="small" style="text-decoration:line-through;color:hsl(var(--muted-foreground))">${escapeHtml(t.title)}</span></div>`).join('')}
       </div>` : '';
 
-    listEl.innerHTML = chips + cards + empty + doneList;
+    listEl.innerHTML = chips + cards + empty + scheduledList + doneList;
   }
 
   async function load() {
@@ -287,6 +347,8 @@ export async function renderTasks(container) {
     const levelBefore = levelInfo(totalPoints(tasks));
     const levelNow = levelInfo(totalPoints(afterTasks));
     await updateTask({ ...task, completed: true, completedAt });
+    const next = nextInstance(task, completedAt);        // tarefa recorrente: agenda a próxima
+    if (next) await createTask(next);
     await auth.addXP(points);
     dropTimer(id);
     showCongratsModal({
@@ -302,7 +364,7 @@ export async function renderTasks(container) {
     const removed = tasks.find((t) => t.id === id);
     await deleteTask(id);
     dropTimer(id);
-    toast('Tarefa removida.', 'info', undefined, removed && {
+    toast(removed && isRecurring(removed) ? 'Tarefa removida. Ela não vai mais se repetir.' : 'Tarefa removida.', 'info', undefined, removed && {
       label: 'Desfazer',
       onClick: async () => { await createTask(removed); load(); },
     });
@@ -331,7 +393,8 @@ export async function renderTasks(container) {
 
   // Atualiza o estado (Continuar/Coletar) das tarefas em andamento.
   const interval = setInterval(() => {
-    if (tasks.some((t) => !t.completed && t.startedAt && !t.pausedAt && getTaskStatus(t) === 'running')) renderList();
+    const running = tasks.some((t) => !t.completed && t.startedAt && !t.pausedAt && getTaskStatus(t) === 'running');
+    if (running || availableKey() !== lastAvailableKey) renderList();
   }, 5000);
 
   await load();

@@ -1,7 +1,9 @@
 // Ponto de entrada: decide entre carregando, login e app (com navegação).
 
 import * as auth from './auth.js';
-import { applyTheme, getActiveTheme } from './themes.js';
+import { getDB, onDatabaseReplaced } from './db.js';
+import { autoRequestPersistence } from './backup.js';
+import { applyTheme, getActiveTheme, getLastTheme, migrateThemes } from './themes.js';
 import { startRouter, stopRouter } from './router.js';
 import { spinnerHTML } from './ui.js';
 import { icon } from './icons.js';
@@ -37,11 +39,33 @@ let mode = null;          // 'loading' | 'login' | 'app'
 let mountedUserId = null;
 let onboarding = null;
 let stopAchievements = null;
+let dbFailure = null;     // erro ao abrir o banco (versão mais nova, modo privado...)
+
+function renderDbFailure() {
+  mode = 'error';
+  stopRouter();
+  const replaced = dbFailure && dbFailure.code === 'DB_REPLACED';
+  const tooNew = dbFailure && dbFailure.code === 'DB_TOO_NEW';
+  const text = replaced
+    ? 'O app foi atualizado em outra aba. Recarregue esta página para continuar.'
+    : tooNew
+      ? 'Seus dados foram criados por uma versão mais nova do app. Recarregue a página (Ctrl+Shift+R) para pegar a versão atual. Seus dados não foram apagados.'
+      : 'O navegador não deixou abrir o banco de dados. Isso acontece em janelas privadas ou com o armazenamento bloqueado. Seus dados não foram apagados.';
+  root.innerHTML = `
+    <div class="screen-center"><div class="glass-card pad-lg stack center" role="alert" style="max-width:24rem">
+      <h1 class="page-title">Não deu para abrir seus dados</h1>
+      <p class="small">${text}</p>
+      <button type="button" class="btn-neon" id="reload">Recarregar</button>
+    </div></div>`;
+  root.querySelector('#reload').addEventListener('click', () => location.reload());
+}
 
 function mountApp(user) {
   mode = 'app';
   mountedUserId = user.id;
+  migrateThemes(user);
   applyTheme(getActiveTheme(user.id));
+  autoRequestPersistence(user.id).catch(() => {});   // protege os dados (uma vez, quando já houver tarefas)
 
   if (stopAchievements) stopAchievements();
   stopAchievements = startAchievementWatcher();
@@ -92,6 +116,7 @@ function mountApp(user) {
 }
 
 function update() {
+  if (dbFailure) { if (mode !== 'error') renderDbFailure(); return; }
   if (auth.state.loading) {
     mode = 'loading';
     root.innerHTML = spinnerHTML;
@@ -106,7 +131,7 @@ function update() {
       if (stopAchievements) stopAchievements();
       stopAchievements = null;
       mountedUserId = null;
-      applyTheme('default');
+      applyTheme(getLastTheme());
       mode = 'login';
       renderLogin(root);
     }
@@ -115,6 +140,8 @@ function update() {
   if (mode !== 'app' || mountedUserId !== user.id) mountApp(user);
 }
 
+onDatabaseReplaced(() => { dbFailure = Object.assign(new Error('replaced'), { code: 'DB_REPLACED' }); update(); });
+getDB().catch((e) => { dbFailure = e; update(); });
 auth.subscribe(update);
 update();
 auth.init();

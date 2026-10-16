@@ -1,8 +1,9 @@
 // Lê e valida um arquivo JSON exportado pelo Energy Planner (do Lovable ou deste app).
 // Nada é gravado aqui: só devolve os dados limpos, ou { error }.
 
-import { SHOP_THEMES, SHOP_PETS } from './themes.js';
+import { FREE_THEMES, SHOP_THEMES, SHOP_PETS } from './themes.js';
 import { CATEGORY_LABELS } from './categories.js';
+import { DB_VERSION } from './db.js';
 
 const MAX_CHARS = 5 * 1024 * 1024;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -10,12 +11,24 @@ const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const isStr = (v) => typeof v === 'string' && v.trim().length > 0;
 const clamp = (v, min, max) => Math.max(min, Math.min(max, Math.round(v)));
 
+// repeat válido: { days: [0..6] } sem repetidos e em ordem; senão null
+function cleanRepeat(r) {
+  if (!r || !Array.isArray(r.days)) return null;
+  const days = [...new Set(r.days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort((a, b) => a - b);
+  return days.length ? { days } : null;
+}
+
 export function parseImport(text) {
   if (typeof text !== 'string' || text.length > MAX_CHARS) return { error: 'Arquivo vazio ou grande demais.' };
 
   let data;
   try { data = JSON.parse(text); } catch { return { error: 'O arquivo não é um JSON válido.' }; }
   if (!data || typeof data !== 'object' || Array.isArray(data)) return { error: 'Formato não reconhecido.' };
+
+  // Arquivos sem schemaVersion vêm do Lovable ou de versões antigas e são aceitos normalmente.
+  if (isNum(data.schemaVersion) && data.schemaVersion > DB_VERSION) {
+    return { error: 'Este arquivo foi criado por uma versão mais nova do Energy Planner. Atualize o app e tente de novo.' };
+  }
 
   const keys = ['tasks', 'routineBlocks', 'rewards', 'redemptionHistory'];
   if (!keys.some((k) => Array.isArray(data[k])) && !data.user) {
@@ -38,6 +51,7 @@ export function parseImport(text) {
       completed: t.completed === true, completedAt: isNum(t.completedAt) ? t.completedAt : null,
       startedAt: isNum(t.startedAt) ? t.startedAt : null,
       pausedAt: isNum(t.pausedAt) ? t.pausedAt : null, pauseOffset: isNum(t.pauseOffset) && t.pauseOffset >= 0 ? t.pauseOffset : 0,
+      repeat: cleanRepeat(t.repeat), availableFrom: isNum(t.availableFrom) ? t.availableFrom : null,
       createdAt: isNum(t.createdAt) ? t.createdAt : Date.now(),
     };
   });
@@ -66,7 +80,7 @@ export function parseImport(text) {
   return {
     tasks, routineBlocks, rewards, redemptionHistory, inventory, skipped,
     xp: data.user && isNum(data.user.xp) && data.user.xp >= 0 ? Math.floor(data.user.xp) : null,
-    theme: themeIds.includes(data.activeTheme) ? data.activeTheme : null,
+    theme: [...themeIds, ...FREE_THEMES.map((t) => t.id)].includes(data.activeTheme) ? data.activeTheme : null,
     pet: petIds.includes(data.activePet) ? data.activePet : null,
   };
 }

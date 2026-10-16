@@ -1,20 +1,63 @@
 // Banco de dados local (IndexedDB nativo).
-// Mesmo nome e versão do app original ('energy-planner', v2), com os mesmos stores e índices.
+// Nome 'energy-planner' e os mesmos stores e índices do app original (v1 e v2); a v3 acrescenta 'meta'.
 //
 // Formato dos registros (igual ao original):
 //   User:       { id, name, email, passwordHash, salt, xp, createdAt }
 //   Session:    { id, userId, createdAt }
 //   Task:       { id, userId, title, energyCost, durationMinutes, deadline, category,
-//                 completed, completedAt, startedAt, createdAt }
+//                 completed, completedAt, startedAt, pausedAt, pauseOffset, createdAt }
 //                 category: work | study | personal | health | finance | leisure | social | creative
 //   RoutineBlock: { id, userId, dayOfWeek, startTime, endTime, label }
 //   Reward:     { id, userId, title, cost, createdAt }
 //   RedemptionRecord: { id, userId, rewardTitle, cost, redeemedAt }
-
+//   Meta (v3):  { key, value }   -> dados do próprio app (ex.: 'backup:<userId>', 'storage')
+//
+// ---------- Como mudar o banco sem perder dados ----------
+// Cada item de MIGRATIONS leva o banco da versão anterior para a sua versão.
+//  - NUNCA edite uma migração que já foi publicada: crie a próxima (version: 4, 5...).
+//  - O número do banco (DB_VERSION) é sempre a versão da última migração.
+//  - up(db, tx) roda dentro da transação de atualização. Para mexer em registros que já existem,
+//    use tx.objectStore('tasks') com cursor; para criar uma tabela, db.createObjectStore(...).
+//  - Quem abre o app só roda as migrações que ainda faltam (quem está na v2 roda só a v3).
+//  - Cada migração precisa de um teste em tests/10-versao-do-banco.mjs.
 const DB_NAME = 'energy-planner';
-const DB_VERSION = 2;
+
+const MIGRATIONS = [
+  {
+    version: 1,
+    up(db) {
+      const users = db.createObjectStore('users', { keyPath: 'id' });
+      users.createIndex('by-email', 'email', { unique: true });
+      db.createObjectStore('sessions', { keyPath: 'id' });
+      db.createObjectStore('tasks', { keyPath: 'id' }).createIndex('by-user', 'userId');
+      db.createObjectStore('routineBlocks', { keyPath: 'id' }).createIndex('by-user', 'userId');
+      db.createObjectStore('rewards', { keyPath: 'id' }).createIndex('by-user', 'userId');
+    },
+  },
+  {
+    version: 2,
+    up(db) {
+      db.createObjectStore('redemptionHistory', { keyPath: 'id' }).createIndex('by-user', 'userId');
+    },
+  },
+  {
+    version: 3,
+    up(db) {
+      db.createObjectStore('meta', { keyPath: 'key' });
+    },
+  },
+];
+
+export const DB_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;
 
 let dbPromise = null;
+const replacedListeners = new Set();
+
+// Avisa quando outra aba/versão do app atualizou o banco e esta aba precisa recarregar.
+export function onDatabaseReplaced(fn) {
+  replacedListeners.add(fn);
+  return () => replacedListeners.delete(fn);
+}
 
 export function getDB() {
   if (!dbPromise) {
@@ -23,23 +66,34 @@ export function getDB() {
 
       open.onupgradeneeded = (event) => {
         const db = open.result;
-        const old = event.oldVersion;
-
-        if (old < 1) {
-          const users = db.createObjectStore('users', { keyPath: 'id' });
-          users.createIndex('by-email', 'email', { unique: true });
-          db.createObjectStore('sessions', { keyPath: 'id' });
-          db.createObjectStore('tasks', { keyPath: 'id' }).createIndex('by-user', 'userId');
-          db.createObjectStore('routineBlocks', { keyPath: 'id' }).createIndex('by-user', 'userId');
-          db.createObjectStore('rewards', { keyPath: 'id' }).createIndex('by-user', 'userId');
-        }
-        if (old < 2) {
-          db.createObjectStore('redemptionHistory', { keyPath: 'id' }).createIndex('by-user', 'userId');
+        const tx = open.transaction;
+        for (const m of MIGRATIONS) {
+          if (m.version > event.oldVersion) m.up(db, tx);
         }
       };
 
-      open.onsuccess = () => resolve(open.result);
-      open.onerror = () => reject(open.error);
+      open.onblocked = () => console.warn('Atualização do banco esperando outra aba do app fechar.');
+
+      open.onsuccess = () => {
+        const db = open.result;
+        // Outra aba pediu uma versão maior: libera o banco para ela não ficar travada.
+        db.onversionchange = () => {
+          db.close();
+          dbPromise = null;
+          replacedListeners.forEach((fn) => fn());
+        };
+        resolve(db);
+      };
+      open.onerror = () => {
+        const err = open.error;
+        if (err && err.name === 'VersionError') {
+          const e = new Error('Os dados deste navegador foram criados por uma versão mais nova do app.');
+          e.code = 'DB_TOO_NEW';
+          reject(e);
+        } else {
+          reject(err);
+        }
+      };
     });
   }
   return dbPromise;
@@ -63,6 +117,14 @@ const addOne = (store, value) => run(store, 'readwrite', (s) => s.add(value));
 const deleteOne = (store, key) => run(store, 'readwrite', (s) => s.delete(key));
 const getAll = (store) => run(store, 'readonly', (s) => s.getAll());
 const getAllByUser = (store, userId) => run(store, 'readonly', (s) => s.index('by-user').getAll(userId));
+
+// ---------- Meta (dados do próprio app) ----------
+export async function getMeta(key) {
+  const row = await getOne('meta', key);
+  return row ? row.value : undefined;
+}
+export const setMeta = (key, value) => putOne('meta', { key, value });
+export const deleteMeta = (key) => deleteOne('meta', key);
 
 // ---------- Usuários ----------
 export const createUser = (user) => addOne('users', user);
@@ -126,6 +188,7 @@ export async function resetUserData(userId) {
 
 export async function deleteUserAccount(userId) {
   await resetUserData(userId);
+  await deleteMeta(`backup:${userId}`);
   await deleteOne('users', userId);
   await clearSessions();
 }
@@ -145,6 +208,7 @@ export async function exportAllData(userId) {
     routineBlocks,
     rewards,
     redemptionHistory,
+    schemaVersion: DB_VERSION,
     exportedAt: new Date().toISOString(),
   };
 }

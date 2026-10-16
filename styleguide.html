@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Guia de estilo · Energy Planner</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Exo+2:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Rajdhani:wght@500;700&family=Space+Grotesk:wght@500;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <script>document.documentElement.setAttribute('data-theme', 'papel');</script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/progress.css">
+  <style>
+    /* Só para esta página (não faz parte do app) */
+    .sg { max-width: 64rem; margin: 0 auto; padding: 1rem 1rem 4rem; display: flex; flex-direction: column; gap: 2rem; }
+    .sg-bar { position: sticky; top: 0; z-index: 20; padding: 0.75rem 0; background: hsl(var(--background)); border-bottom: 1px solid hsl(var(--border)); }
+    .sg-themes { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .sg-themes .chip { cursor: pointer; }
+    .sg section { display: flex; flex-direction: column; gap: 0.75rem; }
+    .sg h2 { font-size: 1.125rem; }
+    .sg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.75rem; align-items: start; }
+    .sg-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .sg-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 0.5rem; }
+    .sg-swatch { border: 1px solid hsl(var(--border)); border-radius: 0.5rem; overflow: hidden; font-size: 0.75rem; }
+    .sg-swatch i { display: block; height: 2.5rem; }
+    .sg-swatch span { display: block; padding: 0.25rem 0.5rem; }
+    .sg-scroll { overflow-x: auto; }
+    .sg table { border-collapse: collapse; width: 100%; font-size: 0.75rem; }
+    .sg th, .sg td { padding: 0.375rem 0.5rem; border-bottom: 1px solid hsl(var(--border)); text-align: left; white-space: nowrap; }
+    .sg td.fail { font-weight: 700; color: hsl(var(--destructive)); }
+    .sg-static-modal { position: static; background: none; padding: 0; }
+    .sg-skip { position: absolute; left: -999px; }
+    .sg-skip:focus { left: 0.5rem; top: 0.5rem; z-index: 50; background: hsl(var(--card)); padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  <a class="sg-skip" href="#conteudo">Ir para o conteúdo</a>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="app" class="sg">
+    <header class="sg-bar">
+      <h1 class="page-title">Guia de estilo</h1>
+      <p class="muted small">Todos os componentes do app reais, em todos os temas. Troque o tema abaixo e confira o visual e o contraste.</p>
+      <div class="sg-themes" id="themes" role="group" aria-label="Tema"></div>
+      <p class="muted xs" style="margin-top:0.5rem">Fonte dos títulos (só para comparar aqui):</p>
+      <div class="sg-themes" id="fonts" role="group" aria-label="Fonte dos títulos"></div>
+    </header>
+
+    <main id="conteudo" class="stack" style="gap:2rem">
+      <section aria-labelledby="h-cores">
+        <h2 id="h-cores">Cores do tema</h2>
+        <div class="sg-swatches" id="swatches"></div>
+      </section>
+
+      <section aria-labelledby="h-contraste">
+        <h2 id="h-contraste">Contraste em todos os temas</h2>
+        <p class="muted small">Mínimo de 4,5 para texto normal (WCAG AA). ✗ marca o que não passa. Texto de cartão é calculado sobre o fundo do cartão.</p>
+        <div class="sg-scroll"><table id="contrast"></table></div>
+      </section>
+
+      <section aria-labelledby="h-tipo">
+        <h2 id="h-tipo">Tipografia</h2>
+        <h1 class="page-title">Título de página (Orbitron)</h1>
+        <p class="mission-title">Título de cartão (Inter, 700)</p>
+        <p>Texto normal do app, em Inter. Textos têm no mínimo 12 px.</p>
+        <p class="small">Texto pequeno (14 px)</p>
+        <p class="muted xs">Texto secundário (12 px)</p>
+        <p class="section-title">Título de seção</p>
+        <p><span class="text-primary">primário</span> · <span class="text-accent">destaque</span> · <span class="text-success">sucesso</span> · <span class="text-warning">atenção</span> · <span style="color:hsl(var(--destructive))">erro</span></p>
+      </section>
+
+      <section aria-labelledby="h-botoes">
+        <h2 id="h-botoes">Botões</h2>
+        <div class="sg-row">
+          <button class="btn-neon" type="button">Principal</button>
+          <button class="btn-neon btn-sm" type="button">Principal pequeno</button>
+          <button class="btn-neon" type="button" disabled>Desativado</button>
+          <button class="btn" type="button">Neutro</button>
+          <button class="btn btn-danger" type="button">Perigo</button>
+          <button class="btn-ghost" type="button">Fantasma</button>
+          <button class="btn-warning" type="button">Atenção</button>
+          <button class="btn-disabled" type="button" disabled>Sem pontos</button>
+        </div>
+        <div class="sg-row" id="icon-buttons"></div>
+      </section>
+
+      <section aria-labelledby="h-cartoes">
+        <h2 id="h-cartoes">Cartões</h2>
+        <div class="sg-grid">
+          <div class="glass-card pad stack"><p class="card-title">Cartão padrão</p><p class="muted xs">glass-card + pad</p></div>
+          <div class="glass-card neon-glow pad stack"><p class="card-title">Com brilho</p><p class="muted xs">neon-glow (missão sugerida)</p></div>
+          <div class="glass-card warning-card pad stack"><p class="text-warning small"><strong>Aviso</strong></p><p class="muted xs">warning-card</p></div>
+          <div class="glass-card done-card"><p class="task-title">Tarefa concluída</p><p class="muted xs">done-card (esmaecido)</p></div>
+          <button class="glass-card card-btn" type="button"><span class="text-primary" id="ic-card"></span><span style="flex:1"><span class="card-title">Cartão-botão</span><span class="card-sub">Texto de apoio</span></span></button>
+          <button class="glass-card card-btn active" type="button"><span class="card-title">Cartão-botão ativo</span></button>
+          <div id="progress-slot"></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-form">
+        <h2 id="h-form">Formulários</h2>
+        <div class="sg-grid">
+          <div class="glass-card pad stack">
+            <div><label class="label muted xs" for="sg-text">Campo de texto</label><input class="input" id="sg-text" value="Exemplo"></div>
+            <div><label class="label muted xs" for="sg-sel">Lista</label><select class="input" id="sg-sel"><option>Trabalho</option><option>Estudo</option></select></div>
+            <div><label class="label muted xs" for="sg-date">Data</label><input class="input" id="sg-date" type="date"></div>
+            <p class="error-text" role="alert">Mensagem de erro de exemplo</p>
+          </div>
+          <div class="glass-card pad stack">
+            <label class="pref-row row" for="sg-sw"><span style="flex:1" class="small">Chave liga/desliga</span><input type="checkbox" class="switch" role="switch" id="sg-sw" checked></label>
+            <fieldset class="days-fieldset"><legend class="label muted xs">Dias da semana</legend>
+              <label class="day-check"><input type="checkbox" checked><span>Seg</span></label>
+              <label class="day-check"><input type="checkbox"><span>Ter</span></label>
+              <label class="day-check"><input type="checkbox" checked><span>Qua</span></label>
+            </fieldset>
+            <div><label class="label muted xs" for="sg-energy">Energia</label><input class="energy-slider" id="sg-energy" type="range" min="1" max="10" value="6" style="--energy-color:hsl(var(--energy-mid));--energy-color-dim:hsl(var(--energy-mid) / 0.3);--energy-percent:55%"></div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-abas">
+        <h2 id="h-abas">Abas, filtros e etiquetas</h2>
+        <div class="tabs" role="tablist" style="max-width:24rem">
+          <button class="tab active" role="tab" aria-selected="true" type="button">Aba ativa</button>
+          <button class="tab" role="tab" aria-selected="false" type="button">Aba</button>
+        </div>
+        <div class="chips"><button class="chip active" type="button">Todas</button><button class="chip" type="button">Trabalho</button><button class="chip" type="button">Estudo</button></div>
+        <div class="chips"><button class="day-pill active" type="button">Seg</button><button class="day-pill" type="button">Ter</button><button class="day-pill" type="button">Qua</button></div>
+        <div class="sg-row" id="categories"></div>
+        <div class="sg-row"><span class="badge-soft">Volta amanhã</span><span class="badge-ok">Ativo</span></div>
+        <div class="progress" role="progressbar" aria-label="Exemplo de progresso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60" style="max-width:24rem"><div class="progress-bar" style="width:60%"></div></div>
+      </section>
+
+      <section aria-labelledby="h-avisos">
+        <h2 id="h-avisos">Avisos e janelas</h2>
+        <div class="sg-row">
+          <button class="btn" type="button" data-toast="info">Aviso</button>
+          <button class="btn" type="button" data-toast="success">Aviso de sucesso</button>
+          <button class="btn" type="button" data-toast="error">Aviso de erro</button>
+          <button class="btn" type="button" data-toast="action">Aviso com Desfazer</button>
+          <button class="btn-neon" type="button" id="open-modal">Abrir janela real</button>
+        </div>
+        <div class="modal-panel glass-card" style="max-width:24rem;position:relative" aria-label="Exemplo estático de janela">
+          <h3 class="modal-title">Janela (exemplo estático)</h3>
+          <p class="small" style="padding-top:0.5rem">É assim que o conteúdo de uma janela aparece.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="js/styleguide.js"></script>
+</body>
+</html>

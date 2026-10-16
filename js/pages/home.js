@@ -1,15 +1,17 @@
 // Tela Home: nível de energia, tempo disponível e missão sugerida. Porte de Home.tsx.
 
 import * as auth from '../auth.js';
-import { getUserTasks, getUserRoutineBlocks, updateTask } from '../db.js';
+import { getUserTasks, getUserRoutineBlocks, updateTask, createTask } from '../db.js';
 import { icon } from '../icons.js';
 import { escapeHtml, formatDuration } from '../ui.js';
 import { CATEGORY_LABELS } from '../categories.js';
 import { createEnergySlider } from '../components/energy-slider.js';
 import { progressCardHTML } from '../components/progress-card.js';
 import { pointsForTask, totalPoints, levelInfo, streakInfo } from '../progress.js';
+import { isAvailable, nextInstance } from '../recurrence.js';
 import { createTaskTimer } from '../components/task-timer.js';
 import { showCongratsModal } from '../components/congrats-modal.js';
+import { mountBackupReminder } from '../components/backup-reminder.js';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -36,6 +38,8 @@ export async function renderHome(container) {
         <p class="muted small">${getGreeting()},</p>
         <h1 class="page-title">${escapeHtml(user.name || 'Usuário')}</h1>
       </div>
+
+      <div id="backup-slot"></div>
 
       <div class="glass-card points-card">
         <div class="row" style="gap:0.75rem">
@@ -80,6 +84,8 @@ export async function renderHome(container) {
   const resultEl = $('#result');
 
   $('#slider-slot').appendChild(createEnergySlider({ value: energy, onChange: (v) => { energy = v; } }));
+
+  mountBackupReminder($('#backup-slot'), user.id);
 
   // ---------- Nível e sequência de dias ----------
   const progressSlot = $('#progress-slot');
@@ -157,7 +163,7 @@ export async function renderHome(container) {
     const minutes = availableMinutes();
     const tasks = await getUserTasks(user.id);
     const compatible = tasks
-      .filter((t) => !t.completed && t.energyCost <= energy && t.durationMinutes <= minutes)
+      .filter((t) => !t.completed && isAvailable(t) && t.energyCost <= energy && t.durationMinutes <= minutes)
       .sort((a, b) => {
         if (a.deadline && b.deadline) return a.deadline - b.deadline;
         if (a.deadline) return -1;
@@ -182,7 +188,10 @@ export async function renderHome(container) {
     const done = mission;
     const points = pointsForTask(done);
     const levelBefore = levelInfo(totalPoints(await getUserTasks(user.id))).level;
-    await updateTask({ ...done, completed: true, completedAt: Date.now() });
+    const completedAt = Date.now();
+    await updateTask({ ...done, completed: true, completedAt });
+    const next = nextInstance(done, completedAt);        // tarefa recorrente: agenda a próxima
+    if (next) await createTask(next);
     await auth.addXP(points);
     resetTimer();
     mission = null;

@@ -2,15 +2,21 @@
 // exportar e importar dados. Porte de Profile.tsx (+ importação de JSON).
 
 import * as auth from '../auth.js';
-import { getUserTasks, exportAllData, importUserData } from '../db.js';
+import { getUserTasks, importUserData } from '../db.js';
 import { icon } from '../icons.js';
 import { escapeHtml, toast } from '../ui.js';
 import { totalPointsEarned } from '../achievements.js';
 import { parseImport } from '../data-import.js';
+import {
+  downloadBackup, getBackupState, lastBackupText,
+  persistenceSupported, isPersisted, requestPersistence,
+} from '../backup.js';
 import { getSetting, setSetting } from '../settings.js';
 import { createModal } from '../components/modal.js';
+import { progressCardHTML } from '../components/progress-card.js';
+import { totalPoints, levelInfo, streakInfo } from '../progress.js';
 import {
-  SHOP_THEMES, SHOP_PETS, getInventory, getActiveTheme, getActivePet,
+  FREE_THEMES, DEFAULT_THEME, SHOP_THEMES, SHOP_PETS, getInventory, getActiveTheme, getActivePet,
   setActiveThemeStorage, setActivePetStorage, addToInventory,
 } from '../themes.js';
 
@@ -42,7 +48,7 @@ function chartSVG(data) {
     return `
       <g>
         <title>${d.day}: ${d.count} concluída(s)</title>
-        ${d.count > 0 ? `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" fill="hsl(${190 + i * 10}, 100%, 50%)" fill-opacity="0.7"/>
+        ${d.count > 0 ? `<rect x="${x}" y="${y}" width="${barW}" height="${h}" class="chart-bar" rx="4" fill="hsl(${190 + i * 10}, 100%, 50%)" fill-opacity="0.7"/>
         <text x="${x + barW / 2}" y="${y - 4}" text-anchor="middle" font-size="10" style="fill:hsl(var(--foreground))">${d.count}</text>` : ''}
         <text x="${x + barW / 2}" y="${TOP + H + 18}" text-anchor="middle" font-size="11" style="fill:hsl(var(--muted-foreground))">${d.day}</text>
       </g>`;
@@ -52,7 +58,8 @@ function chartSVG(data) {
 
 export async function renderProfile(container) {
   const user = () => auth.state.user;
-  let tasks = [], inventory = [], activeTheme = 'default', activePet = null;
+  let tasks = [], inventory = [], activeTheme = DEFAULT_THEME, activePet = null;
+  let backupState = null, persisted = null;
   let activeTab = 'profile';
 
   container.innerHTML = `
@@ -68,6 +75,12 @@ export async function renderProfile(container) {
 
   const content = container.querySelector('#tab-content');
   const fileInput = container.querySelector('#import-file');
+
+  function storageText() {
+    if (persisted === true) return 'Protegido: o navegador não apaga seus dados sozinho quando faltar espaço. Mesmo assim, faça backup de vez em quando.';
+    if (persisted === false) return 'Ainda não protegido: se faltar espaço no aparelho, o navegador pode apagar os dados deste site. O backup é a sua garantia.';
+    return 'Seu navegador não informa se os dados estão protegidos. O backup é a sua garantia.';
+  }
 
   function renderProfileTab() {
     const u = user();
@@ -86,6 +99,8 @@ export async function renderProfile(container) {
           <p class="muted xs row" style="gap:0.25rem">${icon('mail', 12)} <span class="task-title" style="font-weight:400">${escapeHtml(u.email)}</span></p>
         </div>
       </div>
+
+      ${progressCardHTML(levelInfo(totalPoints(tasks)), streakInfo(tasks))}
 
       <div class="grid-3">
         ${stats.map((s) => `
@@ -106,11 +121,17 @@ export async function renderProfile(container) {
         <input type="checkbox" class="switch" role="switch" id="pref-alerts" ${getSetting('alerts') ? 'checked' : ''}>
       </label>
 
+      <div class="glass-card pad stack" id="storage-card">
+        <h3 style="font-family:var(--font-sans);font-size:0.875rem;font-weight:600">Proteção dos dados</h3>
+        <p class="muted xs">${storageText()}</p>
+        ${persistenceSupported() && persisted === false ? '<button type="button" class="btn btn-block" data-act="persist">Proteger armazenamento</button>' : ''}
+      </div>
+
       <div class="stack" style="padding-top:0.5rem">
         <button class="glass-card card-btn" data-act="tutorial"><span class="text-accent">${icon('book-open', 18)}</span>
           <span style="flex:1"><span class="card-title">Rever Tutorial</span><span class="card-sub">Veja novamente como usar o app</span></span></button>
         <button class="glass-card card-btn" data-act="export"><span class="text-primary">${icon('download', 18)}</span>
-          <span style="flex:1"><span class="card-title">Exportar Dados</span><span class="card-sub">Baixar JSON com todos os seus dados</span></span></button>
+          <span style="flex:1"><span class="card-title">Exportar Dados (backup)</span><span class="card-sub">${lastBackupText(backupState)}. Baixa um JSON com tudo.</span></span></button>
         <button class="glass-card card-btn" data-act="import"><span class="text-success">${icon('upload', 18)}</span>
           <span style="flex:1"><span class="card-title">Importar Dados</span><span class="card-sub">Restaurar a partir de um arquivo JSON</span></span></button>
         <button class="glass-card card-btn danger" data-act="logout"><span style="color:hsl(var(--destructive))">${icon('log-out', 18)}</span>
@@ -126,10 +147,11 @@ export async function renderProfile(container) {
     content.innerHTML = `
       <div class="stack" style="gap:0.5rem">
         <h3 class="section-title row" style="gap:0.25rem">${icon('palette', 12)} Temas</h3>
-        <button class="glass-card card-btn between ${activeTheme === 'default' ? 'active' : ''}" data-theme-id="default">
-          <span class="row" style="gap:0.75rem"><span class="theme-swatch" style="background:linear-gradient(135deg, hsl(190 100% 50%), hsl(265 100% 68%))"></span>
-          <span class="card-title">Cyberpunk (Padrão)</span></span>${activeTheme === 'default' ? check : ''}
-        </button>
+        ${FREE_THEMES.map((t) => `
+          <button class="glass-card card-btn between ${activeTheme === t.id ? 'active' : ''}" data-theme-id="${t.id}">
+            <span class="row" style="gap:0.75rem"><span class="theme-swatch" style="background:${t.preview}"></span>
+            <span class="card-title">${t.name}</span></span>${activeTheme === t.id ? check : ''}
+          </button>`).join('')}
         ${ownedThemes.map((t) => `
           <button class="glass-card card-btn between ${activeTheme === t.id ? 'active' : ''}" data-theme-id="${t.id}">
             <span class="row" style="gap:0.75rem"><span class="theme-swatch" style="background:${t.preview}"></span>
@@ -160,25 +182,29 @@ export async function renderProfile(container) {
     inventory = getInventory(u.id);
     activeTheme = getActiveTheme(u.id);
     activePet = getActivePet(u.id);
+    backupState = await getBackupState(u.id);
+    persisted = await isPersisted();
     renderTab();
   }
 
   // ---------- Exportar ----------
   async function handleExport() {
-    const u = user();
-    const data = await exportAllData(u.id);
-    // Além do que o app original exportava, guardamos inventário, tema e pet.
-    data.inventory = getInventory(u.id);
-    data.activeTheme = getActiveTheme(u.id);
-    data.activePet = getActivePet(u.id);
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `energy-planner-export-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast('Dados exportados!', 'success');
+    try {
+      await downloadBackup(user().id);
+      backupState = await getBackupState(user().id);
+      toast('Backup salvo! Guarde o arquivo num lugar seguro.', 'success');
+      if (activeTab === 'profile') renderProfileTab();
+    } catch (e) {
+      console.error(e);
+      toast('Não foi possível exportar. Veja o Console (F12).', 'error');
+    }
+  }
+
+  async function handlePersist() {
+    const granted = await requestPersistence();
+    persisted = await isPersisted();
+    toast(granted ? 'Armazenamento protegido!' : 'O navegador não liberou a proteção agora. O backup continua valendo.', granted ? 'success' : 'info', 4500);
+    if (activeTab === 'profile') renderProfileTab();
   }
 
   // ---------- Importar ----------
@@ -275,7 +301,7 @@ export async function renderProfile(container) {
       const id = themeBtn.dataset.themeId;
       setActiveThemeStorage(user().id, id);
       activeTheme = id;
-      toast(`Tema "${id === 'default' ? 'Padrão' : SHOP_THEMES.find((t) => t.id === id)?.name}" aplicado!`, 'success');
+      toast(`Tema "${[...FREE_THEMES, ...SHOP_THEMES].find((t) => t.id === id)?.name}" aplicado!`, 'success');
       renderTab();
       return;
     }
@@ -291,6 +317,7 @@ export async function renderProfile(container) {
     const act = e.target.closest('[data-act]')?.dataset.act;
     if (act === 'tutorial') { localStorage.removeItem('energy-planner-onboarded'); window.location.reload(); }
     else if (act === 'export') handleExport();
+    else if (act === 'persist') handlePersist();
     else if (act === 'import') fileInput.click();
     else if (act === 'logout') { await auth.logout(); toast('Sessão encerrada.'); }
   });
