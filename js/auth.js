@@ -6,6 +6,7 @@ import {
   clearSessions, getUserByEmail, updateUserXP,
 } from './db.js';
 import { generateSalt, hashPassword, verifyPassword } from './crypto.js';
+import { validateEmail } from './email.js';
 
 export const state = { user: null, loading: true };
 
@@ -39,6 +40,9 @@ export async function refreshUser() {
 
 export async function register(name, email, password) {
   try {
+    const checked = validateEmail(email);
+    if (!checked.ok) return { success: false, error: checked.error };
+    email = checked.email;
     if (await getUserByEmail(email)) return { success: false, error: 'Email já cadastrado.' };
     const salt = await generateSalt();
     const passwordHash = await hashPassword(password, salt);

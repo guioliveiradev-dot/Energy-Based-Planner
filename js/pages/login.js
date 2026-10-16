@@ -2,6 +2,7 @@
 
 import * as auth from '../auth.js';
 import { icon } from '../icons.js';
+import { validateEmail, suggestEmail, normalizeEmail } from '../email.js';
 
 export function renderLogin(root) {
   root.innerHTML = `
@@ -32,10 +33,13 @@ export function renderLogin(root) {
             </div>
           </div>
 
-          <div class="field">
-            <label class="sr-only" for="email">Email</label>
-            <span class="field-icon">${icon('mail', 16)}</span>
-            <input class="input" id="email" type="email" placeholder="Email" maxlength="100" autocomplete="email">
+          <div class="stack" style="gap:0.375rem">
+            <div class="field">
+              <label class="sr-only" for="email">Email</label>
+              <span class="field-icon">${icon('mail', 16)}</span>
+              <input class="input" id="email" type="email" inputmode="email" placeholder="Email" maxlength="100" autocomplete="email" autocapitalize="off" spellcheck="false" aria-describedby="email-hint">
+            </div>
+            <p class="error-text xs" id="email-hint" aria-live="polite"></p>
           </div>
 
           <div class="stack" style="gap:0.375rem">
@@ -64,6 +68,24 @@ export function renderLogin(root) {
   const tabs = $('.tabs');
   const errorEl = $('#auth-error');
   const passwordEl = $('#password');
+  const emailEl = $('#email');
+  const hintEl = $('#email-hint');
+  const confirmedTypos = new Set();   // e-mails que parecem erro de digitação mas a pessoa confirmou
+
+  // Mensagem para o e-mail digitado (vazio = tudo certo). Só o cadastro é rígido: contas antigas continuam entrando.
+  function emailProblem(raw) {
+    const v = validateEmail(raw);
+    if (!v.ok) return v.error;
+    const fix = suggestEmail(v.email);
+    if (fix && !confirmedTypos.has(v.email)) return `Você quis dizer ${fix}? Se o e-mail estiver certo, toque em Criar Conta de novo.`;
+    return '';
+  }
+  function showEmailHint(msg) {
+    hintEl.textContent = msg;
+    emailEl.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  }
+  emailEl.addEventListener('blur', () => { if (!isLogin && emailEl.value.trim()) showEmailHint(emailProblem(emailEl.value)); });
+  emailEl.addEventListener('input', () => showEmailHint(''));
 
   function setMode(login) {
     isLogin = login;
@@ -81,6 +103,7 @@ export function renderLogin(root) {
     label.animate?.([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'ease-out' });
     passwordEl.autocomplete = login ? 'current-password' : 'new-password';
     errorEl.textContent = '';
+    showEmailHint('');
   }
   root.querySelectorAll('.tab').forEach((t) =>
     t.addEventListener('click', () => setMode(t.dataset.tab === 'login')));
@@ -103,24 +126,37 @@ export function renderLogin(root) {
     e.preventDefault();
     errorEl.textContent = '';
     const name = $('#name').value;
-    const email = $('#email').value;
+    const email = emailEl.value;
     const password = passwordEl.value;
 
     if (!email.trim() || !password.trim()) { errorEl.textContent = 'Preencha todos os campos.'; return; }
     if (!isLogin && !name.trim()) { errorEl.textContent = 'Preencha seu nome.'; return; }
     if (password.length < 6) { errorEl.textContent = 'Senha deve ter pelo menos 6 caracteres.'; return; }
 
+    if (!isLogin) {
+      const problem = emailProblem(email);
+      if (problem) {
+        const v = validateEmail(email);
+        if (v.ok) confirmedTypos.add(v.email);   // segunda tentativa com o mesmo e-mail passa
+        showEmailHint(problem);
+        emailEl.focus();
+        return;
+      }
+    }
+
     const button = $('#submit');
     button.disabled = true;
     $('#submit-spinner').hidden = false;
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = normalizeEmail(email);
     const result = isLogin
       ? await auth.login(cleanEmail, password)
       : await auth.register(name.trim(), cleanEmail, password);
 
     // Se deu certo, o app troca de tela sozinho (auth.subscribe em app.js).
     if (!result.success) {
+      const bad = !isLogin ? null : validateEmail(email);
+      if (bad && !bad.ok) showEmailHint(bad.error);      // no login: explica o e-mail mal escrito
       errorEl.textContent = result.error || 'Erro inesperado.';
       button.disabled = false;
       $('#submit-spinner').hidden = true;
