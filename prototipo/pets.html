@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fagulha: prévia da arte dos pets</title>
+<meta name="robots" content="noindex">
+<script>document.documentElement.setAttribute('data-theme', 'papel');</script>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .pv { max-width: 64rem; margin: 0 auto; padding: 1rem 1rem 4rem; display: flex; flex-direction: column; gap: 1.75rem; }
+  .pv-bar { position: sticky; top: 0; z-index: 5; background: hsl(var(--background)); padding: 0.75rem 0; border-bottom: 1px solid hsl(var(--border)); }
+  .pv-themes { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+  .pv-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 0.75rem; }
+  .pv-cell { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; padding: 0.75rem 0.5rem; text-align: center; }
+  .pv-sizes { display: flex; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="pv">
+  <header class="pv-bar">
+    <h1 class="page-title">Fagulha: carvão suave em todos os temas</h1>
+    <p class="muted small">A versão que você escolheu. O corpo é um cinza quente tirado das cores de cada tema, e o raio usa a cor de destaque do tema. Passe por todos os temas para conferir.</p>
+    <div class="pv-themes" role="group" aria-label="Tema" id="themes"></div>
+  </header>
+  <section class="stack" aria-labelledby="p"><h2 id="p" class="mission-title">Poses</h2><div class="pv-row" id="poses"></div></section>
+  <section class="stack" aria-labelledby="e"><h2 id="e" class="mission-title">Evolução com o vínculo</h2><div class="pv-row" id="stages"></div></section>
+  <section class="stack" aria-labelledby="t"><h2 id="t" class="mission-title">Tamanho pequeno (Home e cronômetro)</h2><div class="pv-sizes" id="sizes"></div></section>
+</div>
+<script type="module">
+import { fagulhaSVG, FAGULHA_POSES, FAGULHA_STAGES, FAGULHA_POSE_NAMES, FAGULHA_STAGE_NAMES } from '../js/pet-art.js';
+import { FREE_THEMES, SHOP_THEMES } from '../js/themes.js';
+const LEVEL = { spark: 'nível 1 e 2', flame: 'nível 3 e 4', aura: 'nível 5' };
+const cell = (svg, label) => `<div class="glass-card pv-cell">${svg}<span class="small">${label}</span></div>`;
+document.getElementById('poses').innerHTML = FAGULHA_POSES.map((pose) => cell(fagulhaSVG({ pose, size: 128 }), FAGULHA_POSE_NAMES[pose])).join('');
+document.getElementById('stages').innerHTML = FAGULHA_STAGES.map((stage) => cell(fagulhaSVG({ stage, size: 128 }), `${FAGULHA_STAGE_NAMES[stage]} (${LEVEL[stage]})`)).join('');
+document.getElementById('sizes').innerHTML = [96, 64, 40].map((size) => `<div class="stack" style="align-items:center;gap:.25rem">${fagulhaSVG({ size })}<span class="muted xs">${size}px</span></div>`).join('');
+const themes = [...FREE_THEMES, ...SHOP_THEMES].map((t) => [t.id, t.name]);
+const host = document.getElementById('themes');
+function draw(active) {
+  host.innerHTML = themes.map(([id, name]) => `<button type="button" class="chip ${id === active ? 'active' : ''}" data-t="${id}" aria-pressed="${id === active}">${name}</button>`).join('');
+}
+host.addEventListener('click', (e) => {
+  const id = e.target.closest('[data-t]')?.dataset.t;
+  if (!id) return;
+  document.documentElement.setAttribute('data-theme', id);
+  draw(id);
+  host.querySelector(`[data-t="${id}"]`).focus();
+});
+draw('papel');
+</script>
+</body>
+</html>

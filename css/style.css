@@ -386,6 +386,8 @@ button { cursor: pointer; }
 
 .pet-glow { position: absolute; inset: 0; border-radius: 50%; filter: blur(8px); transform: scale(1.5); background: hsl(var(--primary) / 0.2); }
 .pet-stage[data-state="done"] .pet-glow { background: hsl(var(--success) / 0.3); }
+.pet-thumb { display: inline-flex; width: 3rem; height: 3rem; flex-shrink: 0; align-items: center; justify-content: center; }
+.pet-face svg { width: 80%; height: 80%; }
 .pet-face { position: relative; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; line-height: 1; background: linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--accent) / 0.15)); border: 2px solid hsl(var(--primary) / 0.3); }
 .pet-stage[data-state="done"] .pet-face { border-color: hsl(var(--success) / 0.4); }
 
@@ -608,3 +610,65 @@ html[data-theme="papel"] .auth-card .tabs::before { box-shadow: 0 1px 2px rgb(28
 .collapse { display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden; margin-bottom: -1rem; transition: grid-template-rows 0.3s ease, opacity 0.2s ease, margin-bottom 0.3s ease, visibility 0s linear 0.3s; }
 .collapse[data-open="true"] { grid-template-rows: 1fr; opacity: 1; visibility: visible; margin-bottom: 0; transition: grid-template-rows 0.3s ease, opacity 0.25s ease 0.05s, margin-bottom 0.3s ease, visibility 0s; }
 .collapse-inner { overflow: hidden; min-height: 0; padding: 4px; margin: -4px; }   /* folga para o anel de foco não ser cortado */
+
+/* ---------- Fagulha (carvão suave): cores do mascote em cada tema ----------
+   Corpo = cinza quente tirado das cores do tema, base um tom mais escura (sem contorno), rosto claro, raio e aura com a cor de destaque.
+   Valores calculados para o corpo ter contraste 3:1 com o fundo e o rosto 4,5:1 com o corpo (tests/16). */
+:root { --pet-body: #5E6471; --pet-base: #494E58; --pet-face: #F8FAFC; --pet-bolt: #00D4FF; --pet-aura: #0689A9; }
+html[data-theme="papel"] { --pet-body: #4A443E; --pet-base: #3A3530; --pet-face: #F7F6F2; --pet-bolt: #B8841F; --pet-aura: #8C7D6E; }
+html[data-theme="grafite"] { --pet-body: #6A645E; --pet-base: #534E49; --pet-face: #EFEDE9; --pet-bolt: #D8AE55; --pet-aura: #8C847B; }
+html[data-theme="sunset"] { --pet-body: #67605E; --pet-base: #504B49; --pet-face: #F8FAFC; --pet-bolt: #FF661A; --pet-aura: #A44414; }
+html[data-theme="forest"] { --pet-body: #5C6560; --pet-base: #484F4B; --pet-face: #F8FAFC; --pet-bolt: #14B866; --pet-aura: #117844; }
+html[data-theme="ocean"] { --pet-body: #5B626A; --pet-base: #474C53; --pet-face: #F8FAFC; --pet-bolt: #00AAFF; --pet-aura: #046EA5; }
+html[data-theme="midnight"] { --pet-body: #605F66; --pet-base: #4B4A50; --pet-face: #F8FAFC; --pet-bolt: #8C3CDD; --pet-aura: #59278B; }
+html[data-theme="silver"] { --pet-body: #636569; --pet-base: #4D4F52; --pet-face: #F8FAFC; --pet-bolt: #ABB2BA; --pet-aura: #6F757B; }
+html[data-theme="gold"] { --pet-body: #666462; --pet-base: #504E4C; --pet-face: #F8FAFC; --pet-bolt: #F4B925; --pet-aura: #9A751A; }
+
+/* ---------- Pets: descrição, cartão da Home e missão do Robô ---------- */
+.pet-info summary { list-style: none; min-height: 2.75rem; display: flex; align-items: center; cursor: pointer; font-size: 0.875rem; font-weight: 600; color: hsl(var(--primary)); }
+.pet-info summary::-webkit-details-marker { display: none; }
+.pet-info summary::before { content: '▸'; display: inline-block; margin-right: 0.5rem; transition: transform 0.2s; }
+.pet-info[open] summary::before { transform: rotate(90deg); }
+.pet-info ol { margin: 0.25rem 0 0.5rem; padding-left: 1.25rem; color: hsl(var(--muted-foreground)); }
+.pet-info li.current { color: hsl(var(--foreground)); font-weight: 600; }
+/* Loja: rodapé do cartão, separado por uma linha */
+.pet-info-footer { border-top: 1px solid hsl(var(--border)); margin-top: 0.25rem; }
+/* Inventário: o pet e a descrição formam um cartão só (a descrição fica colada embaixo do pet dela) */
+.pet-entry { display: flex; flex-direction: column; }
+.pet-entry > .card-btn { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.pet-info-attached { margin-top: -1px; padding: 0 1rem 0.25rem; border-top-left-radius: 0; border-top-right-radius: 0; box-shadow: none; }
+.pet-thumb-lg { width: 4.5rem; height: 4.5rem; }
+.pet-home { border-color: hsl(var(--primary) / 0.25); }
+.pet-mission { border-top: 1px solid hsl(var(--border)); padding-top: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
+.congrats-pet { color: hsl(var(--accent)); }
+
+/* ---------- Pet subiu de nível: comemoração animada ---------- */
+.levelup-panel { padding: 2rem 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; overflow: hidden; }
+.levelup-inline { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; padding: 0.5rem 0; }
+.levelup-stage { position: relative; width: 9rem; height: 9rem; display: flex; align-items: center; justify-content: center; }
+.levelup-inline .levelup-stage { width: 6.5rem; height: 6.5rem; }
+.levelup-stage::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, hsl(var(--accent) / 0.35), transparent 70%); animation: levelup-glow 1.6s ease-in-out infinite; }
+.levelup-pet { position: relative; display: inline-flex; animation: levelup-rise 0.9s cubic-bezier(0.2, 1.4, 0.4, 1) both, levelup-bob 2s ease-in-out 0.9s infinite; }
+.levelup-pet svg { width: 7rem; height: 7rem; }
+.levelup-inline .levelup-pet svg { width: 5rem; height: 5rem; }
+.levelup-flash { animation: levelup-flash 0.7s ease-out, levelup-bob 2s ease-in-out 0.7s infinite; }
+.levelup-spark { position: absolute; top: 50%; left: 50%; width: 0.5rem; height: 0.5rem; margin: -0.25rem; border-radius: 50%; background: hsl(var(--accent)); animation: levelup-spark 1.5s ease-out infinite; }
+.levelup-badge { font-family: var(--font-display); font-weight: 700; font-size: 0.875rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.25rem 0.875rem; border-radius: 999px; background: hsl(var(--accent) / 0.15); color: hsl(var(--accent)); animation: levelup-pop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) 0.5s both; }
+.levelup-title { font-size: 1.375rem; font-weight: 700; }
+.levelup-power { color: hsl(var(--accent)); }
+@keyframes levelup-rise { from { transform: translateY(1.5rem) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes levelup-bob { 50% { transform: translateY(-0.4rem); } }
+@keyframes levelup-glow { 50% { opacity: 0.55; transform: scale(1.12); } }
+@keyframes levelup-spark { 0% { transform: translate(0, 0) scale(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; } }
+@keyframes levelup-pop { 0% { transform: scale(0.3); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes levelup-flash { 0% { filter: brightness(3) saturate(0); transform: scale(0.7); } 60% { transform: scale(1.2); } 100% { filter: none; transform: none; } }
+
+/* ---------- Comemoração: fagulhas que sobem, anel de luz e brilho no fundo (js/celebrate.js) ---------- */
+.celebrate-layer { position: fixed; inset: 0; z-index: 2000; pointer-events: none; overflow: hidden; }
+.celebrate-glow { position: absolute; inset: 0; background: radial-gradient(circle at var(--ox) var(--oy), hsl(var(--accent) / 0.22), transparent 55%); animation: celebrate-glow 1.8s ease-out both; }
+.celebrate-ring { position: absolute; left: var(--ox); top: var(--oy); width: 6rem; height: 6rem; margin: -3rem 0 0 -3rem; border-radius: 50%; border: 2px solid hsl(var(--accent) / 0.55); animation: celebrate-ring 1.5s ease-out both; }
+.celebrate-spark { position: absolute; left: calc(var(--ox) + var(--x)); top: var(--oy); width: var(--size); height: var(--size); background: hsl(var(--accent)); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); opacity: 0; animation: celebrate-rise var(--dur) cubic-bezier(0.2, 0.7, 0.3, 1) var(--delay) both; }
+.celebrate-spark.soft { background: hsl(var(--accent) / 0.55); }
+@keyframes celebrate-rise { 0% { opacity: 0; transform: translate(0, 0) scale(0.3) rotate(0deg); } 18% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), calc(var(--rise) * -1)) scale(1) rotate(100deg); } }
+@keyframes celebrate-ring { from { transform: scale(0.2); opacity: 0.9; } to { transform: scale(4.2); opacity: 0; } }
+@keyframes celebrate-glow { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }

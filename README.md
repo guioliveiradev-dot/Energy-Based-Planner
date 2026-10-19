@@ -86,5 +86,5 @@ tempo do cronômetro no título da aba, melhorias de acessibilidade, pausa do cr
 níveis de XP e sequência de dias (🔥) com 3 conquistas novas e tarefas recorrentes (hábitos):
 ao concluir, a próxima ocorrência fica agendada para o dia certo (seção "Agendadas").
 
-Observação: o confete usa a biblioteca canvas-confetti, carregada por CDN no index.html.
+Observação: a comemoração (fagulhas, anel de luz) é feita em CSS e DOM, sem biblioteca externa (`js/celebrate.js`).
 Sem internet o app funciona normalmente, só sem confete.

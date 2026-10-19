@@ -6,9 +6,11 @@
   <title>Guia de estilo · Energy Based Planner</title>
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="stylesheet" href="css/fonts.css">
+  <!-- Só as fontes de comparação (Exo 2, Newsreader, Rajdhani) vêm do Google; as do app são locais. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Exo+2:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Rajdhani:wght@500;700&family=Space+Grotesk:wght@500;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700&family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
   <script>document.documentElement.setAttribute('data-theme', 'papel');</script>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/progress.css">
@@ -130,6 +132,17 @@
         <div class="sg-row" id="categories"></div>
         <div class="sg-row"><span class="badge-soft">Volta amanhã</span><span class="badge-ok">Ativo</span></div>
         <div class="progress" role="progressbar" aria-label="Exemplo de progresso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60" style="max-width:24rem"><div class="progress-bar" style="width:60%"></div></div>
+      </section>
+
+      <section aria-labelledby="h-comemora">
+        <h2 id="h-comemora">Comemorações</h2>
+        <p class="muted small">Fagulhas, anel e brilho nas cores do tema. Troque o tema lá em cima e compare.</p>
+        <div class="sg-row">
+          <button class="btn" type="button" data-celebrate="task">Concluir tarefa</button>
+          <button class="btn" type="button" data-celebrate="level">Pet subiu de nível</button>
+          <button class="btn" type="button" data-celebrate="achievement">Conquista</button>
+          <button class="btn" type="button" data-celebrate="reward">Compra ou resgate</button>
+        </div>
       </section>
 
       <section aria-labelledby="h-avisos">

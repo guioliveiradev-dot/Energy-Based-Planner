@@ -3,11 +3,11 @@
 // Estratégia (pensada para quem edita o código):
 //  - Arquivos do próprio app: SEMPRE tenta a internet primeiro (você vê suas edições na hora)
 //    e só usa a cópia guardada se estiver sem conexão.
-//  - Fontes e confete (de outros sites): usa a cópia guardada e atualiza em segundo plano.
+//  - Fontes do app (pasta fonts/): cópia guardada primeiro (os arquivos nunca mudam).
 //
 // Se algum dia o navegador parecer mostrar uma versão antiga, aumente o número em VERSION.
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `energy-planner-${VERSION}`;
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -27,6 +27,19 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (!url.protocol.startsWith('http')) return;
+
+  // Fontes do app: cópia guardada primeiro, só busca na internet na primeira vez
+  if (url.origin === self.location.origin && url.pathname.includes('/fonts/')) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match(req);
+      if (cached) return cached;
+      const res = await fetch(req);
+      if (cacheable(res)) cache.put(req, res.clone());
+      return res;
+    })());
+    return;
+  }
 
   // Do próprio app: internet primeiro, cópia guardada como reserva
   if (url.origin === self.location.origin) {
@@ -49,7 +62,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // De outros sites (fontes, confete): cópia guardada primeiro, atualiza em segundo plano
+  // De outros sites (ex.: fontes de comparação do guia de estilo): cópia guardada primeiro, atualiza em segundo plano
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const cached = await cache.match(req);

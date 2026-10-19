@@ -69,7 +69,7 @@ ok(parseImport(JSON.stringify(exported)).tasks.length === 3, 'Perfil: o que expo
 
 // inventário vazio
 root.querySelector('[data-tab="inventory"]').click();
-ok(root.textContent.includes('Compre temas na Loja') && root.textContent.includes('Compre pets na Loja'), 'Inventário: avisos quando vazio');
+ok(root.textContent.includes('Compre temas na Loja') && root.textContent.includes('Compre mais pets na Loja'), 'Inventário: avisos quando vazio');
 themes.addToInventory(uid, 'sunset'); themes.addToInventory(uid, 'cat');
 cleanup(); root.innerHTML = ''; cleanup = await renderProfile(root);
 root.querySelector('[data-tab="inventory"]').click();

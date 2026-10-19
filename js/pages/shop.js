@@ -9,8 +9,10 @@ import { icon } from '../icons.js';
 import { escapeHtml, toast, formatDateTime } from '../ui.js';
 import { SHOP_THEMES, SHOP_PETS, getInventory, addToInventory } from '../themes.js';
 import { ACHIEVEMENTS, getUnlocked } from '../achievements.js';
-import { confettiBurst } from '../confetti.js';
+import { celebrate } from '../celebrate.js';
 import { createModal } from '../components/modal.js';
+import { powerSummary } from '../pet-powers.js';
+import { petInfoHTML } from '../components/pet-info.js';
 
 const TABS = [
   { id: 'rewards', label: '🎁 Recompensas' },
@@ -133,16 +135,20 @@ export async function renderShop(container) {
         <div class="stack" style="gap:0.5rem">
           <h3 class="section-title row" style="gap:0.25rem">${icon('paw-print', 12)} Pets</h3>
           ${SHOP_PETS.map((p) => `
-            <div class="glass-card pad row-between">
+            <div class="glass-card pad stack" style="gap:0.25rem">
+              <div class="row-between">
               <div class="row" style="gap:0.75rem">
                 <div class="icon-tile" style="font-size:1.5rem;background:hsl(var(--accent) / 0.1)">${p.emoji}</div>
                 <div>
                   <p style="font-weight:600;font-size:0.875rem">${p.name}</p>
                   <p class="muted tiny">${p.description}</p>
+                  <p class="muted tiny">${powerSummary(p.id)}</p>
                   <p class="xs text-accent display">${p.cost} Pontos</p>
                 </div>
               </div>
               ${action(p)}
+              </div>
+              ${petInfoHTML(p.id)}
             </div>`).join('')}
         </div>`;
     }
@@ -207,7 +213,7 @@ export async function renderShop(container) {
     await auth.addXP(-reward.cost);
     await addRedemptionRecord({ id: crypto.randomUUID(), userId: user.id, rewardTitle: reward.title, cost: reward.cost, redeemedAt: Date.now() });
     await deleteReward(reward.id);
-    confettiBurst({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ['#00e5ff', '#8b5cf6', '#22c55e', '#f59e0b'] });
+    celebrate('reward');
     toast(`🎉 ${reward.title} resgatado!`, 'success');
     load();
   }
@@ -218,7 +224,7 @@ export async function renderShop(container) {
     if (xp() < item.cost) { toast('Pontos insuficientes!', 'error'); return; }
     await auth.addXP(-item.cost);
     addToInventory(user.id, item.id);
-    confettiBurst({ particleCount: 60, spread: 60, origin: { y: 0.6 }, colors: ['#00e5ff', '#8b5cf6', '#22c55e'] });
+    celebrate('reward');
     toast(`🎉 ${item.name} comprado!`, 'success');
     load();
   }

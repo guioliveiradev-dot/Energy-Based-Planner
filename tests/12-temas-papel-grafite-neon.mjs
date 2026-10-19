@@ -49,7 +49,8 @@ for (const t of [...T.FREE_THEMES, ...T.SHOP_THEMES]) {
   if (t.id === 'neon') ok(/Orbitron/.test(f) && !/Space/.test(f), 'Fonte: Neon (clássico) é o único com Orbitron');
   else ok(/^["']?Space Grotesk/.test(f) && !/Orbitron/.test(f), `Fonte: ${t.name} usa Space Grotesk`);
 }
-ok(/Space\+Grotesk/.test(readFileSync(new URL('../index.html', import.meta.url), 'utf8')) && /Orbitron/.test(readFileSync(new URL('../index.html', import.meta.url), 'utf8')), 'Fonte: Space Grotesk e Orbitron carregadas no index.html');
+const fontsCss = readFileSync(new URL('../css/fonts.css', import.meta.url), 'utf8');
+ok(/font-family: 'Space Grotesk'/.test(fontsCss) && /font-family: 'Orbitron'/.test(fontsCss), 'Fonte: Space Grotesk e Orbitron carregadas pelo css/fonts.css')
 
 // ---------- padrão, "último tema" e migração ----------
 await auth.register('Ana', 'ana@x.com', 'segredo1');

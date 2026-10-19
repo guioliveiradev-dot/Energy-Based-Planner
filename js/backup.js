@@ -6,6 +6,7 @@
 
 import { exportAllData, getMeta, setMeta, getUserTasks } from './db.js';
 import { getInventory, getActiveTheme, getActivePet } from './themes.js';
+import { getPetState } from './pet-state.js';
 
 export const BACKUP_INTERVAL_DAYS = 14;   // de quanto em quanto tempo lembrar
 export const SNOOZE_DAYS = 3;             // "Lembrar depois" volta em quantos dias
@@ -22,6 +23,7 @@ export async function buildBackup(userId) {
   data.inventory = getInventory(userId);
   data.activeTheme = getActiveTheme(userId);
   data.activePet = getActivePet(userId);
+  data.petState = await getPetState(userId);   // escudos, baú e Fênix
   return data;
 }
 

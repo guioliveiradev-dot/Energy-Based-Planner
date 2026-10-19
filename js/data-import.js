@@ -1,9 +1,10 @@
 // Lê e valida um arquivo JSON exportado pelo Energy Based Planner (do Lovable ou deste app).
 // Nada é gravado aqui: só devolve os dados limpos, ou { error }.
 
-import { FREE_THEMES, SHOP_THEMES, SHOP_PETS } from './themes.js';
+import { FREE_THEMES, SHOP_THEMES, SHOP_PETS, ALL_PETS } from './themes.js';
 import { CATEGORY_LABELS } from './categories.js';
 import { DB_VERSION } from './db.js';
+import { cleanPetState } from './pet-state.js';
 
 const MAX_CHARS = 5 * 1024 * 1024;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -73,14 +74,24 @@ export function parseImport(text) {
   });
 
   const themeIds = SHOP_THEMES.map((t) => t.id);
-  const petIds = SHOP_PETS.map((p) => p.id);
+  const petIds = SHOP_PETS.map((p) => p.id);          // o que pode estar no inventário (comprado)
+  const allPetIds = ALL_PETS.map((p) => p.id);        // inclui a Fagulha (grátis)
   const inventory = Array.isArray(data.inventory)
     ? data.inventory.filter((id) => themeIds.includes(id) || petIds.includes(id)) : [];
 
+  // Vínculo dos pets: só pets que existem, número inteiro de 0 a 100000; repetido fica o maior.
+  const bondMap = new Map();
+  for (const b of Array.isArray(data.petBonds) ? data.petBonds : []) {
+    if (!b || !allPetIds.includes(b.petId) || !isNum(b.bond) || b.bond < 0) continue;
+    const bond = Math.min(100000, Math.floor(b.bond));
+    bondMap.set(b.petId, Math.max(bond, bondMap.get(b.petId) || 0));
+  }
+  const petBonds = [...bondMap].map(([petId, bond]) => ({ petId, bond }));
+
   return {
-    tasks, routineBlocks, rewards, redemptionHistory, inventory, skipped,
+    tasks, routineBlocks, rewards, redemptionHistory, inventory, petBonds, petState: cleanPetState(data.petState), skipped,
     xp: data.user && isNum(data.user.xp) && data.user.xp >= 0 ? Math.floor(data.user.xp) : null,
     theme: [...themeIds, ...FREE_THEMES.map((t) => t.id)].includes(data.activeTheme) ? data.activeTheme : null,
-    pet: petIds.includes(data.activePet) ? data.activePet : null,
+    pet: allPetIds.includes(data.activePet) ? data.activePet : null,
   };
 }

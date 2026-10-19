@@ -11,6 +11,7 @@
 //   Reward:     { id, userId, title, cost, createdAt }
 //   RedemptionRecord: { id, userId, rewardTitle, cost, redeemedAt }
 //   Meta (v3):  { key, value }   -> dados do próprio app (ex.: 'backup:<userId>', 'storage')
+//   PetBond (v4): { id: '<userId>:<petId>', userId, petId, bond, updatedAt }  -> vínculo (tarefas concluídas com o pet ativo)
 //
 // ---------- Como mudar o banco sem perder dados ----------
 // Cada item de MIGRATIONS leva o banco da versão anterior para a sua versão.
@@ -44,6 +45,12 @@ const MIGRATIONS = [
     version: 3,
     up(db) {
       db.createObjectStore('meta', { keyPath: 'key' });
+    },
+  },
+  {
+    version: 4,
+    up(db) {
+      db.createObjectStore('petBonds', { keyPath: 'id' }).createIndex('by-user', 'userId');
     },
   },
 ];
@@ -153,6 +160,18 @@ export const createTask = (task) => addOne('tasks', task);
 export const updateTask = (task) => putOne('tasks', task);
 export const deleteTask = (id) => deleteOne('tasks', id);
 
+// ---------- Vínculo dos pets ----------
+export const getUserPetBonds = (userId) => getAllByUser('petBonds', userId);
+
+// Soma ao vínculo do pet. Devolve { before, after }.
+export async function addPetBond(userId, petId, amount = 1, now = Date.now()) {
+  const id = `${userId}:${petId}`;
+  const prev = await getOne('petBonds', id);
+  const before = prev ? prev.bond : 0;
+  await putOne('petBonds', { id, userId, petId, bond: before + amount, updatedAt: now });
+  return { before, after: before + amount };
+}
+
 // ---------- Rotina ----------
 export const getUserRoutineBlocks = (userId) => getAllByUser('routineBlocks', userId);
 export const createRoutineBlock = (block) => addOne('routineBlocks', block);
@@ -169,11 +188,13 @@ export const getUserRedemptionHistory = (userId) => getAllByUser('redemptionHist
 
 // ---------- Resetar / excluir conta ----------
 export async function resetUserData(userId) {
+  await deleteMeta(`petstate:${userId}`);   // escudos, baú, Fênix e missão do Robô
   const stores = [
     ['tasks', getUserTasks],
     ['routineBlocks', getUserRoutineBlocks],
     ['rewards', getUserRewards],
     ['redemptionHistory', getUserRedemptionHistory],
+    ['petBonds', getUserPetBonds],
   ];
   for (const [store, getter] of stores) {
     const items = await getter(userId);
@@ -195,12 +216,13 @@ export async function deleteUserAccount(userId) {
 
 // ---------- Exportar ----------
 export async function exportAllData(userId) {
-  const [tasks, routineBlocks, rewards, user, redemptionHistory] = await Promise.all([
+  const [tasks, routineBlocks, rewards, user, redemptionHistory, petBonds] = await Promise.all([
     getUserTasks(userId),
     getUserRoutineBlocks(userId),
     getUserRewards(userId),
     getUser(userId),
     getUserRedemptionHistory(userId),
+    getUserPetBonds(userId),
   ]);
   return {
     user: user ? { name: user.name, email: user.email, xp: user.xp } : null,
@@ -208,6 +230,7 @@ export async function exportAllData(userId) {
     routineBlocks,
     rewards,
     redemptionHistory,
+    petBonds: petBonds.map(({ petId, bond, updatedAt }) => ({ petId, bond, updatedAt })),
     schemaVersion: DB_VERSION,
     exportedAt: new Date().toISOString(),
   };
@@ -227,9 +250,17 @@ export async function importUserData(userId, data) {
       counts[store]++;
     }
   }
+  // Vínculo: o id leva o userId da conta de destino; se já existe, fica o maior (nunca perde progresso).
+  let petBonds = 0;
+  for (const b of data.petBonds || []) {
+    const id = `${userId}:${b.petId}`;
+    const existing = await getOne('petBonds', id);
+    await putOne('petBonds', { id, userId, petId: b.petId, bond: Math.max(b.bond, existing ? existing.bond : 0), updatedAt: Date.now() });
+    petBonds++;
+  }
   if (data.xp !== null && data.xp !== undefined) {
     const user = await getUser(userId);
     if (user) { user.xp = data.xp; await putOne('users', user); }
   }
-  return { counts, skipped };
+  return { counts, skipped, petBonds };
 }

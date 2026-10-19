@@ -11,7 +11,7 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: { ...globals.browser, confetti: 'readonly' },   // confetti vem do CDN (index.html)
+      globals: globals.browser,
     },
     rules: {
       'no-unused-vars': ['warn', { args: 'none', caughtErrors: 'none' }],

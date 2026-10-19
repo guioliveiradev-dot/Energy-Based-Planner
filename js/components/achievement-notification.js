@@ -9,7 +9,7 @@ import * as auth from '../auth.js';
 import { ACHIEVEMENTS, getUnlocked } from '../achievements.js';
 import { createModal } from './modal.js';
 import { icon } from '../icons.js';
-import { confettiBurst } from '../confetti.js';
+import { celebrate } from '../celebrate.js';
 
 export function startAchievementWatcher({ pollMs = 3000, delayMs = 2000 } = {}) {
   let previous = null;       // null = ainda não fez a primeira leitura
@@ -32,7 +32,7 @@ export function startAchievementWatcher({ pollMs = 3000, delayMs = 2000 } = {}) 
     modal.panel.querySelector('[data-role="ok"]').addEventListener('click', () => modal.close());
     modal.open();
     modal.panel.querySelector('[data-role="ok"]').focus();
-    confettiBurst({ particleCount: 80, spread: 70, origin: { y: 0.5 }, colors: ['#ffd700', '#ff6b6b', '#00e5ff', '#8b5cf6'] });
+    celebrate('achievement', { origin: { x: 0.5, y: 0.45 } });
   }
 
   async function check() {

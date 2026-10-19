@@ -16,7 +16,9 @@
 import { createModal } from './modal.js';
 import { icon } from '../icons.js';
 import { escapeHtml } from '../ui.js';
-import { SHOP_PETS, getActivePet } from '../themes.js';
+import { ALL_PETS, getActivePet } from '../themes.js';
+import { getUserPetBonds } from '../db.js';
+import { petFaceHTML } from '../pets.js';
 import { notifyTimerDone } from '../alerts.js';
 import { remainingSeconds, pausedTask, resumedTask } from '../task-time.js';
 
@@ -52,7 +54,7 @@ function petHTML(pet) {
         <div class="pet-bubble" role="status"></div>
         <div class="pet-body">
           <div class="pet-glow"></div>
-          <div class="pet-face"><span>${pet.emoji}</span></div>
+          <div class="pet-face">${petFaceHTML(pet, { bond: 0, pose: 'work', size: 76 })}</div>
           <div class="pet-timer-chip">${icon('timer', 14)}</div>
           ${zs}
           <div class="pet-celebrate">${celebrate}</div>
@@ -64,7 +66,7 @@ function petHTML(pet) {
 
 export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt, pausedAt = null, pauseOffset = 0, onUpdate = () => {}, onComplete }) {
   const total = durationMinutes * 60;
-  const pet = SHOP_PETS.find((p) => p.id === getActivePet(userId));
+  const pet = ALL_PETS.find((p) => p.id === getActivePet(userId));
 
   // Dados de tempo. Ao pausar/continuar, onUpdate(times) é chamado para quem usa o cronômetro guardar na tarefa.
   let times = { startedAt, durationMinutes, pausedAt, pauseOffset };
@@ -101,6 +103,19 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
   const stage = modal.panel.querySelector('.pet-stage');
   const bubble = modal.panel.querySelector('.pet-bubble');
   const status = modal.panel.querySelector('.pet-status');
+  const faceEl = modal.panel.querySelector('.pet-face');
+  let petBond = 0, facePose = 'work', faceBond = 0;   // a arte só é redesenhada quando a pose ou a forma mudam
+  const POSE_BY_STATE = { running: 'work', paused: 'sleep', done: 'cheer' };
+  function paintFace(state) {
+    if (!faceEl || pet.id !== 'fagulha') return;
+    const pose = POSE_BY_STATE[state];
+    if (pose === facePose && petBond === faceBond) return;
+    facePose = pose; faceBond = petBond;
+    faceEl.innerHTML = petFaceHTML(pet, { bond: petBond, pose, size: 76 });
+  }
+  if (pet && pet.id === 'fagulha') {
+    getUserPetBonds(userId).then((all) => { petBond = (all.find((b) => b.petId === 'fagulha') || { bond: 0 }).bond; paintFace(currentState()); }).catch(() => {});
+  }
 
   const computeRemaining = () => remainingSeconds(times);
   const currentState = () => (isDone ? 'done' : isPaused ? 'paused' : 'running');
@@ -135,6 +150,7 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
 
     if (stage) {
       stage.dataset.state = state;
+      paintFace(state);
       stage.dataset.hot = String(progress > 0.75 && !isDone);
       stage.dataset.particles = String((progress > 0.5 || isDone) && !isPaused);
       status.textContent = isDone

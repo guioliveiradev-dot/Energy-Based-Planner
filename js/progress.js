@@ -49,22 +49,40 @@ const dayIndex = (ts) => {
   return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
 };
 
+// Chave do dia no calendário local ("2026-10-17") e o caminho de volta para o número do dia.
+export const dayKey = (ts) => {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+export const keyToIndex = (key) => {
+  const [y, m, d] = key.split('-').map(Number);
+  return Math.round(Date.UTC(y, m - 1, d) / 86400000);
+};
+
 // current:   sequência atual. Continua "viva" até o fim do dia seguinte ao último dia com tarefa.
 // best:      maior sequência de todos os tempos
 // doneToday: já concluiu alguma tarefa hoje
-export function streakInfo(tasks, now = Date.now()) {
-  const days = new Set(tasks.filter((t) => t.completed && t.completedAt).map((t) => dayIndex(t.completedAt)));
+// extra (poderes dos pets, opcional):
+//   covered: dias ("2026-10-16") protegidos pelo escudo do Cão: contam como dias da sequência
+//   bonuses: [{ start: "2026-10-17", extra: 4 }] dias reacendidos pela Fênix, somados à sequência que COMEÇA em start
+export function streakInfo(tasks, now = Date.now(), extra = {}) {
+  const real = new Set(tasks.filter((t) => t.completed && t.completedAt).map((t) => dayIndex(t.completedAt)));
+  const days = new Set([...real, ...(extra.covered || []).map(keyToIndex)]);
+  const bonusAt = new Map((extra.bonuses || []).map((b) => [keyToIndex(b.start), b.extra]));
   const today = dayIndex(now);
-  const doneToday = days.has(today);
+  const doneToday = real.has(today);
 
   let current = 0;
-  for (let d = doneToday ? today : today - 1; days.has(d); d--) current++;
+  let d = doneToday ? today : today - 1;
+  while (days.has(d)) { current++; d--; }
+  if (current > 0) current += bonusAt.get(d + 1) || 0;
 
-  let best = 0, run = 0, prev = null;
-  for (const d of [...days].sort((a, b) => a - b)) {
-    run = prev !== null && d === prev + 1 ? run + 1 : 1;
-    best = Math.max(best, run);
-    prev = d;
+  let best = 0, run = 0, prev = null, runStart = null;
+  for (const day of [...days].sort((a, b) => a - b)) {
+    if (prev !== null && day === prev + 1) run++;
+    else { run = 1; runStart = day; }
+    best = Math.max(best, run + (bonusAt.get(runStart) || 0));
+    prev = day;
   }
   return { current, best, doneToday, alive: current > 0 };
 }

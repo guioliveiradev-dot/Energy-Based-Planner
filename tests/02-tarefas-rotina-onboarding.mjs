@@ -73,8 +73,9 @@ await db.updateTask({ ...t, startedAt: Date.now() - 46 * 60000 });
 cleanup(); root.innerHTML = ''; cleanup = await renderTasks(root);
 ok(!!root.querySelector('[data-action="collect"]'), 'Tarefas: tempo esgotado mostra Coletar');
 root.querySelector('[data-action="collect"]').click(); await wait(120);
-ok(auth.state.user.xp === Math.round(8 * 10 + 45 * 0.5), `Tarefas: XP = 103 (veio ${auth.state.user.xp})`);
-ok(document.querySelector('.congrats-panel')?.textContent.includes('+103 Pontos Planner'), 'Tarefas: modal de parabéns');
+// 103 pontos-base + 10% da Fagulha (pet inicial, vínculo nível 1) = 113
+ok(auth.state.user.xp === 103 + Math.round(103 * 0.08), `Tarefas: XP = 103 + bônus da Fagulha (veio ${auth.state.user.xp})`);
+ok(document.querySelector('.congrats-panel')?.textContent.includes('+103 Pontos Planner') && document.querySelector('.congrats-panel')?.textContent.includes('Fagulha ajudou: +8 pontos'), 'Tarefas: modal de parabéns com o bônus da Fagulha');
 document.querySelector('.congrats-panel [data-role="ok"]').click();
 ok(root.textContent.includes('Concluídas (1)'), 'Tarefas: aparece em Concluídas');
 cleanup(); root.innerHTML = '';

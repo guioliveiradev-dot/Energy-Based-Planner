@@ -3,7 +3,11 @@
 import * as auth from '../auth.js';
 import { getUserTasks, getUserRoutineBlocks, updateTask, createTask } from '../db.js';
 import { icon } from '../icons.js';
-import { escapeHtml, formatDuration } from '../ui.js';
+import { escapeHtml, formatDuration, toast } from '../ui.js';
+import { recordTaskForPet } from '../pets.js';
+import { onDataChanged } from '../events.js';
+import { applyPetPowers, applyShield, getStreakExtra } from '../pet-powers.js';
+import { mountPetHome } from '../components/pet-home.js';
 import { CATEGORY_LABELS } from '../categories.js';
 import { createEnergySlider } from '../components/energy-slider.js';
 import { progressCardHTML } from '../components/progress-card.js';
@@ -40,6 +44,8 @@ export async function renderHome(container) {
       </div>
 
       <div id="backup-slot"></div>
+
+      <div id="pet-slot"></div>
 
       <div class="glass-card points-card">
         <div class="row" style="gap:0.75rem">
@@ -91,9 +97,16 @@ export async function renderHome(container) {
   const progressSlot = $('#progress-slot');
   async function refreshProgress(list) {
     const all = list || await getUserTasks(user.id);
-    progressSlot.innerHTML = progressCardHTML(levelInfo(totalPoints(all)), streakInfo(all));
+    progressSlot.innerHTML = progressCardHTML(levelInfo(totalPoints(all)), streakInfo(all, Date.now(), await getStreakExtra(user.id)));
   }
-  refreshProgress();
+  // Ao abrir: o Cão protege a sequência se preciso, depois o cartão do pet e a missão do Robô
+  (async () => {
+    const list = await getUserTasks(user.id);
+    const shield = await applyShield(user.id, list).catch(() => null);
+    if (shield) toast(`${shield.petName} protegeu a sua sequência!`, 'success', 5000);
+    await refreshProgress(list);
+    await mountPetHome($('#pet-slot'), user.id, list);
+  })().catch((e) => console.error(e));
 
   // ---------- Tempo disponível ----------
   const availableMinutes = () => (parseInt(hoursEl.value) || 0) * 60 + (parseInt(minutesEl.value) || 0);
@@ -187,12 +200,16 @@ export async function renderHome(container) {
   async function handleCollect() {
     const done = mission;
     const points = pointsForTask(done);
-    const levelBefore = levelInfo(totalPoints(await getUserTasks(user.id))).level;
+    const tasksBefore = await getUserTasks(user.id);
+    const levelBefore = levelInfo(totalPoints(tasksBefore)).level;
     const completedAt = Date.now();
     await updateTask({ ...done, completed: true, completedAt });
     const next = nextInstance(done, completedAt);        // tarefa recorrente: agenda a próxima
     if (next) await createTask(next);
-    await auth.addXP(points);
+    const fx = await applyPetPowers({ userId: user.id, task: done, basePoints: points, tasksBefore, completedAt }).catch(() => ({ bonus: null, note: null }));   // poder do pet ativo
+    const petBonus = fx.bonus;
+    await auth.addXP(points + (petBonus ? petBonus.amount : 0));
+    const bond = await recordTaskForPet(user.id).catch(() => null);   // vínculo do pet ativo
     resetTimer();
     mission = null;
     candidates = [];
@@ -203,10 +220,14 @@ export async function renderHome(container) {
     showCongratsModal({
       taskTitle: done.title,
       points,
+      petBonus,
+      petNote: fx.note,
+      petLevelUp: bond,
       levelUp: levelNow.level > levelBefore ? { level: levelNow.level, title: levelNow.title } : null,
-      streak: streakInfo(all).current,
+      streak: streakInfo(all, Date.now(), await getStreakExtra(user.id)).current,
     });
     refreshProgress(all);
+    mountPetHome($('#pet-slot'), user.id, all);
   }
 
   function nextMission() {
@@ -268,6 +289,17 @@ export async function renderHome(container) {
     if (xpEl && s.user) xpEl.textContent = s.user.xp || 0;
   });
 
+  // Quando o painel admin (ou outra parte) muda vínculo, sequência ou tarefas: atualiza o cartão do pet e o nível sem trocar de aba
+  const offData = onDataChanged(async () => {
+    try {
+      const slot = $('#pet-slot');
+      if (!slot || !slot.isConnected) return;   // a tela já foi fechada
+      const list = await getUserTasks(user.id);
+      await refreshProgress(list);
+      await mountPetHome(slot, user.id, list);
+    } catch (e) { console.error(e); }
+  });
+
   // Ao sair da tela
-  return () => { unsubscribe(); resetTimer(); };
+  return () => { unsubscribe(); offData(); resetTimer(); };
 }

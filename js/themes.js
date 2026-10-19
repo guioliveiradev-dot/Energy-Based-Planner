@@ -21,14 +21,22 @@ export const SHOP_THEMES = [
   { id: 'gold',     name: 'Ouro Imperial',   cost: 10000, type: 'theme', preview: 'linear-gradient(135deg, hsl(43 90% 55%), hsl(30 80% 40%))' },
 ];
 
-export const SHOP_PETS = [
-  { id: 'cat',     name: 'Gato Cósmico',      emoji: '🐱', cost: 1000, type: 'pet', description: 'Ronrona enquanto você trabalha' },
-  { id: 'dog',     name: 'Cão Guardião',      emoji: '🐶', cost: 1000, type: 'pet', description: 'Te encoraja a continuar' },
-  { id: 'dragon',  name: 'Dragão Neon',       emoji: '🐉', cost: 1500, type: 'pet', description: 'Cospe fogo de motivação' },
-  { id: 'phoenix', name: 'Fênix Estelar',     emoji: '🦅', cost: 2000, type: 'pet', description: 'Renasce das cinzas com você' },
-  { id: 'robot',   name: 'Robô Quântico',     emoji: '🤖', cost: 2000, type: 'pet', description: 'Calcula seu sucesso' },
-  { id: 'unicorn', name: 'Unicórnio Mágico',  emoji: '🦄', cost: 2500, type: 'pet', description: 'Espalha magia e arco-íris' },
+// Pet inicial: de graça para todos, não aparece na Loja. Desenhada em SVG (js/pet-art.js).
+export const DEFAULT_PET = 'fagulha';
+export const FREE_PETS = [
+  { id: 'fagulha', name: 'Fagulha', emoji: '🔥', cost: 0, type: 'pet', free: true, description: 'O espírito da sua logo: medita com você e cresce com o vínculo' },
 ];
+
+export const SHOP_PETS = [
+  { id: 'cat',     name: 'Gato Cósmico',      emoji: '🐱', cost: 500, type: 'pet', description: 'Ronrona enquanto você trabalha' },
+  { id: 'dragon',  name: 'Dragão Neon',       emoji: '🐉', cost: 500, type: 'pet', description: 'Cospe fogo de motivação' },
+  { id: 'unicorn', name: 'Unicórnio Mágico',  emoji: '🦄', cost: 500, type: 'pet', description: 'Espalha magia e arco-íris' },
+  { id: 'robot',   name: 'Robô Quântico',     emoji: '🤖', cost: 500, type: 'pet', description: 'Calcula seu sucesso' },
+  { id: 'dog',     name: 'Cão Guardião',      emoji: '🐶', cost: 800, type: 'pet', description: 'Te encoraja a continuar' },
+  { id: 'phoenix', name: 'Fênix Estelar',     emoji: '🦅', cost: 1000, type: 'pet', description: 'Renasce das cinzas com você' },
+];
+
+export const ALL_PETS = [...FREE_PETS, ...SHOP_PETS];
 
 const key = (userId, name) => `energy-planner-${name}-${userId}`;
 
@@ -78,13 +86,15 @@ export function setActiveThemeStorage(userId, themeId) {
   applyTheme(themeId);
 }
 
+// Pet ativo. Sem escolha, é a Fagulha. "Nenhum pet" fica gravado como 'none'.
 export function getActivePet(userId) {
-  return localStorage.getItem(key(userId, 'pet')) || null;
+  const saved = localStorage.getItem(key(userId, 'pet'));
+  if (saved === 'none') return null;
+  return ALL_PETS.some((p) => p.id === saved) ? saved : DEFAULT_PET;
 }
 
 export function setActivePetStorage(userId, petId) {
-  if (petId) localStorage.setItem(key(userId, 'pet'), petId);
-  else localStorage.removeItem(key(userId, 'pet'));
+  localStorage.setItem(key(userId, 'pet'), petId || 'none');
 }
 
 // remember: false não grava como "último tema" (usado pelo guia de estilo).

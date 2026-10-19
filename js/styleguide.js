@@ -11,6 +11,7 @@ import { toast } from './ui.js';
 import { createModal } from './components/modal.js';
 import { progressCardHTML } from './components/progress-card.js';
 import { levelInfo, streakInfo } from './progress.js';
+import { celebrate } from './celebrate.js';
 import { hslToRgb, contrast } from './contrast.js';
 
 const THEMES = [...FREE_THEMES, ...SHOP_THEMES].map((t) => ({ id: t.id, name: t.name }));
@@ -124,6 +125,8 @@ document.getElementById('categories').innerHTML = Object.entries(CATEGORY_LABELS
 document.getElementById('progress-slot').innerHTML = progressCardHTML(levelInfo(420), streakInfo([]));
 
 document.querySelector('main').addEventListener('click', (e) => {
+  const feast = e.target.closest('[data-celebrate]')?.dataset.celebrate;
+  if (feast) { celebrate(feast); return; }
   const kind = e.target.closest('[data-toast]')?.dataset.toast;
   if (kind === 'info') toast('Aviso de exemplo.');
   else if (kind === 'success') toast('Tudo certo!', 'success');

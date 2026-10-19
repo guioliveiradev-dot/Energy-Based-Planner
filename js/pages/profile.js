@@ -2,7 +2,12 @@
 // exportar e importar dados. Porte de Profile.tsx (+ importação de JSON).
 
 import * as auth from '../auth.js';
-import { getUserTasks, importUserData } from '../db.js';
+import { getUserTasks, importUserData, getUserPetBonds } from '../db.js';
+import { bondProgress, petFaceHTML } from '../pets.js';
+import { powerText, getStreakExtra } from '../pet-powers.js';
+import { petInfoHTML } from '../components/pet-info.js';
+import { importPetState } from '../pet-state.js';
+import { onDataChanged } from '../events.js';
 import { icon } from '../icons.js';
 import { escapeHtml, toast } from '../ui.js';
 import { totalPointsEarned } from '../achievements.js';
@@ -16,7 +21,7 @@ import { createModal } from '../components/modal.js';
 import { progressCardHTML } from '../components/progress-card.js';
 import { totalPoints, levelInfo, streakInfo } from '../progress.js';
 import {
-  FREE_THEMES, DEFAULT_THEME, SHOP_THEMES, SHOP_PETS, getInventory, getActiveTheme, getActivePet,
+  FREE_THEMES, DEFAULT_THEME, SHOP_THEMES, SHOP_PETS, FREE_PETS, ALL_PETS, getInventory, getActiveTheme, getActivePet,
   setActiveThemeStorage, setActivePetStorage, addToInventory,
 } from '../themes.js';
 
@@ -59,7 +64,7 @@ function chartSVG(data) {
 export async function renderProfile(container) {
   const user = () => auth.state.user;
   let tasks = [], inventory = [], activeTheme = DEFAULT_THEME, activePet = null;
-  let backupState = null, persisted = null;
+  let backupState = null, persisted = null, petBonds = {}, streakExtra = {};
   let activeTab = 'profile';
 
   container.innerHTML = `
@@ -75,6 +80,11 @@ export async function renderProfile(container) {
 
   const content = container.querySelector('#tab-content');
   const fileInput = container.querySelector('#import-file');
+
+  function bondText(bond) {
+    const b = bondProgress(bond || 0);
+    return b.max ? `Vínculo nível ${b.level} (máximo) · ${b.bond} tarefas` : `Vínculo nível ${b.level} · faltam ${b.remaining} tarefas para o nível ${b.level + 1}`;
+  }
 
   function storageText() {
     if (persisted === true) return 'Protegido: o navegador não apaga seus dados sozinho quando faltar espaço. Mesmo assim, faça backup de vez em quando.';
@@ -100,7 +110,7 @@ export async function renderProfile(container) {
         </div>
       </div>
 
-      ${progressCardHTML(levelInfo(totalPoints(tasks)), streakInfo(tasks))}
+      ${progressCardHTML(levelInfo(totalPoints(tasks)), streakInfo(tasks, Date.now(), streakExtra))}
 
       <div class="grid-3">
         ${stats.map((s) => `
@@ -141,7 +151,8 @@ export async function renderProfile(container) {
 
   function renderInventoryTab() {
     const ownedThemes = SHOP_THEMES.filter((t) => inventory.includes(t.id));
-    const ownedPets = SHOP_PETS.filter((p) => inventory.includes(p.id));
+    const boughtPets = SHOP_PETS.filter((p) => inventory.includes(p.id));
+    const ownedPets = [...FREE_PETS, ...boughtPets];   // a Fagulha é de todos
     const check = `<span class="text-success" style="display:inline-flex">${icon('check', 16)}</span>`;
 
     content.innerHTML = `
@@ -166,11 +177,14 @@ export async function renderProfile(container) {
           <span class="card-title muted">Nenhum pet</span>${!activePet ? check : ''}
         </button>
         ${ownedPets.map((p) => `
+          <div class="pet-entry">
           <button class="glass-card card-btn between ${activePet === p.id ? 'active' : ''}" data-pet="${p.id}">
-            <span class="row" style="gap:0.75rem"><span style="font-size:1.5rem">${p.emoji}</span>
-            <span><span class="card-title">${p.name}</span><span class="card-sub tiny">${p.description}</span></span></span>${activePet === p.id ? check : ''}
-          </button>`).join('')}
-        ${ownedPets.length === 0 ? '<p class="muted xs center" style="padding:1rem 0">Compre pets na Loja para acompanhar seu cronômetro!</p>' : ''}
+            <span class="row" style="gap:0.75rem"><span class="pet-thumb">${petFaceHTML(p, { bond: petBonds[p.id] || 0, size: 48 })}</span>
+            <span><span class="card-title">${p.name}</span><span class="card-sub tiny">${p.description}</span><span class="card-sub tiny">${bondText(petBonds[p.id])}</span><span class="card-sub tiny">${powerText(p.id, bondProgress(petBonds[p.id] || 0).level)}</span></span></span>${activePet === p.id ? check : ''}
+          </button>
+          ${petInfoHTML(p.id, bondProgress(petBonds[p.id] || 0).level, 'attached')}
+          </div>`).join('')}
+        ${boughtPets.length === 0 ? '<p class="muted xs center" style="padding:1rem 0">Compre mais pets na Loja para acompanhar seu cronômetro!</p>' : ''}
       </div>`;
   }
 
@@ -182,6 +196,8 @@ export async function renderProfile(container) {
     inventory = getInventory(u.id);
     activeTheme = getActiveTheme(u.id);
     activePet = getActivePet(u.id);
+    streakExtra = await getStreakExtra(u.id);
+    petBonds = Object.fromEntries((await getUserPetBonds(u.id)).map((b) => [b.petId, b.bond]));
     backupState = await getBackupState(u.id);
     persisted = await isPersisted();
     renderTab();
@@ -252,6 +268,7 @@ export async function renderProfile(container) {
     const u = user();
     try {
       const { counts, skipped } = await importUserData(u.id, parsed);
+      await importPetState(u.id, parsed.petState);   // escudos, baú e Fênix: união com o que a conta já tem
       parsed.inventory.forEach((id) => addToInventory(u.id, id));
       if (parsed.theme) setActiveThemeStorage(u.id, parsed.theme);
       if (parsed.pet) setActivePetStorage(u.id, parsed.pet);
@@ -310,7 +327,7 @@ export async function renderProfile(container) {
       const id = petBtn.dataset.pet || null;
       setActivePetStorage(user().id, id);
       activePet = id;
-      toast(id ? `Pet "${SHOP_PETS.find((p) => p.id === id)?.name}" ativado!` : 'Pet desativado.', 'success');
+      toast(id ? `Pet "${ALL_PETS.find((p) => p.id === id)?.name}" ativado!` : 'Pet desativado.', 'success');
       renderTab();
       return;
     }
@@ -324,6 +341,8 @@ export async function renderProfile(container) {
 
   const unsubscribe = auth.subscribe((s) => { if (s.user && activeTab === 'profile') renderProfileTab(); });
 
+  const offData = onDataChanged(() => { load().catch((e) => console.error(e)); });   // vínculo/sequência alterados pelo painel admin
+
   await load();
-  return unsubscribe;
+  return () => { unsubscribe(); offData(); };
 }

@@ -36,6 +36,14 @@ ok(/<link rel="manifest" href="manifest\.webmanifest">/.test(index) && /viewport
 ok(/register\('sw\.js'\)/.test(read('js/app.js')) && exists('sw.js'), 'App: registra o service worker por caminho relativo');
 ok(exists('.nojekyll'), 'GitHub Pages: .nojekyll presente (publica os arquivos como estão)');
 
+// ---------- fontes hospedadas no app ----------
+const fontsCss = read('css/fonts.css');
+const fontUrls = [...fontsCss.matchAll(/url\('\.\.\/([^']+)'\)/g)].map((m) => m[1]);
+ok(fontUrls.length === 7 && fontUrls.every((u) => exists(u) && statSync(new URL(u, root)).size > 3000), 'Fontes: 7 arquivos .woff2 existem e não estão vazios');
+ok(['Inter', 'Orbitron', 'Space Grotesk'].every((f) => fontsCss.includes(`font-family: '${f}'`)) && !/fonts\.googleapis|gstatic/.test(index), 'Fontes: Inter, Orbitron e Space Grotesk locais; index.html não chama o Google');
+ok(index.includes('css/fonts.css') && ['LICENSE-Inter.txt', 'LICENSE-Orbitron.txt', 'LICENSE-SpaceGrotesk.txt'].every((f) => exists('fonts/' + f)), 'Fontes: fonts.css ligado e licenças (OFL) junto dos arquivos');
+ok(/\/fonts\//.test(read('sw.js')), 'Fontes: o service worker guarda as fontes para uso offline');
+
 // ---------- contraste (funções puras) ----------
 const { hslToRgb, contrast } = await import(new URL('js/contrast.js', root).href);
 const white = hslToRgb('0 0% 100%'), black = hslToRgb('0 0% 0%');

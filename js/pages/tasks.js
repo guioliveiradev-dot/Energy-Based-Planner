@@ -4,6 +4,9 @@ import * as auth from '../auth.js';
 import { getUserTasks, createTask, updateTask, deleteTask } from '../db.js';
 import { icon } from '../icons.js';
 import { escapeHtml, toast, formatDuration } from '../ui.js';
+import { recordTaskForPet } from '../pets.js';
+import { onDataChanged } from '../events.js';
+import { applyPetPowers, getStreakExtra } from '../pet-powers.js';
 import { CATEGORY_LABELS, CATEGORY_EMOJI } from '../categories.js';
 import { energyBadge } from '../components/energy-slider.js';
 import { createTaskTimer } from '../components/task-timer.js';
@@ -349,13 +352,19 @@ export async function renderTasks(container) {
     await updateTask({ ...task, completed: true, completedAt });
     const next = nextInstance(task, completedAt);        // tarefa recorrente: agenda a próxima
     if (next) await createTask(next);
-    await auth.addXP(points);
+    const fx = await applyPetPowers({ userId: auth.state.user.id, task, basePoints: points, tasksBefore: tasks, completedAt }).catch(() => ({ bonus: null, note: null }));   // poder do pet ativo
+    const petBonus = fx.bonus;
+    await auth.addXP(points + (petBonus ? petBonus.amount : 0));
+    const bond = await recordTaskForPet(auth.state.user.id).catch(() => null);   // vínculo do pet ativo
     dropTimer(id);
     showCongratsModal({
       taskTitle: task.title,
       points,
+      petBonus,
+      petNote: fx.note,
+      petLevelUp: bond,
       levelUp: levelNow.level > levelBefore.level ? { level: levelNow.level, title: levelNow.title } : null,
-      streak: streakInfo(afterTasks, completedAt).current,
+      streak: streakInfo(afterTasks, completedAt, await getStreakExtra(auth.state.user.id)).current,
     });
     load();
   }
@@ -397,10 +406,13 @@ export async function renderTasks(container) {
     if (running || availableKey() !== lastAvailableKey) renderList();
   }, 5000);
 
+  const offData = onDataChanged(() => { Promise.resolve(load()).catch((e) => console.error(e)); });   // o painel admin pode criar tarefas de teste
+
   await load();
 
   return () => {
     clearInterval(interval);
+    offData();
     dialog.close();
     for (const id of [...timers.keys()]) dropTimer(id);
   };
