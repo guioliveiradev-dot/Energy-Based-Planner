@@ -23,7 +23,7 @@ const uid = auth.state.user.id;
 const mk = (o) => ({ id: crypto.randomUUID(), userId: uid, title: 't', energyCost: 5, durationMinutes: 30, deadline: null, category: 'work', completed: false, completedAt: null, startedAt: null, createdAt: Date.now(), ...o });
 
 // regras de conquistas
-ok(ACHIEVEMENTS.length === 19, 'Conquistas: 19 definidas');
+ok(ACHIEVEMENTS.length === 24, 'Conquistas: 24 definidas (19 de antes + 5 de pets)');
 ok(getUnlocked([], []).length === 0, 'Conquistas: nenhuma sem dados');
 ok(totalPointsEarned([mk({ completed: true, energyCost: 8, durationMinutes: 45 })]) === 103, 'Conquistas: pontos totais = 103');
 const ids = (t, h=[]) => getUnlocked(t, h).map(a => a.id);
@@ -72,8 +72,8 @@ ok(root.textContent.includes('✓ Obtido'), 'Loja: mostra "Obtido"');
 
 // conquistas + histórico
 root.querySelector('[data-tab="achievements"]').click();
-ok(root.textContent.includes('1/19 desbloqueadas'), 'Loja: conquistas 1/19 (Merecido pelo resgate)');
-ok(root.querySelectorAll('.locked').length === 18, 'Loja: 18 conquistas bloqueadas (cinza)');
+ok(root.textContent.includes('1/24 desbloqueadas'), 'Loja: conquistas 1/24 (Merecido pelo resgate)');
+ok(root.querySelectorAll('.locked').length === 23, 'Loja: 23 conquistas bloqueadas (cinza)');
 root.querySelector('[data-tab="history"]').click();
 ok(/Jogar <b>Video<\/b>game/.test(root.textContent) && /\d\d\/\d\d\/\d{4} \d\d:\d\d · -500 Pontos/.test(root.textContent), 'Loja: histórico com data e custo');
 cleanup(); root.innerHTML = '';

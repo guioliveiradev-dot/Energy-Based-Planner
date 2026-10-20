@@ -8,7 +8,7 @@ import {
 import { icon } from '../icons.js';
 import { escapeHtml, toast, formatDateTime } from '../ui.js';
 import { SHOP_THEMES, SHOP_PETS, getInventory, addToInventory } from '../themes.js';
-import { ACHIEVEMENTS, getUnlocked } from '../achievements.js';
+import { ACHIEVEMENTS, getUnlocked, loadPetContext } from '../achievements.js';
 import { celebrate } from '../celebrate.js';
 import { createModal } from '../components/modal.js';
 import { powerSummary } from '../pet-powers.js';
@@ -25,7 +25,7 @@ export async function renderShop(container) {
   const user = auth.state.user;
   const xp = () => auth.state.user?.xp || 0;
 
-  let rewards = [], history = [], tasks = [], inventory = [];
+  let rewards = [], history = [], tasks = [], inventory = [], petContext = { owned: [], bonds: {} };
   let activeTab = 'rewards';
 
   container.innerHTML = `
@@ -154,7 +154,7 @@ export async function renderShop(container) {
     }
 
     else if (activeTab === 'achievements') {
-      const unlockedIds = new Set(getUnlocked(tasks, history).map((a) => a.id));
+      const unlockedIds = new Set(getUnlocked(tasks, history, petContext).map((a) => a.id));
       content.innerHTML = `
         <p class="muted xs center">${unlockedIds.size}/${ACHIEVEMENTS.length} desbloqueadas</p>
         ${ACHIEVEMENTS.map((a) => {
@@ -191,6 +191,7 @@ export async function renderShop(container) {
     ]);
     history.sort((a, b) => b.redeemedAt - a.redeemedAt);
     inventory = getInventory(user.id);
+    petContext = await loadPetContext(user.id);
     renderTab();
   }
 

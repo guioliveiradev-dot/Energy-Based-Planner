@@ -6,7 +6,7 @@
 
 import { getUserTasks, getUserRedemptionHistory } from '../db.js';
 import * as auth from '../auth.js';
-import { ACHIEVEMENTS, getUnlocked } from '../achievements.js';
+import { ACHIEVEMENTS, getUnlocked, loadPetContext } from '../achievements.js';
 import { createModal } from './modal.js';
 import { icon } from '../icons.js';
 import { celebrate } from '../celebrate.js';
@@ -38,9 +38,9 @@ export function startAchievementWatcher({ pollMs = 3000, delayMs = 2000 } = {}) 
   async function check() {
     const user = auth.state.user;
     if (!user || stopped) return;
-    const [tasks, history] = await Promise.all([getUserTasks(user.id), getUserRedemptionHistory(user.id)]);
+    const [tasks, history, pets] = await Promise.all([getUserTasks(user.id), getUserRedemptionHistory(user.id), loadPetContext(user.id)]);
     if (stopped) return;
-    const current = new Set(getUnlocked(tasks, history).map((a) => a.id));
+    const current = new Set(getUnlocked(tasks, history, pets).map((a) => a.id));
 
     if (previous === null) { previous = current; return; }   // primeira leitura: só memoriza
 

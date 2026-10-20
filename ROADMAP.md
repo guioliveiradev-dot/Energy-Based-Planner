@@ -67,7 +67,8 @@ Este arquivo junta as minhas ideias com as suas. Ordem pensada para **não refaz
 - [~] **B6 Pet na Home e no cronômetro** (M, junto com **#12**): companheiro com mensagem do dia e animação no cronômetro.
   - **Feito:** cartão do pet na Home (arte, vínculo, mensagem do dia gentil que muda com a hora e o que você já fez, e a missão do Robô). **Falta:** animação no cronômetro além das poses e o cronômetro mais bonito (#12).
   - **Comemoração de nível:** quando o vínculo do pet sobe de nível (concluindo tarefa ou pelo painel admin), aparece uma animação com o pet, brilhos, o nível novo e o poder novo; a Fagulha "evolui" na tela quando muda de forma. Home, Perfil e Tarefas se atualizam sozinhas quando o painel admin muda algo (`js/events.js`).
-- [ ] **B7 Conquistas de pets** (P) e, opcional, **2º espaço de pet liberado por nível** (dá um motivo extra para subir de nível).
+- [x] **B7 Conquistas de pets**: feito, 5 conquistas novas (24 no total): Novo Amigo (1º pet da Loja), Matilha (3 pets), Zoológico Estelar (todos os pets da Loja), Laço Criado (um pet no nível 2 de vínculo) e Vínculo Eterno (um pet no nível 5). Avisam com a janela de conquista como as outras.
+- [ ] **B7b 2º espaço de pet liberado por nível** (opcional, **decisão pendente**): dois pets ativos ao mesmo tempo, o 2º liberado por um nível do usuário. Mexe na economia (dois poderes juntos), por isso fica de fora até você decidir.
 - Substitui o **#8** (mais pets, pets que evoluem).
 
 ### Rascunho dos poderes (os números serão ajustados)

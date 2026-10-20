@@ -1,12 +1,18 @@
 // Lista de conquistas e regras para desbloqueá-las. Porte de AchievementNotification.tsx.
 // Para criar uma conquista nova, adicione um item em ACHIEVEMENTS.
 //   icon:  nome de um ícone em icons.js
-//   check: (tarefas, histórico de resgates, pontos ganhos no total) => true/false
+//   check: (tarefas, histórico de resgates, pontos ganhos no total, pets) => true/false
+//          pets: { owned: [ids dos pets comprados], bonds: { petId: vínculo em tarefas } }
 // Os cálculos de pontos, nível e sequência de dias ficam em progress.js.
 
 import { totalPoints, streakInfo } from './progress.js';
+import { getUserPetBonds } from './db.js';
+import { getInventory, SHOP_PETS } from './themes.js';
+import { bondLevel } from './pets.js';
 
 const done = (t) => t.filter((x) => x.completed);
+const bonds = (pets) => Object.values((pets && pets.bonds) || {});
+const owned = (pets) => ((pets && pets.owned) || []).length;
 
 export const ACHIEVEMENTS = [
   { id: 'first_task', title: 'Primeiro Passo', description: 'Complete sua primeira tarefa', icon: 'star', color: 'hsl(45, 100%, 55%)', check: (t) => done(t).length >= 1 },
@@ -28,12 +34,27 @@ export const ACHIEVEMENTS = [
   { id: 'streak_7', title: 'Semana Perfeita', description: 'Conclua tarefas 7 dias seguidos', icon: 'calendar', color: 'hsl(190, 100%, 50%)', check: (t) => streakInfo(t).best >= 7 },
   { id: 'streak_30', title: 'Hábito de Aço', description: 'Conclua tarefas 30 dias seguidos', icon: 'shield-check', color: 'hsl(265, 100%, 68%)', check: (t) => streakInfo(t).best >= 30 },
   { id: 'marathon', title: 'Ultra Maratonista', description: 'Complete tarefa de 5+ horas', icon: 'book-open', color: 'hsl(150, 70%, 45%)', check: (t) => t.some((x) => x.completed && x.durationMinutes >= 300) },
+  // Pets (a Fagulha é de graça e não conta como compra)
+  { id: 'pet_first', title: 'Novo Amigo', description: 'Adote seu primeiro pet na Loja', icon: 'paw-print', color: 'hsl(30, 90%, 55%)', check: (_t, _h, _p, pets) => owned(pets) >= 1 },
+  { id: 'pet_three', title: 'Matilha', description: 'Tenha 3 pets da Loja', icon: 'heart', color: 'hsl(340, 80%, 55%)', check: (_t, _h, _p, pets) => owned(pets) >= 3 },
+  { id: 'pet_all', title: 'Zoológico Estelar', description: 'Tenha todos os pets da Loja', icon: 'gem', color: 'hsl(190, 100%, 50%)', check: (_t, _h, _p, pets) => owned(pets) >= SHOP_PETS.length },
+  { id: 'pet_bond_2', title: 'Laço Criado', description: 'Leve um pet ao nível 2 de vínculo', icon: 'star', color: 'hsl(45, 100%, 55%)', check: (_t, _h, _p, pets) => bonds(pets).some((b) => bondLevel(b) >= 2) },
+  { id: 'pet_bond_5', title: 'Vínculo Eterno', description: 'Leve um pet ao nível máximo de vínculo', icon: 'crown', color: 'hsl(265, 100%, 68%)', check: (_t, _h, _p, pets) => bonds(pets).some((b) => bondLevel(b) >= 5) },
 ];
 
 // Pontos ganhos no total (soma dos pontos de todas as tarefas concluídas)
 export const totalPointsEarned = totalPoints;
 
-export function getUnlocked(tasks, history) {
+// Dados dos pets usados nas conquistas: pets comprados e vínculo de cada um.
+export async function loadPetContext(userId) {
+  const shopIds = SHOP_PETS.map((p) => p.id);
+  return {
+    owned: getInventory(userId).filter((id) => shopIds.includes(id)),
+    bonds: Object.fromEntries((await getUserPetBonds(userId)).map((b) => [b.petId, b.bond])),
+  };
+}
+
+export function getUnlocked(tasks, history, pets = { owned: [], bonds: {} }) {
   const pts = totalPointsEarned(tasks);
-  return ACHIEVEMENTS.filter((a) => a.check(tasks, history, pts));
+  return ACHIEVEMENTS.filter((a) => a.check(tasks, history, pts, pets));
 }
