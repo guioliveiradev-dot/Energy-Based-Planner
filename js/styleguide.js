@@ -12,6 +12,7 @@ import { createModal } from './components/modal.js';
 import { progressCardHTML } from './components/progress-card.js';
 import { levelInfo, streakInfo } from './progress.js';
 import { celebrate } from './celebrate.js';
+import { showCongratsModal } from './components/congrats-modal.js';
 import { hslToRgb, contrast } from './contrast.js';
 
 const THEMES = [...FREE_THEMES, ...SHOP_THEMES].map((t) => ({ id: t.id, name: t.name }));
@@ -125,6 +126,7 @@ document.getElementById('categories').innerHTML = Object.entries(CATEGORY_LABELS
 document.getElementById('progress-slot').innerHTML = progressCardHTML(levelInfo(420), streakInfo([]));
 
 document.querySelector('main').addEventListener('click', (e) => {
+  if (e.target.closest('#open-congrats')) { showCongratsModal({ taskTitle: 'Tarefa de exemplo', points: 65, petBonus: { message: 'Fagulha ajudou: +5 pontos' }, streak: 4 }); return; }
   const feast = e.target.closest('[data-celebrate]')?.dataset.celebrate;
   if (feast) { celebrate(feast); return; }
   const kind = e.target.closest('[data-toast]')?.dataset.toast;

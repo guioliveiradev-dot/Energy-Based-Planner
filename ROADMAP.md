@@ -100,7 +100,7 @@ Tarefa média = 65 pontos. Com 3 tarefas por dia (195 pontos/dia), **um bônus d
 - [ ] **#6 Registro de energia ao longo do dia** (M/G): insights como "você rende mais de manhã" (o Robô usa).
 
 ## Fase 4 · Acabamento e acessibilidade
-- [x] ~~Confete~~ trocado por **fagulhas de luz** (`js/celebrate.js`, sem biblioteca externa, funciona offline, com as cores do tema). Aparece ao concluir tarefa, subir o pet de nível, desbloquear conquista e comprar/resgatar.
+- [x] ~~Confete~~ trocado por **fagulhas de luz** (`js/celebrate.js`, sem biblioteca externa, funciona offline, com as cores do tema). As fagulhas aparecem ao subir o pet de nível, desbloquear conquista e comprar/resgatar. **Concluir tarefa tem animação própria, mais calma:** círculo e "visto" que se desenham, um anel de luz, pontos que sobem contando e linhas de bônus que aparecem uma a uma (`js/components/congrats-modal.js`).
 - [ ] **#12 Cronômetro mais bonito** (P/M): anel de progresso e modo foco em tela cheia.
 - [ ] **#13 Transições entre telas e telas vazias com ilustração** (P).
 - [ ] **#14 Atalhos de teclado** (P): por exemplo **N** para nova tarefa.

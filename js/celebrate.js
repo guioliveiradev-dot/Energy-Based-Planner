@@ -2,13 +2,13 @@
 // Tudo em CSS e DOM, sem imagens e sem bibliotecas externas (funciona offline) e com as cores do tema (--accent).
 // Combina com a Fagulha: é a "faísca" do app, em vez de papel colorido caindo.
 //
-// kind:  'task' (concluir tarefa) | 'level' (pet subiu de nível) | 'achievement' (conquista) | 'reward' (compra e resgate)
+// kind:  'level' (pet subiu de nível) | 'achievement' (conquista) | 'reward' (compra e resgate)
+// (concluir tarefa tem uma animação própria, mais calma: veja js/components/congrats-modal.js)
 // Quem pediu "menos movimento" no sistema não vê nada (a janela de comemoração continua funcionando).
 
 export const CELEBRATE_MS = 3400;
 
 const PRESETS = {
-  task: { sparks: 14, spread: 150, ring: true },
   level: { sparks: 22, spread: 210, ring: true },
   achievement: { sparks: 18, spread: 190, ring: true },
   reward: { sparks: 10, spread: 130, ring: false },
@@ -17,10 +17,10 @@ const PRESETS = {
 const between = (rng, a, b) => a + rng() * (b - a);
 
 // origin: posição do centro da comemoração em frações da tela (0 a 1). Devolve o elemento, ou null se não animou.
-export function celebrate(kind = 'task', { origin = { x: 0.5, y: 0.55 }, rng = Math.random, duration = CELEBRATE_MS } = {}) {
+export function celebrate(kind = 'reward', { origin = { x: 0.5, y: 0.55 }, rng = Math.random, duration = CELEBRATE_MS } = {}) {
   if (typeof document === 'undefined') return null;
   if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
-  const preset = PRESETS[kind] || PRESETS.task;
+  const preset = PRESETS[kind] || PRESETS.reward;
 
   const layer = document.createElement('div');
   layer.className = 'celebrate-layer';
