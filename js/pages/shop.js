@@ -3,7 +3,7 @@
 import * as auth from '../auth.js';
 import {
   getUserRewards, createReward, deleteReward, getUserTasks,
-  getUserRedemptionHistory, addRedemptionRecord,
+  getUserRedemptionHistory, addRedemptionRecord, updateReward,
 } from '../db.js';
 import { icon } from '../icons.js';
 import { escapeHtml, toast, formatDateTime } from '../ui.js';
@@ -53,7 +53,7 @@ export async function renderShop(container) {
   const dialog = createModal();
   dialog.panel.innerHTML = `
     <button class="modal-close" data-role="close" aria-label="Fechar">${icon('x', 18)}</button>
-    <h2 class="modal-title">Nova Recompensa</h2>
+    <h2 class="modal-title" id="r-heading">Nova Recompensa</h2>
     <div class="stack" style="gap:1rem;padding-top:0.5rem">
       <div>
         <label class="label muted xs" for="r-title">Nome</label>
@@ -68,7 +68,21 @@ export async function renderShop(container) {
   const titleEl = dialog.panel.querySelector('#r-title');
   const costEl = dialog.panel.querySelector('#r-cost');
   const createBtn = dialog.panel.querySelector('#r-create');
+  const headingEl = dialog.panel.querySelector('#r-heading');
+  let editingId = null;     // null = criando; um id = editando essa recompensa
   const syncCreate = () => { createBtn.disabled = !titleEl.value.trim() || !costEl.value; };
+
+  // Mesma janela para criar e para editar
+  function openDialog(reward = null) {
+    editingId = reward ? reward.id : null;
+    headingEl.textContent = reward ? 'Editar Recompensa' : 'Nova Recompensa';
+    createBtn.textContent = reward ? 'Salvar' : 'Criar Recompensa';
+    titleEl.value = reward ? reward.title : '';
+    costEl.value = reward ? String(reward.cost) : '';
+    syncCreate();
+    dialog.open();
+    titleEl.focus();
+  }
   titleEl.addEventListener('input', syncCreate);
   costEl.addEventListener('input', syncCreate);
   dialog.panel.querySelector('[data-role="close"]').addEventListener('click', () => dialog.close());
@@ -78,13 +92,19 @@ export async function renderShop(container) {
     const cost = parseInt(costEl.value);
     if (!title || !costEl.value) return;
     if (isNaN(cost) || cost <= 0) { toast('Custo inválido.', 'error'); return; }
-    await createReward({ id: crypto.randomUUID(), userId: user.id, title, cost, createdAt: Date.now() });
+    if (editingId) {
+      await updateReward(editingId, { title, cost });
+      toast('Recompensa atualizada!', 'success');
+    } else {
+      await createReward({ id: crypto.randomUUID(), userId: user.id, title, cost, createdAt: Date.now() });
+      toast('Recompensa criada!', 'success');
+    }
+    editingId = null;
     titleEl.value = ''; costEl.value = ''; createBtn.disabled = true;
     dialog.close();
-    toast('Recompensa criada!', 'success');
     load();
   });
-  container.querySelector('#fab').addEventListener('click', () => { dialog.open(); titleEl.focus(); });
+  container.querySelector('#fab').addEventListener('click', () => openDialog());
 
   // ---------- Abas ----------
   const buyButton = (kind, id, cost) => xp() >= cost
@@ -106,6 +126,7 @@ export async function renderShop(container) {
             </div>
             <div class="row" style="gap:0.5rem">
               ${buyButton('redeem', r.id, r.cost)}
+              <button class="icon-btn neutral" data-action="edit-reward" data-id="${r.id}" aria-label="Editar recompensa ${escapeHtml(r.title)}">${icon('pencil', 14)}</button>
               <button class="icon-btn destructive" data-action="delete-reward" data-id="${r.id}" aria-label="Excluir recompensa ${escapeHtml(r.title)}">${icon('trash', 14)}</button>
             </div>
           </div>`).join('');
@@ -246,6 +267,7 @@ export async function renderShop(container) {
     if (!btn) return;
     if (btn.dataset.action === 'redeem') handleRedeem(btn.dataset.id);
     else if (btn.dataset.action === 'buy') handleBuy(btn.dataset.id);
+    else if (btn.dataset.action === 'edit-reward') { const r = rewards.find((x) => x.id === btn.dataset.id); if (r) openDialog(r); }
     else if (btn.dataset.action === 'delete-reward') handleDeleteReward(btn.dataset.id);
   });
 

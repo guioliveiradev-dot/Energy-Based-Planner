@@ -9,6 +9,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([t
 let locks = 0;
 let uid = 0;
 const stack = [];   // janelas abertas; a última é a de cima
+const waiters = [];  // funções esperando todas as janelas fecharem
 
 // Bloqueia o fundo (#app) enquanto houver alguma janela aberta. Também usado pelo Onboarding.
 export function lockBackground() {
@@ -17,7 +18,19 @@ export function lockBackground() {
 }
 export function unlockBackground() {
   locks = Math.max(0, locks - 1);
-  if (locks === 0) document.getElementById('app')?.removeAttribute('inert');
+  if (locks === 0) {
+    document.getElementById('app')?.removeAttribute('inert');
+    waiters.splice(0).forEach((fn) => fn());   // quem estava esperando as janelas fecharem
+  }
+}
+
+// Fila de janelas: há alguma janela (ou o tutorial) aberta agora?
+export const isModalOpen = () => locks > 0;
+
+// Executa fn quando não houver nenhuma janela aberta (na hora, se já não houver). Usado pelas conquistas
+// para não aparecerem por cima da janela de parabéns.
+export function whenModalsClosed(fn) {
+  if (locks === 0) fn(); else waiters.push(fn);
 }
 
 export function createModal({ className = '', overlayClass = '', onRequestClose } = {}) {

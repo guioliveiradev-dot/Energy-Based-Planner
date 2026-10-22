@@ -33,3 +33,6 @@ ou aumente `VERSION` em `sw.js` e publique de novo. O Pages pode levar alguns mi
 - Nenhum arquivo usa endereço começando com `/` (que quebraria na subpasta).
 - O manifest e todos os ícones usam caminhos relativos e os arquivos existem.
 - O `.nojekyll` evita que o GitHub processe os arquivos como site Jekyll.
+
+## Painel admin no site publicado
+O painel admin (8 toques em "Home") **só abre no seu computador** (`localhost`). No endereço do GitHub Pages ele fica desligado de propósito, para ninguém mexer nos dados por ali. Se quiser liberar para amigos testarem, acrescente o endereço em `ADMIN_HOSTS`, no arquivo `js/config.js`.

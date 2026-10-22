@@ -181,6 +181,14 @@ export const deleteRoutineBlock = (id) => deleteOne('routineBlocks', id);
 export const getUserRewards = (userId) => getAllByUser('rewards', userId);
 export const createReward = (reward) => addOne('rewards', reward);
 export const deleteReward = (id) => deleteOne('rewards', id);
+// Muda título e/ou custo de uma recompensa (o resto fica igual). Devolve a recompensa nova, ou null se não existe.
+export async function updateReward(id, changes) {
+  const reward = await getOne('rewards', id);
+  if (!reward) return null;
+  const next = { ...reward, ...changes, id: reward.id, userId: reward.userId };
+  await putOne('rewards', next);
+  return next;
+}
 
 // ---------- Histórico de resgates ----------
 export const addRedemptionRecord = (record) => addOne('redemptionHistory', record);

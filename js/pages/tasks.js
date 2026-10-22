@@ -6,6 +6,7 @@ import { icon } from '../icons.js';
 import { escapeHtml, toast, formatDuration } from '../ui.js';
 import { recordTaskForPet } from '../pets.js';
 import { onDataChanged } from '../events.js';
+import { SORTS, DEFAULT_SORT, isSortId, matchesSearch, sortTasks, isOverdue, deadlineNote } from '../task-view.js';
 import { applyPetPowers, getStreakExtra } from '../pet-powers.js';
 import { CATEGORY_LABELS, CATEGORY_EMOJI } from '../categories.js';
 import { energyBadge } from '../components/energy-slider.js';
@@ -32,6 +33,10 @@ export async function renderTasks(container) {
 
   let tasks = [];
   let filterCategory = null;
+  let filterOverdue = false;     // só as que passaram do prazo
+  let searchText = '';
+  const sortKey = `energy-planner-tasks-sort-${user.id}`;
+  let sortId = isSortId(localStorage.getItem(sortKey)) ? localStorage.getItem(sortKey) : DEFAULT_SORT;
   const timers = new Map(); // id da tarefa -> cronômetro (guarda o estado de pausa)
 
   container.innerHTML = `
@@ -40,12 +45,27 @@ export async function renderTasks(container) {
         <h1 style="font-size:1.125rem;font-weight:700">Tarefas</h1>
         <span class="muted xs" id="count"></span>
       </div>
+      <div class="stack" id="tools" style="gap:0.5rem" hidden>
+        <div class="field">
+          <label class="sr-only" for="task-search">Buscar tarefas</label>
+          <span class="field-icon">${icon('search', 16)}</span>
+          <input class="input" id="task-search" type="search" placeholder="Buscar por nome ou categoria" autocomplete="off" maxlength="60">
+        </div>
+        <div class="row" style="gap:0.5rem">
+          <label class="muted xs" for="task-sort" style="white-space:nowrap">Ordenar por</label>
+          <select class="input" id="task-sort">${SORTS.map((s) => `<option value="${s.id}">${s.label}</option>`).join('')}</select>
+        </div>
+      </div>
       <div id="list" class="stack" style="gap:1rem"></div>
       <button class="fab btn-neon" id="fab" aria-label="Nova tarefa">${icon('plus', 28)}</button>
     </section>`;
 
   const listEl = container.querySelector('#list');
   const countEl = container.querySelector('#count');
+  const toolsEl = container.querySelector('#tools');
+  const searchEl = container.querySelector('#task-search');
+  const sortEl = container.querySelector('#task-sort');
+  sortEl.value = sortId;
 
   // ---------- Janela "Nova Tarefa" ----------
   const dialog = createModal();
@@ -246,6 +266,7 @@ export async function renderTasks(container) {
               ${energyBadge(task.energyCost)}
               <span class="muted tiny">${formatDuration(task.durationMinutes)}</span>
               ${task.deadline ? `<span class="muted tiny">📅 ${pad2(new Date(task.deadline).getDate())}/${pad2(new Date(task.deadline).getMonth() + 1)}</span>` : ''}
+              ${deadlineNote(task) ? `<span class="badge-soft overdue-note ${isOverdue(task) ? 'is-overdue' : ''}">${icon('calendar', 12)} ${deadlineNote(task)}</span>` : ''}
               ${isRecurring(task) ? `<span class="muted tiny">🔁 ${repeatLabel(task.repeat.days)}</span>` : ''}
               ${scheduled ? `<span class="badge-soft">${comesBackLabel(task)}</span>` : ''}
             </div>
@@ -266,35 +287,48 @@ export async function renderTasks(container) {
     lastAvailableKey = availableKey();
 
     if (filterCategory && !pending.some((t) => t.category === filterCategory)) filterCategory = null;
+    const overdueCount = pending.filter((t) => isOverdue(t)).length;
+    if (filterOverdue && overdueCount === 0) filterOverdue = false;
     const categories = [...new Set(pending.map((t) => t.category))];
-    const shown = filterCategory ? pending.filter((t) => t.category === filterCategory) : pending;
+    const filtered = pending
+      .filter((t) => (!filterCategory || t.category === filterCategory) && (!filterOverdue || isOverdue(t)) && matchesSearch(t, searchText));
+    const shown = sortTasks(filtered, sortId);
+    const scheduledShown = sortTasks(scheduled.filter((t) => matchesSearch(t, searchText)), sortId);
+    const doneShown = done.filter((t) => matchesSearch(t, searchText));
+    const searching = searchText.trim() !== '';
+    toolsEl.hidden = open.length === 0;
 
-    countEl.textContent = `${pending.length} pendentes`;
+    countEl.textContent = (searching || filterCategory || filterOverdue)
+      ? `${shown.length} de ${pending.length} pendentes`
+      : `${pending.length} pendentes${overdueCount ? ` · ${overdueCount} com prazo passado` : ''}`;
 
     const chips = pending.length > 0 ? `
       <div class="chips">
-        <button class="chip ${!filterCategory ? 'active' : ''}" data-filter="" aria-pressed="${!filterCategory}">Todas</button>
+        <button class="chip ${!filterCategory && !filterOverdue ? 'active' : ''}" data-filter="" aria-pressed="${!filterCategory && !filterOverdue}">Todas</button>
+        ${overdueCount ? `<button class="chip ${filterOverdue ? 'active' : ''}" data-overdue="1" aria-pressed="${filterOverdue}">${icon('calendar', 12)} Prazo passou (${overdueCount})</button>` : ''}
         ${categories.map((c) => `<button class="chip ${filterCategory === c ? `category-${c}` : ''}" data-filter="${c}" aria-pressed="${filterCategory === c}">${CATEGORY_EMOJI[c]} ${CATEGORY_LABELS[c]}</button>`).join('')}
       </div>` : '';
 
     const cards = shown.map((task) => cardHTML(task)).join('');
 
+    const noResults = pending.length > 0 && shown.length === 0
+      ? `<div class="center muted small stack" style="padding:1.5rem 0;align-items:center" role="status">Nenhuma tarefa encontrada${searching ? ` para “${escapeHtml(searchText.trim())}”` : ''}.<button class="btn btn-sm" data-action="clear-filters">Limpar busca e filtros</button></div>` : '';
     const empty = pending.length === 0
       ? `<div class="center muted small" style="padding:2rem 0">${scheduled.length ? 'Nada para agora. As tarefas agendadas voltam no dia certo.' : 'Nenhuma tarefa pendente. Toque em + para criar.'}</div>` : '';
 
-    const scheduledList = scheduled.length > 0 ? `
+    const scheduledList = scheduledShown.length > 0 ? `
       <div class="stack" style="gap:0.75rem;padding-top:1rem">
-        <h2 class="section-title">Agendadas (${scheduled.length})</h2>
-        ${scheduled.map((t) => cardHTML(t, true)).join('')}
+        <h2 class="section-title">Agendadas (${scheduledShown.length})</h2>
+        ${scheduledShown.map((t) => cardHTML(t, true)).join('')}
       </div>` : '';
 
-    const doneList = done.length > 0 ? `
+    const doneList = doneShown.length > 0 ? `
       <div class="stack" style="gap:0.5rem;padding-top:1rem">
-        <h2 class="section-title">Concluídas (${done.length})</h2>
-        ${done.slice(0, 5).map((t) => `<div class="glass-card done-card"><span class="small" style="text-decoration:line-through;color:hsl(var(--muted-foreground))">${escapeHtml(t.title)}</span></div>`).join('')}
+        <h2 class="section-title">Concluídas (${doneShown.length})</h2>
+        ${doneShown.slice(0, 5).map((t) => `<div class="glass-card done-card"><span class="small" style="text-decoration:line-through;color:hsl(var(--muted-foreground))">${escapeHtml(t.title)}</span></div>`).join('')}
       </div>` : '';
 
-    listEl.innerHTML = chips + cards + empty + scheduledList + doneList;
+    listEl.innerHTML = chips + cards + noResults + empty + scheduledList + doneList;
   }
 
   async function load() {
@@ -381,15 +415,24 @@ export async function renderTasks(container) {
   }
 
   listEl.addEventListener('click', (e) => {
+    const overdueChip = e.target.closest('[data-overdue]');
+    if (overdueChip) { filterOverdue = !filterOverdue; renderList(); return; }
     const chip = e.target.closest('[data-filter]');
     if (chip) {
       const cat = chip.dataset.filter || null;
       filterCategory = cat === filterCategory ? null : cat;
+      if (!cat) filterOverdue = false;              // "Todas" limpa os filtros de categoria e de prazo
       renderList();
       return;
     }
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
+    if (btn.dataset.action === 'clear-filters') {
+      searchText = ''; searchEl.value = ''; filterCategory = null; filterOverdue = false;
+      renderList();
+      searchEl.focus();
+      return;
+    }
     const task = tasks.find((t) => t.id === btn.dataset.id);
     if (!task) return;
     const action = btn.dataset.action;
@@ -398,6 +441,13 @@ export async function renderTasks(container) {
     else if (action === 'continue') getTimer(task).open();
     else if (action === 'collect') handleCollect(task.id);
     else if (action === 'delete') handleDelete(task.id);
+  });
+
+  searchEl.addEventListener('input', () => { searchText = searchEl.value; renderList(); });
+  sortEl.addEventListener('change', () => {
+    sortId = isSortId(sortEl.value) ? sortEl.value : DEFAULT_SORT;
+    localStorage.setItem(sortKey, sortId);          // lembra a escolha
+    renderList();
   });
 
   // Atualiza o estado (Continuar/Coletar) das tarefas em andamento.

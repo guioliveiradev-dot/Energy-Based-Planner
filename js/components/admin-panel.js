@@ -1,4 +1,5 @@
 // Painel admin escondido (8 toques em "Home" em 5 s). Porte de AdminPanel.tsx.
+// Só abre nos endereços de js/config.js (por padrão, só no seu computador: localhost).
 // A senha abaixo fica visível no código: serve só para esconder o painel, não é segurança.
 // Troque aqui se quiser outra.
 
@@ -10,6 +11,7 @@ import { icon } from '../icons.js';
 import { toast } from '../ui.js';
 import { ALL_PETS, getActivePet } from '../themes.js';
 import * as tools from '../admin-tools.js';
+import { isAdminAllowed } from '../config.js';
 import { emitDataChanged } from '../events.js';
 import { showPetLevelUp } from './pet-levelup.js';
 
@@ -17,6 +19,7 @@ const ADMIN_PASSWORD = 'zen123';
 let current = null;   // evita abrir dois painéis
 
 export function openAdminPanel() {
+  if (!isAdminAllowed()) return null;   // site publicado: painel desligado
   if (current) return;
 
   let authenticated = false;

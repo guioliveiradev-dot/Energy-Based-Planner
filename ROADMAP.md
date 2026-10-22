@@ -68,7 +68,7 @@ Este arquivo junta as minhas ideias com as suas. Ordem pensada para **não refaz
   - **Feito:** cartão do pet na Home (arte, vínculo, mensagem do dia gentil que muda com a hora e o que você já fez, e a missão do Robô). **Falta:** animação no cronômetro além das poses e o cronômetro mais bonito (#12).
   - **Comemoração de nível:** quando o vínculo do pet sobe de nível (concluindo tarefa ou pelo painel admin), aparece uma animação com o pet, brilhos, o nível novo e o poder novo; a Fagulha "evolui" na tela quando muda de forma. Home, Perfil e Tarefas se atualizam sozinhas quando o painel admin muda algo (`js/events.js`).
 - [x] **B7 Conquistas de pets**: feito, 5 conquistas novas (24 no total): Novo Amigo (1º pet da Loja), Matilha (3 pets), Zoológico Estelar (todos os pets da Loja), Laço Criado (um pet no nível 2 de vínculo) e Vínculo Eterno (um pet no nível 5). Avisam com a janela de conquista como as outras.
-- [ ] **B7b 2º espaço de pet liberado por nível** (opcional, **decisão pendente**): dois pets ativos ao mesmo tempo, o 2º liberado por um nível do usuário. Mexe na economia (dois poderes juntos), por isso fica de fora até você decidir.
+- [x] ~~**B7b 2º espaço de pet**~~: **descartado por decisão sua** (um pet ativo por vez).
 - Substitui o **#8** (mais pets, pets que evoluem).
 
 ### Rascunho dos poderes (os números serão ajustados)
@@ -92,9 +92,9 @@ Tarefa média = 65 pontos. Com 3 tarefas por dia (195 pontos/dia), **um bônus d
 
 ## Fase 3 · Utilidade no dia a dia
 - [ ] **#1 Estatísticas** (M): mapa de calor dos dias, tempo focado, tarefas por categoria, melhores dias, histórico de hábitos.
-- [ ] **#3 Busca, ordenação e atrasadas** (P).
+- [x] **#3 Busca, ordenação e atrasadas** (P): feito. Busca por nome ou categoria (sem acento, várias palavras), 7 ordens (lembra a escolha), aviso calmo "Prazo hoje" / "Prazo passou há N dias" e filtro "Prazo passou (N)". Regras em `js/task-view.js`.
 - [ ] **#2 Missão que respeita a rotina** (M): só sugere tarefas que cabem antes do próximo compromisso.
-- [ ] **#5 Editar recompensas** (P).
+- [x] **#5 Editar recompensas** (P): feito. Botão de lápis em cada recompensa; a mesma janela de "Nova Recompensa" vira "Editar Recompensa". O histórico de resgates antigo não muda.
 - [ ] **#9 Subtarefas e notas** (M).
 - [ ] **#7 Metas e desafios** (M): meta semanal e "missão do dia" (os pets entram aqui).
 - [x] ~~**#4 Congelar sequência**~~: decidido, só como poder dos pets (veja a decisão 7). Entra no B5.
@@ -108,7 +108,7 @@ Tarefa média = 65 pontos. Com 3 tarefas por dia (195 pontos/dia), **um bônus d
 - [ ] **#22 Setas nas abas e filtros; tamanho de texto ajustável** (P/M).
 - [ ] **#21 Teste com leitor de tela de verdade** (P, feito por você no NVDA ou VoiceOver).
 - [ ] **#26 Aviso de "nova versão disponível"** (P).
-- [ ] **#19 Senha e painel admin** (P): trocar a senha escondida no código por algo melhor, ou remover o painel.
+- [x] **#19 Senha e painel admin** (P): feito. O painel admin agora **só abre em `localhost`/`127.0.0.1`** (lista em `js/config.js`); no site publicado ele fica desligado, então a senha escrita no código não expõe nada. Para liberar a amigos, acrescente o endereço em `ADMIN_HOSTS`.
 - [ ] **#24 Testes no navegador de verdade** (M): rodam na sua máquina. Eu não tenho navegador aqui, então não consigo executá-los, e isso me faria entregar testes sem ter visto passar. Por isso o guia de estilo (A0) e as suas capturas de tela são a nossa checagem visual.
 - [ ] **#18 Sincronizar entre aparelhos** (G): só se você usar em mais de um aparelho. Exige servidor ou serviço externo.
 
@@ -119,6 +119,8 @@ Você aprovou a paleta e pediu só cores e fonte. Ficou assim:
 - O visual antigo virou **Neon (clássico)**, **vendido na Loja por 3500 pontos** (perto do Prata Lunar, 5000), com a fonte antiga (Orbitron). Quem já tinha conta ganhou o Neon de graça no inventário. Os temas antigos da Loja ficam como estavam (inclusive a fonte).
 - Mudou o que era "decisão 1" abaixo: o Neon **não** é grátis, e não há modo automático (o aparelho não decide sozinho).
 - Pendente (A5): redesenhar os 6 temas antigos da Loja. Pares de cor que ainda falham no contraste estão só neles (e no Neon).
+
+- **Conquistas em fila:** a conquista nunca aparece por cima de outra janela. Espera a janela de parabéns (ou qualquer outra) fechar e, se vierem várias, aparecem uma de cada vez (`js/components/modal.js`: `whenModalsClosed`).
 
 ## Decisões tomadas (15/10/2026)
 Você me deixou decidir. Tudo abaixo é a minha escolha, com o motivo. **Dá para mudar qualquer uma; só a 8 depende de um fato seu e precisa de confirmação.**

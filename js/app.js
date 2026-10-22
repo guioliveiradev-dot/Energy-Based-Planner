@@ -10,6 +10,7 @@ import { icon } from './icons.js';
 import { showOnboarding } from './components/onboarding.js';
 import { startAchievementWatcher } from './components/achievement-notification.js';
 import { openAdminPanel } from './components/admin-panel.js';
+import { isAdminAllowed } from './config.js';
 import { renderLogin } from './pages/login.js';
 import { renderHome } from './pages/home.js';
 import { renderTasks } from './pages/tasks.js';
@@ -94,7 +95,7 @@ function mountApp(user) {
   root.querySelector('.nav-tab[data-path="/"]').addEventListener('click', () => {
     const now = Date.now();
     homeClicks = [...homeClicks, now].filter((t) => now - t < 5000);
-    if (homeClicks.length >= 8) { homeClicks = []; openAdminPanel(); }
+    if (homeClicks.length >= 8) { homeClicks = []; if (isAdminAllowed()) openAdminPanel(); }   // só em localhost (js/config.js)
   });
 
   const links = root.querySelectorAll('.nav-tab');
