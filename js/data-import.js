@@ -5,6 +5,7 @@ import { FREE_THEMES, SHOP_THEMES, SHOP_PETS, ALL_PETS } from './themes.js';
 import { CATEGORY_LABELS } from './categories.js';
 import { DB_VERSION } from './db.js';
 import { cleanPetState } from './pet-state.js';
+import { cleanNotes, cleanSubtasks } from './subtasks.js';
 
 const MAX_CHARS = 5 * 1024 * 1024;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -54,6 +55,7 @@ export function parseImport(text) {
       pausedAt: isNum(t.pausedAt) ? t.pausedAt : null, pauseOffset: isNum(t.pauseOffset) && t.pauseOffset >= 0 ? t.pauseOffset : 0,
       repeat: cleanRepeat(t.repeat), availableFrom: isNum(t.availableFrom) ? t.availableFrom : null,
       createdAt: isNum(t.createdAt) ? t.createdAt : Date.now(),
+      notes: cleanNotes(t.notes), subtasks: cleanSubtasks(t.subtasks),
     };
   });
 

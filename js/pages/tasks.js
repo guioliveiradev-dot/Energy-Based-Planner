@@ -6,6 +6,7 @@ import { icon } from '../icons.js';
 import { escapeHtml, toast, formatDuration } from '../ui.js';
 import { recordTaskForPet } from '../pets.js';
 import { onDataChanged } from '../events.js';
+import { MAX_SUBTASKS, newSubtask, cleanSubtasks, cleanNotes, subtaskProgress, toggleSubtask } from '../subtasks.js';
 import { SORTS, DEFAULT_SORT, isSortId, matchesSearch, sortTasks, isOverdue, deadlineNote } from '../task-view.js';
 import { applyPetPowers, getStreakExtra } from '../pet-powers.js';
 import { CATEGORY_LABELS, CATEGORY_EMOJI } from '../categories.js';
@@ -115,6 +116,19 @@ export async function renderTasks(container) {
           ${Object.keys(CATEGORY_LABELS).map((c) => `<option value="${c}">${CATEGORY_EMOJI[c]} ${CATEGORY_LABELS[c]}</option>`).join('')}
         </select>
       </div>
+      <div>
+        <label class="label muted xs" for="t-notes">Notas (opcional)</label>
+        <textarea class="input" id="t-notes" rows="3" maxlength="500" placeholder="Detalhes, links, o que lembrar..."></textarea>
+      </div>
+      <fieldset class="sub-edit">
+        <legend class="label muted xs">Etapas (opcional)</legend>
+        <ul class="sub-edit-list" id="t-sub-list"></ul>
+        <div class="row" style="gap:0.5rem">
+          <label class="sr-only" for="t-sub-new">Nova etapa</label>
+          <input class="input" id="t-sub-new" placeholder="Ex: Separar os materiais" maxlength="80" style="flex:1">
+          <button type="button" class="btn" id="t-sub-add">Adicionar</button>
+        </div>
+      </fieldset>
       <button class="btn-neon btn-block" id="t-create" disabled>Criar Tarefa</button>
     </div>`;
 
@@ -123,6 +137,23 @@ export async function renderTasks(container) {
   const hoursEl = f('#t-hours'), minutesEl = f('#t-minutes');
   const deadlineEl = f('#t-deadline'), categoryEl = f('#t-category'), createBtn = f('#t-create');
   const repeatEl = f('#t-repeat'), daysEl = f('#t-days');
+  const notesEl = f('#t-notes'), subListEl = f('#t-sub-list'), subNewEl = f('#t-sub-new'), subAddBtn = f('#t-sub-add');
+  let formSubs = [];     // etapas no formulário
+
+  function renderFormSubs() {
+    subListEl.innerHTML = formSubs.map((s) => `<li><span>${escapeHtml(s.title)}</span><button type="button" class="icon-btn destructive" data-remove="${s.id}" aria-label="Remover etapa ${escapeHtml(s.title)}">${icon('x', 14)}</button></li>`).join('');
+    const full = formSubs.length >= MAX_SUBTASKS;
+    subAddBtn.disabled = full;
+    subNewEl.disabled = full;
+    subNewEl.placeholder = full ? `Limite de ${MAX_SUBTASKS} etapas` : 'Ex: Separar os materiais';
+  }
+  function addFormSub() {
+    if (!subNewEl.value.trim() || formSubs.length >= MAX_SUBTASKS) return;
+    formSubs.push(newSubtask(subNewEl.value));
+    subNewEl.value = '';
+    renderFormSubs();
+    subNewEl.focus();
+  }
 
   // Dias escolhidos no formulário (lista ordenada) ou null se não repete
   function getRepeatDays() {
@@ -149,6 +180,7 @@ export async function renderTasks(container) {
     titleEl.value = ''; energyEl.value = '5'; hoursEl.value = '1'; minutesEl.value = '0';
     minutesEl.disabled = false; deadlineEl.value = ''; categoryEl.value = 'work';
     setRepeatDays(null);
+    notesEl.value = ''; formSubs = []; subNewEl.value = ''; renderFormSubs();
     createBtn.disabled = true;
     paintEnergy();
   }
@@ -170,6 +202,10 @@ export async function renderTasks(container) {
       deadlineEl.value = task.deadline ? toDateInput(task.deadline) : '';
       categoryEl.value = task.category;
       setRepeatDays(task.repeat?.days || null);
+      notesEl.value = task.notes || '';
+      formSubs = cleanSubtasks(task.subtasks);
+      subNewEl.value = '';
+      renderFormSubs();
       heading.textContent = 'Editar Tarefa';
       createBtn.textContent = 'Salvar';
       createBtn.disabled = false;
@@ -196,6 +232,15 @@ export async function renderTasks(container) {
     minutesEl.value = String(Math.max(0, Math.min(59, parseInt(minutesEl.value) || 0)));
   });
   repeatEl.addEventListener('change', () => { daysEl.hidden = repeatEl.value !== 'custom'; });
+  subAddBtn.addEventListener('click', addFormSub);
+  subNewEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addFormSub(); } });
+  subListEl.addEventListener('click', (e) => {
+    const id = e.target.closest('[data-remove]')?.dataset.remove;
+    if (!id) return;
+    formSubs = formSubs.filter((s) => s.id !== id);
+    renderFormSubs();
+    subNewEl.focus();
+  });
   dialog.panel.querySelector('[data-role="close"]').addEventListener('click', () => dialog.close());
 
   createBtn.addEventListener('click', async () => {
@@ -214,6 +259,7 @@ export async function renderTasks(container) {
     const fields = {
       title, energyCost: Number(energyEl.value), durationMinutes: dur, deadline, category: categoryEl.value,
       repeat: days && days.length ? { days } : null,
+      notes: cleanNotes(notesEl.value), subtasks: cleanSubtasks(formSubs),
     };
     const existing = editingId && tasks.find((t) => t.id === editingId);
     if (existing) {
@@ -246,6 +292,18 @@ export async function renderTasks(container) {
   const availableKey = () => tasks.filter((t) => !t.completed && isAvailable(t)).map((t) => t.id).join(',');
   let lastAvailableKey = '';
 
+  // Etapas e notas: botão que abre e fecha (lembra quais estão abertas)
+  const expanded = new Set();
+  function moreHTML(task) {
+    const prog = subtaskProgress(task);
+    if (!prog.total && !task.notes) return '';
+    const open = expanded.has(task.id);
+    const label = [prog.total ? `Etapas ${prog.done}/${prog.total}` : '', task.notes ? 'Notas' : ''].filter(Boolean).join(' · ');
+    const steps = prog.total ? `<ul class="sub-list">${task.subtasks.map((s) => `<li><label class="sub-check"><input type="checkbox" data-sub="${s.id}" data-id="${task.id}" ${s.done ? 'checked' : ''}><span>${escapeHtml(s.title)}</span></label></li>`).join('')}</ul>` : '';
+    return `<button type="button" class="task-more-btn" data-action="toggle-more" data-id="${task.id}" aria-expanded="${open}"${open ? ` aria-controls="more-${task.id}"` : ''}>${label}</button>
+      ${open ? `<div class="task-more stack" id="more-${task.id}" style="gap:0.5rem">${steps}${task.notes ? `<p class="small task-notes">${escapeHtml(task.notes)}</p>` : ''}</div>` : ''}`;
+  }
+
   function cardHTML(task, scheduled = false) {
     const status = getTaskStatus(task);
     let action;
@@ -276,6 +334,7 @@ export async function renderTasks(container) {
             <button class="icon-btn destructive" data-action="delete" data-id="${task.id}" aria-label="Excluir ${escapeHtml(task.title)}">${icon('trash', 14)}</button>
           </div>
         </div>
+        ${moreHTML(task)}
       </div>`;
   }
 
@@ -427,6 +486,13 @@ export async function renderTasks(container) {
     }
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
+    if (btn.dataset.action === 'toggle-more') {
+      const id = btn.dataset.id;
+      if (expanded.has(id)) expanded.delete(id); else expanded.add(id);
+      renderList();
+      listEl.querySelector(`[data-action="toggle-more"][data-id="${id}"]`)?.focus();
+      return;
+    }
     if (btn.dataset.action === 'clear-filters') {
       searchText = ''; searchEl.value = ''; filterCategory = null; filterOverdue = false;
       renderList();
@@ -441,6 +507,17 @@ export async function renderTasks(container) {
     else if (action === 'continue') getTimer(task).open();
     else if (action === 'collect') handleCollect(task.id);
     else if (action === 'delete') handleDelete(task.id);
+  });
+
+  // Marcar e desmarcar etapas (guarda na hora e mantém o foco no mesmo quadradinho)
+  listEl.addEventListener('change', async (e) => {
+    const box = e.target.closest('[data-sub]');
+    if (!box) return;
+    const task = tasks.find((t) => t.id === box.dataset.id);
+    if (!task) return;
+    await updateTask({ ...task, subtasks: toggleSubtask(task.subtasks, box.dataset.sub) });
+    await load();
+    listEl.querySelector(`[data-sub="${box.dataset.sub}"]`)?.focus();
   });
 
   searchEl.addEventListener('input', () => { searchText = searchEl.value; renderList(); });

@@ -23,6 +23,10 @@ export default [
     languageOptions: { ecmaVersion: 'latest', sourceType: 'script', globals: globals.serviceworker },
   },
   {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.node },
+  },
+  {
     files: ['tests/**/*.mjs'],
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.node, ...globals.browser } },
     rules: { 'no-unused-vars': 'off', 'no-empty': 'off' },

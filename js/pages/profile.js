@@ -8,6 +8,10 @@ import { powerText, getStreakExtra } from '../pet-powers.js';
 import { petInfoHTML } from '../components/pet-info.js';
 import { importPetState } from '../pet-state.js';
 import { onDataChanged } from '../events.js';
+import { APP_VERSION } from '../version.js';
+import { computeStats } from '../stats.js';
+import { statsHTML } from '../components/stats-view.js';
+import { checkForUpdate, showUpdateBanner } from '../update-check.js';
 import { icon } from '../icons.js';
 import { escapeHtml, toast } from '../ui.js';
 import { totalPointsEarned } from '../achievements.js';
@@ -70,8 +74,9 @@ export async function renderProfile(container) {
   container.innerHTML = `
     <section class="page" style="gap:1.25rem">
       <h1 style="font-size:1.125rem;font-weight:700">Perfil</h1>
-      <div class="tabs" role="tablist">
+      <div class="tabs tabs-3" role="tablist">
         <button class="tab active" role="tab" aria-selected="true" data-tab="profile">👤 Perfil</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="stats">📊 Estatísticas</button>
         <button class="tab" role="tab" aria-selected="false" data-tab="inventory">🎒 Inventário</button>
       </div>
       <div id="tab-content" class="stack" style="gap:1.25rem"></div>
@@ -138,6 +143,8 @@ export async function renderProfile(container) {
       </div>
 
       <div class="stack" style="padding-top:0.5rem">
+        <button class="glass-card card-btn" data-act="update"><span class="text-primary">${icon('rotate-ccw', 18)}</span>
+          <span style="flex:1"><span class="card-title">Verificar atualização</span><span class="card-sub">Versão do app: ${APP_VERSION}</span></span></button>
         <button class="glass-card card-btn" data-act="tutorial"><span class="text-accent">${icon('book-open', 18)}</span>
           <span style="flex:1"><span class="card-title">Rever Tutorial</span><span class="card-sub">Veja novamente como usar o app</span></span></button>
         <button class="glass-card card-btn" data-act="export"><span class="text-primary">${icon('download', 18)}</span>
@@ -188,7 +195,11 @@ export async function renderProfile(container) {
       </div>`;
   }
 
-  const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : renderInventoryTab());
+  function renderStatsTab() {
+    content.innerHTML = statsHTML(computeStats(tasks, Date.now(), streakExtra));
+  }
+
+  const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : activeTab === 'stats' ? renderStatsTab() : renderInventoryTab());
 
   async function load() {
     const u = user();
@@ -214,6 +225,12 @@ export async function renderProfile(container) {
       console.error(e);
       toast('Não foi possível exportar. Veja o Console (F12).', 'error');
     }
+  }
+
+  async function handleUpdateCheck() {
+    const { status } = await checkForUpdate();
+    if (status === 'new') showUpdateBanner();
+    else toast(status === 'same' ? 'Você já está na versão mais recente.' : 'Não deu para verificar agora. Confira a internet e tente de novo.', status === 'same' ? 'success' : 'info');
   }
 
   async function handlePersist() {
@@ -335,6 +352,7 @@ export async function renderProfile(container) {
     if (act === 'tutorial') { localStorage.removeItem('energy-planner-onboarded'); window.location.reload(); }
     else if (act === 'export') handleExport();
     else if (act === 'persist') handlePersist();
+    else if (act === 'update') handleUpdateCheck();
     else if (act === 'import') fileInput.click();
     else if (act === 'logout') { await auth.logout(); toast('Sessão encerrada.'); }
   });

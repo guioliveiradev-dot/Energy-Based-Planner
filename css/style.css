@@ -689,3 +689,70 @@ html[data-theme="gold"] { --pet-body: #666462; --pet-base: #504E4C; --pet-face: 
 /* ---------- Tarefas: aviso de prazo (calmo, sem alarme) ---------- */
 .overdue-note { display: inline-flex; align-items: center; gap: 0.25rem; }
 .overdue-note.is-overdue { background: hsl(var(--warning) / 0.12); color: hsl(var(--warning)); }
+
+/* ---------- Aviso de versão nova (js/update-check.js) ---------- */
+.update-banner { position: fixed; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 0.5rem); z-index: 150; width: min(28rem, calc(100% - 1.5rem)); display: flex; flex-direction: column; gap: 0.5rem; padding: 0.875rem 1rem; border-radius: 0.875rem; background: hsl(var(--popover)); color: hsl(var(--popover-foreground)); border: 1px solid hsl(var(--primary) / 0.4); box-shadow: 0 8px 28px rgb(0 0 0 / 0.25); animation: update-in 0.35s ease-out both; }
+.update-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.update-actions > * { flex: 1 1 8rem; }
+@keyframes update-in { from { opacity: 0; transform: translate(-50%, -0.75rem); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* ---------- Estatísticas (aba do Perfil) ---------- */
+.tabs-3 { grid-template-columns: repeat(3, 1fr); }
+.tabs-3 .tab { font-size: 0.8125rem; padding: 0.5rem 0.25rem; white-space: normal; line-height: 1.2; }
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+.stat-tile { display: flex; flex-direction: column; gap: 0.125rem; padding: 0.75rem; border-radius: 0.75rem; background: hsl(var(--secondary) / 0.6); }
+.stat-value { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; }
+.heat-wrap { display: flex; flex-direction: column; gap: 0.25rem; }
+.heat-months, .heat { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; }
+.heat-months span { font-size: 0.75rem; line-height: 1rem; color: hsl(var(--muted-foreground)); white-space: nowrap; overflow: visible; }
+.heat { grid-template-rows: repeat(7, auto); grid-auto-flow: column; }
+.heat-cell { display: inline-block; aspect-ratio: 1; border-radius: 3px; background: hsl(var(--muted)); box-shadow: inset 0 0 0 1px hsl(var(--border)); }
+.heat-cell.h1 { background: hsl(var(--accent) / 0.28); box-shadow: none; }
+.heat-cell.h2 { background: hsl(var(--accent) / 0.5); box-shadow: none; }
+.heat-cell.h3 { background: hsl(var(--accent) / 0.75); box-shadow: none; }
+.heat-cell.h4 { background: hsl(var(--accent)); box-shadow: none; }
+.heat-cell.future { opacity: 0.35; }
+.heat-cell.today { outline: 2px solid hsl(var(--foreground)); outline-offset: 1px; }
+.heat-legend { display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+.heat-legend .heat-cell { width: 0.875rem; }
+.stat-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.stat-list li { display: grid; grid-template-columns: minmax(6.5rem, 1fr) 2fr auto; align-items: center; gap: 0.5rem; }
+.stat-track { height: 0.5rem; border-radius: 999px; background: hsl(var(--muted)); overflow: hidden; box-shadow: inset 0 0 0 1px hsl(var(--border)); }
+.stat-track i { display: block; height: 100%; border-radius: 999px; background: hsl(var(--accent)); }
+.stat-list li.best .stat-label { font-weight: 700; }
+.stat-num { text-align: right; font-variant-numeric: tabular-nums; }
+.stat-list.habits li { grid-template-columns: minmax(6.5rem, 1fr) 4.5rem auto; }
+.habit-weeks { display: flex; align-items: flex-end; gap: 3px; height: 1.5rem; }
+.habit-weeks i { flex: 1; background: hsl(var(--accent)); border-radius: 2px; }
+.habit-weeks i.zero { background: hsl(var(--muted)); box-shadow: inset 0 0 0 1px hsl(var(--border)); }
+.habit-note { grid-column: 1 / -1; }
+
+/* ---------- Tarefas: etapas e notas ---------- */
+.sub-edit { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.sub-edit-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.375rem; }
+.sub-edit-list li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.25rem 0.5rem 0.25rem 0.75rem; border-radius: 0.5rem; background: hsl(var(--secondary) / 0.6); font-size: 0.875rem; }
+.task-more-btn { align-self: flex-start; min-height: 2.75rem; padding: 0 0.25rem; background: none; border: 0; cursor: pointer; font-size: 0.875rem; font-weight: 600; color: hsl(var(--primary)); display: inline-flex; align-items: center; }
+.task-more-btn::after { content: '▸'; margin-left: 0.5rem; transition: transform 0.2s; }
+.task-more-btn[aria-expanded="true"]::after { transform: rotate(90deg); }
+.sub-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.sub-check { display: flex; align-items: center; gap: 0.75rem; min-height: 2.75rem; cursor: pointer; font-size: 0.875rem; }
+.sub-check input { width: 1.25rem; height: 1.25rem; flex-shrink: 0; accent-color: hsl(var(--accent)); }
+.sub-check input:checked + span { text-decoration: line-through; opacity: 0.65; }
+.task-notes { white-space: pre-wrap; overflow-wrap: anywhere; color: hsl(var(--muted-foreground)); }
+
+/* ---------- Cronômetro: anel de progresso e modo foco ---------- */
+.timer-ring { position: relative; width: 12rem; height: 12rem; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.timer-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); fill: none; }
+.ring-track { stroke: hsl(var(--muted)); stroke-width: 6; }
+.ring-arc { stroke: hsl(var(--primary)); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.9s linear, stroke 0.3s; }
+.ring-arc[data-state="paused"] { stroke: hsl(var(--muted-foreground)); }
+.ring-arc[data-state="done"] { stroke: hsl(var(--success)); }
+.timer-ring .timer-time { position: relative; font-size: 2.5rem; }
+.timer-focus-btn { position: absolute; top: 0.75rem; left: 0.75rem; width: 2.75rem; height: 2.75rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 0; background: transparent; color: hsl(var(--muted-foreground)); cursor: pointer; }
+.timer-focus-btn:hover { color: hsl(var(--foreground)); background: hsl(var(--muted)); }
+.modal-overlay.timer-focus { padding: 0; }
+.timer-panel.focus-mode { width: 100%; max-width: none; height: 100%; max-height: none; border-radius: 0; justify-content: center; overflow: auto; }
+.timer-panel.focus-mode .timer-ring { width: min(70vmin, 26rem); height: min(70vmin, 26rem); }
+.timer-panel.focus-mode .timer-ring .timer-time { font-size: clamp(3rem, 14vmin, 7rem); }
+.timer-panel.focus-mode .timer-title { font-size: 1.125rem; }
+.timer-panel.focus-mode [data-role="actions"] { width: min(24rem, 100%); }

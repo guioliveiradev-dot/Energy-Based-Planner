@@ -10,6 +10,9 @@
 //   timer.open();     // abre a janela
 //   timer.destroy();  // fecha e limpa tudo
 //
+// O tempo aparece dentro de um anel que se enche conforme o tempo passa. O botão no canto abre o MODO FOCO:
+// o cronômetro ocupa a tela toda (e, se o navegador deixar, entra em tela cheia). Esc sai do modo foco primeiro.
+//
 // Fechar a janela com o tempo rodando pausa o cronômetro (igual ao original).
 // As animações do pet estão em css/style.css, controladas por data-state.
 
@@ -80,16 +83,23 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
   let lastActionState = null;
   let savedTitle = null;   // título da aba antes de abrir o cronômetro
 
-  const modal = createModal({ className: 'timer-panel center stack', onRequestClose: () => close() });
+  let focusOn = false;
+  const modal = createModal({ className: 'timer-panel center stack', onRequestClose: () => { if (focusOn) setFocus(false); else close(); } });
   modal.panel.innerHTML = `
     <button class="modal-close" data-role="close" aria-label="Fechar">${icon('x', 18)}</button>
+    <button class="timer-focus-btn" data-role="focus" aria-pressed="false" aria-label="Modo foco (tela cheia)">${icon('maximize-2', 18)}</button>
     <div class="stack" style="align-items:center;gap:0.5rem">
       <span class="text-primary">${icon('timer', 24)}</span>
       <h2 class="timer-title">${escapeHtml(taskTitle)}</h2>
     </div>
     <div class="stack" style="gap:1rem">
-      <p class="timer-time" data-role="time">00:00</p>
-      <div class="progress"><div class="progress-bar" data-role="bar"></div></div>
+      <div class="timer-ring">
+        <svg viewBox="0 0 120 120" role="progressbar" aria-label="Tempo da tarefa" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-role="ring">
+          <circle class="ring-track" cx="60" cy="60" r="54" pathLength="100"/>
+          <circle class="ring-arc" data-role="arc" cx="60" cy="60" r="54" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+        </svg>
+        <p class="timer-time" data-role="time">00:00</p>
+      </div>
       <p class="timer-paused" data-role="paused" hidden>⏸ Pausado</p>
     </div>
     ${pet ? petHTML(pet) : ''}
@@ -97,7 +107,9 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
 
   const q = (role) => modal.panel.querySelector(`[data-role="${role}"]`);
   const timeEl = q('time');
-  const barEl = q('bar');
+  const ringEl = q('ring');
+  const arcEl = q('arc');
+  const focusBtn = q('focus');
   const pausedEl = q('paused');
   const actionsEl = q('actions');
   const stage = modal.panel.querySelector('.pet-stage');
@@ -143,8 +155,9 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
     if (modal.isOpen) {
       document.title = isDone ? `✅ Tempo esgotado · ${taskTitle}` : `${timeEl.textContent}${isPaused ? ' (pausado)' : ''} · ${taskTitle}`;
     }
-    barEl.style.width = `${progress * 100}%`;
-    barEl.dataset.state = state;
+    arcEl.style.strokeDashoffset = String(Math.round((1 - progress) * 1000) / 10);   // anel que se enche
+    arcEl.dataset.state = state;
+    ringEl.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
     pausedEl.hidden = !(isPaused && !isDone);
     paintActions();
 
@@ -219,6 +232,23 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
     tick();
   }
 
+  // Modo foco: o cronômetro ocupa a tela. Tenta a tela cheia do navegador (se ele não deixar, só ocupa a janela).
+  function setFocus(on) {
+    if (on === focusOn) return;
+    focusOn = on;
+    modal.panel.classList.toggle('focus-mode', on);
+    modal.panel.parentElement?.classList.toggle('timer-focus', on);
+    focusBtn.setAttribute('aria-pressed', String(on));
+    focusBtn.setAttribute('aria-label', on ? 'Sair do modo foco' : 'Modo foco (tela cheia)');
+    focusBtn.innerHTML = icon(on ? 'minimize-2' : 'maximize-2', 18);
+    try {
+      if (on && modal.panel.requestFullscreen) modal.panel.requestFullscreen().catch(() => {});
+      else if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    } catch { /* sem tela cheia: segue só com o modo foco */ }
+  }
+  const onFullscreenChange = () => { if (focusOn && !document.fullscreenElement && modal.panel.requestFullscreen) setFocus(false); };
+  document.addEventListener('fullscreenchange', onFullscreenChange);
+
   function restoreTitle() {
     if (savedTitle !== null) document.title = savedTitle;
     savedTitle = null;
@@ -228,6 +258,8 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
     pause();           // fechar com o tempo rodando pausa (igual ao original)
     stopTick();
     stopBubbles();
+    setFocus(false);
+    document.removeEventListener('fullscreenchange', onFullscreenChange);
     modal.close();
     restoreTitle();
   }
@@ -248,6 +280,7 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
     if (action === 'pause') pause();
     else if (action === 'resume') resume();
     else if (action === 'collect') onComplete();
+    else if (e.target.closest('[data-role="focus"]')) setFocus(!focusOn);
     else if (e.target.closest('[data-role="close"]')) close();
   });
 
@@ -255,6 +288,7 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
     open,
     close,
     get isOpen() { return modal.isOpen; },
-    destroy() { stopTick(); stopBubbles(); modal.close(); restoreTitle(); },
+    get focusMode() { return focusOn; },
+    destroy() { stopTick(); stopBubbles(); setFocus(false); document.removeEventListener('fullscreenchange', onFullscreenChange); modal.close(); restoreTitle(); },
   };
 }

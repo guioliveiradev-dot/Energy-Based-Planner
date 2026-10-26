@@ -5,6 +5,8 @@
 // Campos novos da tarefa:
 //   repeat:        null  ou  { days: [0..6] }   (0 = domingo ... 6 = sábado)
 //   availableFrom: null  ou  momento (ms) a partir do qual ela aparece como tarefa de hoje
+import { resetSubtasks } from './subtasks.js';
+
 
 export const WEEKDAYS = [
   { value: 1, label: 'Seg' }, { value: 2, label: 'Ter' }, { value: 3, label: 'Qua' },
@@ -71,6 +73,8 @@ export function nextInstance(task, completedAt = Date.now(), newId = () => crypt
     createdAt: Date.now(),
     repeat: { days: [...task.repeat.days] },
     availableFrom,
+    notes: task.notes || '',                       // notas e etapas se repetem (etapas desmarcadas)
+    subtasks: resetSubtasks(task.subtasks, newId),
   };
 }
 

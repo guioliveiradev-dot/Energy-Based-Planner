@@ -43,6 +43,7 @@ Os dados ficam no navegador e são separados por endereço. Se publicar em outro
 São 360 verificações (login, Home, Tarefas, Rotina, Loja, Perfil, importação, admin, acessibilidade, pausa do cronômetro, níveis, sequência, hábitos, backup, versão do banco e publicação).
 Precisa do Node.js. Na pasta do projeto: `npm install` (uma vez) e depois `npm test`.
 Rode depois de editar qualquer coisa: se algo quebrou, ele diz qual. O app em si não usa npm.
+`npm run release` roda os testes e carimba a versão antes de publicar (veja docs/PUBLICAR.md).
 `npm run lint` aponta erros de código (instale a extensão ESLint no VS Code para ver os avisos enquanto edita).
 
 ## Regras para editar sem quebrar

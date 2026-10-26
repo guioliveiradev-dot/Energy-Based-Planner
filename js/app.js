@@ -11,6 +11,7 @@ import { showOnboarding } from './components/onboarding.js';
 import { startAchievementWatcher } from './components/achievement-notification.js';
 import { openAdminPanel } from './components/admin-panel.js';
 import { isAdminAllowed } from './config.js';
+import { startUpdateCheck } from './update-check.js';
 import { renderLogin } from './pages/login.js';
 import { renderHome } from './pages/home.js';
 import { renderTasks } from './pages/tasks.js';
@@ -148,6 +149,8 @@ update();
 auth.init();
 
 // App instalável + funciona sem internet (veja sw.js)
+if (location.protocol.startsWith('http')) startUpdateCheck();   // avisa quando há versão nova publicada
+
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch((e) => console.warn('Service worker não registrado:', e));

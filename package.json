@@ -5,7 +5,8 @@
   "description": "Energy Planner em HTML, CSS e JS puro. O app em si não precisa de npm: o package.json é só para os testes e o lint.",
   "scripts": {
     "test": "node tests/run-all.mjs",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "release": "node scripts/release.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

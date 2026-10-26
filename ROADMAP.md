@@ -64,8 +64,8 @@ Este arquivo junta as minhas ideias com as suas. Ordem pensada para **não refaz
   - **Economia reajustada:** a Fagulha (grátis) caiu de +10% para +8%, para os pets pagos valerem a pena. Preços: Gato, Dragão, Unicórnio e Robô **500**; Cão **800**; Fênix **1000** (antes: 1000, 1500, 2500, 2000, 1000, 2000). Cada pet pago se paga em 2 a 4 semanas de uso normal (conta no teste 18). Quem já comprou não perde nada.
   - **Descrição de cada pet** na Loja e no Inventário ("O que ele faz": explicação + o poder em cada nível).
   - **Painel admin para testar:** +100/+1000/+10000 pontos, +1/+5/+20/máximo/zerar vínculo do pet ativo, 3 cenários de sequência (viva, perdi ontem, quebrada), criar/limpar tarefas de teste, liberar o baú, zerar poderes.
-- [~] **B6 Pet na Home e no cronômetro** (M, junto com **#12**): companheiro com mensagem do dia e animação no cronômetro.
-  - **Feito:** cartão do pet na Home (arte, vínculo, mensagem do dia gentil que muda com a hora e o que você já fez, e a missão do Robô). **Falta:** animação no cronômetro além das poses e o cronômetro mais bonito (#12).
+- [x] **B6 Pet na Home e no cronômetro** (M, junto com **#12**): companheiro com mensagem do dia e animação no cronômetro.
+  - **Feito:** cartão do pet na Home (arte, vínculo, mensagem do dia gentil que muda com a hora e o que você já fez, e a missão do Robô). O cronômetro já tem anel de progresso e modo foco (#12).
   - **Comemoração de nível:** quando o vínculo do pet sobe de nível (concluindo tarefa ou pelo painel admin), aparece uma animação com o pet, brilhos, o nível novo e o poder novo; a Fagulha "evolui" na tela quando muda de forma. Home, Perfil e Tarefas se atualizam sozinhas quando o painel admin muda algo (`js/events.js`).
 - [x] **B7 Conquistas de pets**: feito, 5 conquistas novas (24 no total): Novo Amigo (1º pet da Loja), Matilha (3 pets), Zoológico Estelar (todos os pets da Loja), Laço Criado (um pet no nível 2 de vínculo) e Vínculo Eterno (um pet no nível 5). Avisam com a janela de conquista como as outras.
 - [x] ~~**B7b 2º espaço de pet**~~: **descartado por decisão sua** (um pet ativo por vez).
@@ -91,23 +91,23 @@ Tarefa média = 65 pontos. Com 3 tarefas por dia (195 pontos/dia), **um bônus d
 - O **nível do usuário conta só os pontos-base**: o bônus de pet não infla o nível.
 
 ## Fase 3 · Utilidade no dia a dia
-- [ ] **#1 Estatísticas** (M): mapa de calor dos dias, tempo focado, tarefas por categoria, melhores dias, histórico de hábitos.
+- [x] **#1 Estatísticas** (M): feito, na nova aba **Estatísticas** do Perfil. Resumo (tarefas, tempo focado, sequência e recorde, média por dia ativo), mapa de calor das últimas 16 semanas, tempo focado (hoje, 7 e 30 dias, total), tarefas por categoria, melhores dias da semana, melhor horário e histórico de hábitos (4 semanas). Tudo com os números em texto. Cálculos em `js/stats.js`, tela em `js/components/stats-view.js`.
 - [x] **#3 Busca, ordenação e atrasadas** (P): feito. Busca por nome ou categoria (sem acento, várias palavras), 7 ordens (lembra a escolha), aviso calmo "Prazo hoje" / "Prazo passou há N dias" e filtro "Prazo passou (N)". Regras em `js/task-view.js`.
 - [ ] **#2 Missão que respeita a rotina** (M): só sugere tarefas que cabem antes do próximo compromisso.
 - [x] **#5 Editar recompensas** (P): feito. Botão de lápis em cada recompensa; a mesma janela de "Nova Recompensa" vira "Editar Recompensa". O histórico de resgates antigo não muda.
-- [ ] **#9 Subtarefas e notas** (M).
+- [x] **#9 Subtarefas e notas** (M): feito. No formulário da tarefa: campo de **Notas** (até 500 letras) e **Etapas** (até 20, adiciona com o botão ou com Enter). No cartão: botão "Etapas 1/3 · Notas" que abre as etapas com quadradinhos e as notas. As etapas são opcionais: concluir a tarefa não exige marcar todas (sem cobrança). Tarefas que se repetem trazem as mesmas etapas desmarcadas. A busca também acha pelas notas e etapas. Regras em `js/subtasks.js`.
 - [ ] **#7 Metas e desafios** (M): meta semanal e "missão do dia" (os pets entram aqui).
 - [x] ~~**#4 Congelar sequência**~~: decidido, só como poder dos pets (veja a decisão 7). Entra no B5.
 - [ ] **#6 Registro de energia ao longo do dia** (M/G): insights como "você rende mais de manhã" (o Robô usa).
 
 ## Fase 4 · Acabamento e acessibilidade
 - [x] ~~Confete~~ trocado por **fagulhas de luz** (`js/celebrate.js`, sem biblioteca externa, funciona offline, com as cores do tema). As fagulhas aparecem ao subir o pet de nível, desbloquear conquista e comprar/resgatar. **Concluir tarefa tem animação própria, mais calma:** círculo e "visto" que se desenham, um anel de luz, pontos que sobem contando e linhas de bônus que aparecem uma a uma (`js/components/congrats-modal.js`).
-- [ ] **#12 Cronômetro mais bonito** (P/M): anel de progresso e modo foco em tela cheia.
+- [x] **#12 Cronômetro mais bonito** (P/M): feito. O tempo agora aparece dentro de um **anel de progresso** que se enche (verde ao terminar, apagado quando pausado) e há o **modo foco**: o botão no canto abre o cronômetro em tela cheia (usa a tela cheia do navegador quando ele deixa); Esc sai do modo foco primeiro. Falta, do pet no cronômetro: nada. (B6 completo.)
 - [ ] **#13 Transições entre telas e telas vazias com ilustração** (P).
 - [ ] **#14 Atalhos de teclado** (P): por exemplo **N** para nova tarefa.
 - [ ] **#22 Setas nas abas e filtros; tamanho de texto ajustável** (P/M).
 - [ ] **#21 Teste com leitor de tela de verdade** (P, feito por você no NVDA ou VoiceOver).
-- [ ] **#26 Aviso de "nova versão disponível"** (P).
+- [x] **#26 Aviso de "nova versão disponível"** (P): feito. `npm run release` roda os testes e carimba a versão; o app confere `version.json` (ao abrir, a cada 15 min, ao voltar para a aba e ao voltar a internet) e mostra um aviso calmo com "Atualizar agora" e "Depois". Nunca recarrega sozinho. Perfil > Verificar atualização mostra a versão. Passo a passo em `docs/PUBLICAR.md`.
 - [x] **#19 Senha e painel admin** (P): feito. O painel admin agora **só abre em `localhost`/`127.0.0.1`** (lista em `js/config.js`); no site publicado ele fica desligado, então a senha escrita no código não expõe nada. Para liberar a amigos, acrescente o endereço em `ADMIN_HOSTS`.
 - [ ] **#24 Testes no navegador de verdade** (M): rodam na sua máquina. Eu não tenho navegador aqui, então não consigo executá-los, e isso me faria entregar testes sem ter visto passar. Por isso o guia de estilo (A0) e as suas capturas de tela são a nossa checagem visual.
 - [ ] **#18 Sincronizar entre aparelhos** (G): só se você usar em mais de um aparelho. Exige servidor ou serviço externo.

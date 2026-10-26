@@ -16,11 +16,12 @@ export const DEFAULT_SORT = 'recent';
 // minúsculas e sem acento, para "acao" achar "Ação"
 export const normalize = (text) => String(text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-// A busca olha o título e o nome da categoria. Várias palavras: todas precisam aparecer.
+// A busca olha o título, a categoria, as notas e as etapas. Várias palavras: todas precisam aparecer.
 export function matchesSearch(task, query) {
   const words = normalize(query).split(/\s+/).filter(Boolean);
   if (words.length === 0) return true;
-  const haystack = normalize(`${task.title} ${CATEGORY_LABELS[task.category] || ''}`);
+  const steps = Array.isArray(task.subtasks) ? task.subtasks.map((s) => s.title).join(' ') : '';
+  const haystack = normalize(`${task.title} ${CATEGORY_LABELS[task.category] || ''} ${task.notes || ''} ${steps}`);
   return words.every((w) => haystack.includes(w));
 }
 

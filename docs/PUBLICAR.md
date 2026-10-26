@@ -25,9 +25,26 @@ Não apague os dados do `localhost` até conferir que tudo chegou.
 - Em **Perfil**, veja o cartão "Proteção dos dados". Se aparecer "Ainda não protegido", toque em **Proteger armazenamento**.
   No Chrome, ter o app instalado ajuda o navegador a aceitar.
 
-## 4. Se o navegador mostrar versão antiga
-O app busca os arquivos na internet primeiro, então em geral atualiza sozinho. Se não atualizar: recarregue com **Ctrl+Shift+R**
-ou aumente `VERSION` em `sw.js` e publique de novo. O Pages pode levar alguns minutos para entregar o arquivo novo.
+## 4. Publicar uma atualização (e avisar quem está com o app aberto)
+Antes de cada `git push` com mudanças, rode **uma vez**:
+
+```
+npm run release
+```
+
+Ele roda os testes; se tudo passar, carimba uma versão nova (`version.json` e `js/version.js`). Depois:
+
+```
+git add .
+git commit -m "sua mensagem"
+git push
+```
+
+O que acontece com seus amigos: o app confere a versão publicada ao abrir, a cada 15 minutos, ao voltar para a aba e quando a internet volta. Se for diferente da que está rodando, aparece um aviso calmo no topo: **"Versão nova disponível"**, com **Atualizar agora** e **Depois**. O app nunca recarrega sozinho. Em **Perfil > Verificar atualização** dá para conferir na hora (e ver o número da versão).
+
+Se você esquecer o `npm run release`, o app continua atualizando normalmente na próxima abertura, só não aparece o aviso para quem já estava com ele aberto.
+
+Se mesmo assim alguém ficar com a versão antiga: recarregue com **Ctrl+Shift+R** ou aumente `VERSION` em `sw.js`. O Pages pode levar alguns minutos para entregar o arquivo novo.
 
 ## O que já foi conferido por teste
 - Nenhum arquivo usa endereço começando com `/` (que quebraria na subpasta).
