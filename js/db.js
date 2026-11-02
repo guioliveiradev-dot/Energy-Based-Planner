@@ -198,6 +198,7 @@ export const getUserRedemptionHistory = (userId) => getAllByUser('redemptionHist
 export async function resetUserData(userId) {
   await deleteMeta(`petstate:${userId}`);   // escudos, baú, Fênix e missão do Robô
   await deleteMeta(`goals:${userId}`);      // meta da semana e recompensas recebidas
+  await deleteMeta(`energy:${userId}`);     // registros de energia
   const stores = [
     ['tasks', getUserTasks],
     ['routineBlocks', getUserRoutineBlocks],

@@ -5,8 +5,10 @@ import { escapeHtml } from '../ui.js';
 import { icon } from '../icons.js';
 import { categoryIcon } from '../categories.js';
 import { WEEKDAY_NAMES, PERIODS, formatMinutes } from '../stats.js';
+import { MIN_LOGS } from '../energy-log.js';
 
 const WEEKDAY_PHRASE = ['nas segundas', 'nas terças', 'nas quartas', 'nas quintas', 'nas sextas', 'aos sábados', 'aos domingos'];
+const PERIOD_NOUN = { morning: 'a manhã', afternoon: 'a tarde', evening: 'a noite', night: 'a madrugada' };
 const PERIOD_PHRASE = { morning: 'de manhã', afternoon: 'à tarde', evening: 'à noite', night: 'de madrugada' };
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
@@ -71,6 +73,21 @@ function periods(p) {
     <li${x.id === p.best ? ' class="best"' : ''}><span class="stat-label small">${x.label} <span class="muted xs">(${x.range})</span></span>${bar(p.max ? (p.counts[x.id] / p.max) * 100 : 0)}<span class="stat-num small">${p.counts[x.id]}</span></li>`).join('')}</ul>`);
 }
 
+// Energia ao longo do dia (média de cada parte do dia, a partir do que foi registrado ao gerar missões)
+function energy(e) {
+  if (!e.enough) {
+    return card('st-energy', 'Sua energia ao longo do dia', `<p class="muted small">Quando você gera uma missão, o app guarda como estava a sua energia. Com alguns registros, mostramos aqui em que parte do dia ela costuma ser mais alta.</p>
+      <p class="muted xs">Registros até agora: ${Math.min(e.total, MIN_LOGS)} de ${MIN_LOGS}.</p>`);
+  }
+  const sentence = e.best === null
+    ? '<p class="small">Sua energia costuma ser parecida ao longo do dia.</p>'
+    : `<p class="small">Sua energia costuma ser mais alta <strong>${PERIOD_PHRASE[e.best]}</strong> e mais baixa <strong>${PERIOD_PHRASE[e.low]}</strong>.</p>
+       <p class="muted xs">Uma ideia: deixe as tarefas mais pesadas para ${PERIOD_NOUN[e.best]}.</p>`;
+  return card('st-energy', 'Sua energia ao longo do dia', `${sentence}<ul class="stat-list">${e.periods.map((x) => `
+    <li${x.id === e.best ? ' class="best"' : ''}><span class="stat-label small">${x.label} <span class="muted xs">(${x.range})</span></span>${bar(x.avg === null ? 0 : x.avg * 10)}<span class="stat-num small">${x.avg === null ? '–' : `${String(x.avg).replace('.', ',')}/10`}</span></li>`).join('')}</ul>
+    <p class="muted xs">Média da energia que você informou ao gerar missões. Partes do dia com poucos registros aparecem com "–".</p>`);
+}
+
 function habits(list) {
   const body = list.length === 0
     ? '<p class="muted small">Tarefas que se repetem aparecem aqui. Crie uma tarefa com repetição para acompanhar seu hábito semana a semana.</p>'
@@ -100,7 +117,7 @@ export function statsHTML(s, section = 'resumo') {
   const id = STATS_SECTIONS.some((x) => x.id === section) ? section : 'resumo';
   const bodies = {
     resumo: () => tiles(s) + week(s.week) + insight(s) + weekly(s.weekly) + focusLine(s.focus),
-    quando: () => weekdays(s.weekdays) + periods(s.periods),
+    quando: () => weekdays(s.weekdays) + periods(s.periods) + (s.energy ? energy(s.energy) : ''),
     categorias: () => categories(s.categories),
     habitos: () => habits(s.habits),
   };

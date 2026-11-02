@@ -15,6 +15,8 @@ export const PERIODS = [
   { id: 'night', label: 'Madrugada', range: '22h às 5h' },
 ];
 
+export const periodOfHour = (h) => (h >= 5 && h < 12 ? 'morning' : h >= 12 && h < 18 ? 'afternoon' : h >= 18 && h < 22 ? 'evening' : 'night');
+
 const done = (tasks) => tasks.filter((t) => t.completed && t.completedAt);
 const mondayIndex = (ts) => (new Date(ts).getDay() + 6) % 7;            // 0 = segunda
 
@@ -94,7 +96,7 @@ export function periodStats(tasks) {
   const counts = { morning: 0, afternoon: 0, evening: 0, night: 0 };
   for (const t of done(tasks)) {
     const h = new Date(t.completedAt).getHours();
-    counts[h >= 5 && h < 12 ? 'morning' : h >= 12 && h < 18 ? 'afternoon' : h >= 18 && h < 22 ? 'evening' : 'night']++;
+    counts[periodOfHour(h)]++;
   }
   const max = Math.max(...Object.values(counts));
   return { counts, max, best: max > 0 ? PERIODS.find((p) => counts[p.id] === max).id : null };

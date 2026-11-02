@@ -20,18 +20,22 @@ Legenda: `[x]` feito · `[~]` pronto, falta uma ação sua · `[ ]` a fazer · t
 - **Ícones no lugar de emoji:** a interface usa os ícones do app (categorias, abas, energia, sequência, avisos); só os 6 pets antigos mantêm emoji até a arte chegar. O teste 31 avisa se um emoji voltar.
 - **Sequência e Estatísticas refeitas:** cartão da sequência com os 7 últimos dias; Estatísticas em 4 abas (Resumo, Dias e horários, Categorias, Hábitos), sem o mapa de calor, com "Esta semana" e "Semana a semana".
 - **Home mais leve:** faixa de situação (nível, sequência, pontos), energia e tempo em 2 passos com atalhos (15 min, 30 min, 1 h, 2 h, Outro), meta numa linha e pet compacto.
-- **#7 Metas e desafios:** meta da semana (3, 5, 7, 10 ou 15 tarefas; +50 pontos) e 3 desafios opcionais por semana (+20 a +40), com anel na nova página **Metas** do menu (junto da sequência de dias). Os pontos vão para o saldo, não para o nível. Pets ficaram de fora desta primeira versão (ideia: o Robô escolher o desafio do dia).
+- **#6 Registro de energia ao longo do dia:** ao gerar uma missão, o app guarda a energia informada; na aba "Dias e horários" das Estatísticas mostra a média em cada parte do dia e em que hora a energia costuma ser mais alta (aparece depois de 6 registros). Ideia para depois: o Robô usar esse padrão.
+- **Tutorial com Metas:** o tutorial agora tem 7 passos, incluindo as Metas (meta da semana, sequência e desafios), e a Home atualizada.
+- **#2 Missão que respeita a rotina:** a missão só sugere tarefas que cabem antes do próximo compromisso de hoje; avisa qual é e, se nada couber, oferece ver as tarefas sem considerar a rotina.
+- **#7 Metas e desafios:** meta da semana (3, 5, 7, 10 ou 15 tarefas, ou qualquer número de 1 a 50 em "Outro"; +50 pontos) e 3 desafios opcionais por semana (+20 a +40), com anel na nova página **Metas** do menu (junto da sequência de dias). Os pontos vão para o saldo, não para o nível. Pets ficaram de fora desta primeira versão (ideia: o Robô escolher o desafio do dia).
 
 ## Pendente (ordem sugerida)
-1. **#2 Missão que respeita a rotina** (M): só sugerir tarefas que cabem antes do próximo compromisso.
-2. **#6 Registro de energia ao longo do dia** (M/G): insights como "você rende mais de manhã" (o Robô pode usar).
-3. **#14 Atalhos de teclado** (P, por exemplo **N** para nova tarefa), **#13 transições entre telas e telas vazias com ilustração** (P), **#22 setas nas abas e filtros e tamanho de texto ajustável** (P/M).
-4. **A8 Computador e telas pequenas** (M): barra lateral no desktop (#11) e conferência em 320 px e zoom de 200% (#23).
-5. **B3 Arte dos 6 pets antigos** (G): **aguardando os modelos do grupo do usuário**. Quando chegarem, desenhar em SVG no estilo da Fagulha (silhueta chapada "carvão suave", cores por tema via variáveis `--pet-*`, 4 poses: parado, trabalhando, dormindo, comemorando), mantendo os ids `cat`, `dog`, `dragon`, `phoenix`, `robot`, `unicorn`. A base está em `js/pet-art.js` e `prototipo/pets.html`.
-6. **Ações do usuário:** publicar no GitHub Pages; testar no celular de verdade; **#21** teste com leitor de tela (NVDA ou VoiceOver); **#24** testes no navegador de verdade (rodam na máquina dele).
-7. **Sem prazo:** **#18** sincronizar entre aparelhos (assumido que usa um aparelho só; exigiria servidor). Se um dia houver servidor, a confirmação de e-mail entra junto.
+1. **#13 Transições entre telas e telas vazias com ilustração** (P): animação suave ao trocar de tela e um desenho simples quando não há tarefas, rotina ou recompensas.
+2. **B3 Arte dos 6 pets antigos** (G): **aguardando os modelos do grupo do usuário**. Quando chegarem, desenhar em SVG no estilo da Fagulha (silhueta chapada "carvão suave", cores por tema via variáveis `--pet-*`, 4 poses: parado, trabalhando, dormindo, comemorando), mantendo os ids `cat`, `dog`, `dragon`, `phoenix`, `robot`, `unicorn`. A base está em `js/pet-art.js` e `prototipo/pets.html`.
+3. **Fase final: acessibilidade para todos** (M/G): uma rodada dedicada, depois que o resto estiver pronto. Inclui **#22** setas nas abas e filtros e **tamanho de texto ajustável**, **#23** conferência em 320 px e com zoom de 200%, contraste e foco em todas as telas, textos de apoio para leitor de tela, redução de movimento, alvos de toque confortáveis e linguagem simples. Os testes com leitor de tela (**#21**, NVDA ou TalkBack) entram aqui.
+4. **Ações do usuário:** publicar no GitHub Pages; testar no celular de verdade; **#21** teste com leitor de tela (NVDA ou VoiceOver); **#24** testes no navegador de verdade (rodam na máquina dele).
+5. **Sem prazo:** **#18** sincronizar entre aparelhos (assumido que usa um aparelho só; exigiria servidor). Se um dia houver servidor, a confirmação de e-mail entra junto.
+
+
 
 ## Descartado ou resolvido de outro jeito
+- **Versão para computador** (barra lateral no desktop, #11) e **atalhos de teclado** (#14): o app é só para o celular, então não serão feitos.
 - A2, A3 e A4 (separar tema de estilo, seletor de aparência, aplicar o "novo estilo" por partes): não foram necessários, porque você pediu só mudar cores e fonte. Claro/escuro é feito escolhendo o tema Papel ou Grafite.
 - 2º espaço de pet; congelar sequência como item avulso (virou poder dos pets); confete (virou fagulhas de luz).
 

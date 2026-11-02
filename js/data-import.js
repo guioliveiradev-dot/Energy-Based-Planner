@@ -6,6 +6,7 @@ import { CATEGORY_LABELS } from './categories.js';
 import { DB_VERSION } from './db.js';
 import { cleanPetState } from './pet-state.js';
 import { cleanGoalState } from './goals.js';
+import { cleanEnergyLogs } from './energy-log.js';
 import { cleanNotes, cleanSubtasks } from './subtasks.js';
 
 const MAX_CHARS = 5 * 1024 * 1024;
@@ -92,7 +93,7 @@ export function parseImport(text) {
   const petBonds = [...bondMap].map(([petId, bond]) => ({ petId, bond }));
 
   return {
-    tasks, routineBlocks, rewards, redemptionHistory, inventory, petBonds, petState: cleanPetState(data.petState), goalState: cleanGoalState(data.goalState), skipped,
+    tasks, routineBlocks, rewards, redemptionHistory, inventory, petBonds, petState: cleanPetState(data.petState), goalState: cleanGoalState(data.goalState), energyLogs: cleanEnergyLogs(data.energyLogs), skipped,
     xp: data.user && isNum(data.user.xp) && data.user.xp >= 0 ? Math.floor(data.user.xp) : null,
     theme: [...themeIds, ...FREE_THEMES.map((t) => t.id)].includes(data.activeTheme) ? data.activeTheme : null,
     pet: allPetIds.includes(data.activePet) ? data.activePet : null,

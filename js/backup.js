@@ -8,6 +8,7 @@ import { exportAllData, getMeta, setMeta, getUserTasks } from './db.js';
 import { getInventory, getActiveTheme, getActivePet } from './themes.js';
 import { getPetState } from './pet-state.js';
 import { getGoalState } from './goals.js';
+import { getEnergyLogs } from './energy-log.js';
 
 export const BACKUP_INTERVAL_DAYS = 14;   // de quanto em quanto tempo lembrar
 export const SNOOZE_DAYS = 3;             // "Lembrar depois" volta em quantos dias
@@ -26,6 +27,7 @@ export async function buildBackup(userId) {
   data.activePet = getActivePet(userId);
   data.petState = await getPetState(userId);   // escudos, baú e Fênix
   data.goalState = await getGoalState(userId); // meta da semana e recompensas já recebidas
+  data.energyLogs = await getEnergyLogs(userId); // registros de energia ao longo do dia
   return data;
 }
 

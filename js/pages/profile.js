@@ -8,6 +8,7 @@ import { powerText, getStreakExtra } from '../pet-powers.js';
 import { petInfoHTML } from '../components/pet-info.js';
 import { importPetState } from '../pet-state.js';
 import { importGoalState } from '../goals.js';
+import { getEnergyLogs, importEnergyLogs, energyByPeriod } from '../energy-log.js';
 import { onDataChanged } from '../events.js';
 import { APP_VERSION } from '../version.js';
 import { computeStats } from '../stats.js';
@@ -69,7 +70,7 @@ function chartSVG(data) {
 export async function renderProfile(container) {
   const user = () => auth.state.user;
   let tasks = [], inventory = [], activeTheme = DEFAULT_THEME, activePet = null;
-  let backupState = null, persisted = null, petBonds = {}, streakExtra = {};
+  let backupState = null, persisted = null, petBonds = {}, streakExtra = {}, energyLogs = [];
   let activeTab = 'profile';
   let statsSection = 'resumo';
 
@@ -196,7 +197,7 @@ export async function renderProfile(container) {
   }
 
   function renderStatsTab() {
-    content.innerHTML = statsHTML(computeStats(tasks, Date.now(), streakExtra), statsSection);
+    content.innerHTML = statsHTML({ ...computeStats(tasks, Date.now(), streakExtra), energy: energyByPeriod(energyLogs) }, statsSection);
   }
 
   const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : activeTab === 'stats' ? renderStatsTab() : renderInventoryTab());
@@ -208,6 +209,7 @@ export async function renderProfile(container) {
     activeTheme = getActiveTheme(u.id);
     activePet = getActivePet(u.id);
     streakExtra = await getStreakExtra(u.id);
+    energyLogs = await getEnergyLogs(u.id);
     petBonds = Object.fromEntries((await getUserPetBonds(u.id)).map((b) => [b.petId, b.bond]));
     backupState = await getBackupState(u.id);
     persisted = await isPersisted();
@@ -287,6 +289,7 @@ export async function renderProfile(container) {
       const { counts, skipped } = await importUserData(u.id, parsed);
       await importPetState(u.id, parsed.petState);   // escudos, baú e Fênix: união com o que a conta já tem
       await importGoalState(u.id, parsed.goalState); // meta da semana e recompensas recebidas: união
+      await importEnergyLogs(u.id, parsed.energyLogs); // registros de energia: união
       parsed.inventory.forEach((id) => addToInventory(u.id, id));
       if (parsed.theme) setActiveThemeStorage(u.id, parsed.theme);
       if (parsed.pet) setActivePetStorage(u.id, parsed.pet);

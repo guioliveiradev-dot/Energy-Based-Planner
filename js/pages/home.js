@@ -16,6 +16,7 @@ import { claimWeekRewards } from '../goals.js';
 import { pointsForTask, totalPoints, levelInfo, streakInfo } from '../progress.js';
 import { isAvailable, nextInstance } from '../recurrence.js';
 import { currentCommitment, nextCommitment, fitMinutes } from '../routine-fit.js';
+import { addEnergyLog } from '../energy-log.js';
 import { createTaskTimer } from '../components/task-timer.js';
 import { showCongratsModal } from '../components/congrats-modal.js';
 import { mountBackupReminder } from '../components/backup-reminder.js';
@@ -190,6 +191,7 @@ export async function renderHome(container) {
     noTasks = false;
     fit = null;
     resetTimer();
+    await addEnergyLog(user.id, energy).catch(() => {});   // guarda como estava a energia (alimenta "Sua energia ao longo do dia")
 
     let minutes = availableMinutes();
     if (!bypass) {

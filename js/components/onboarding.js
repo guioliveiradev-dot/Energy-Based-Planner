@@ -1,4 +1,4 @@
-// Tutorial inicial em 6 passos. Porte de Onboarding.tsx.
+// Tutorial inicial em 7 passos. Porte de Onboarding.tsx.
 // Uso: showOnboarding({ onComplete }) -> { close() }
 
 import { icon } from '../icons.js';
@@ -9,14 +9,17 @@ const STEPS = [
     description: 'Gerencie suas tarefas com base no seu nível de energia, não apenas no horário.',
     tipIcon: 'arrow-right', tip: 'Deslize para ver como funciona.', color: 'hsl(190, 100%, 50%)' },
   { icon: 'zap', title: 'Home — Gerar Missão',
-    description: 'Ajuste o slider de energia (1-10) e informe quanto tempo você tem. Toque em "Gerar Missão" e o app sugere a tarefa ideal para o momento.',
-    tipIcon: 'lightbulb', tip: 'O app verifica se você está em horário bloqueado pela rotina.', color: 'hsl(190, 100%, 50%)' },
+    description: 'Diga como está a sua energia (1-10) e escolha quanto tempo você tem: 15 min, 30 min, 1 h, 2 h ou outro. Toque em "Gerar Missão" e o app sugere a tarefa ideal para o momento.',
+    tipIcon: 'lightbulb', tip: 'O app respeita a sua rotina: só sugere o que cabe antes do próximo compromisso.', color: 'hsl(190, 100%, 50%)' },
   { icon: 'list-todo', title: 'Tarefas — Organize Tudo',
     description: 'Crie tarefas com título, custo de energia (1-10), duração, prazo e categoria. Inicie o cronômetro e ganhe Pontos Planner ao concluir!',
     tipIcon: 'lightbulb', tip: 'Fórmula: Pontos = (Energia × 10) + (Minutos × 0.5)', color: 'hsl(150, 100%, 50%)' },
   { icon: 'calendar', title: 'Rotina — Bloqueie Horários',
     description: 'Adicione blocos fixos como escola, trabalho ou academia. O app não vai sugerir tarefas nesses horários.',
     tipIcon: 'lightbulb', tip: 'Cada dia da semana pode ter blocos diferentes.', color: 'hsl(45, 100%, 55%)' },
+  { icon: 'target', title: 'Metas — Seu ritmo da semana',
+    description: 'Escolha quantas tarefas quer concluir na semana (ou digite o número que quiser) e ganhe pontos ao bater a meta. Aqui você também vê a sua sequência de dias e 3 desafios opcionais que mudam toda segunda-feira.',
+    tipIcon: 'lightbulb', tip: 'Sem pressão: toda semana começa do zero, e a meta você muda quando quiser.', color: 'hsl(150, 100%, 50%)' },
   { icon: 'shopping-bag', title: 'Loja — Recompensas, Temas & Pets',
     description: 'Crie recompensas personalizadas, compre temas de cores e pets que acompanham seu cronômetro! Tudo com Pontos Planner.',
     tipIcon: 'lightbulb', tip: 'Ex: "Jogar Videogame" por 500 Pontos.', color: 'hsl(265, 100%, 68%)' },

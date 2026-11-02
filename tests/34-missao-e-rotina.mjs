@@ -241,11 +241,12 @@ if (nowMin + 50 > 23 * 60 + 50) {
   await wait(150);
 
   root.querySelector('[data-time="other"]').click();
-  await generate(2);
+  await generate(1);   // 1 h livre; o compromisso 'Longe' fica pelo menos 1 h depois (se o dia já está acabando, o cenário é pulado abaixo)
 
   ok(
-    !/Exibindo somente tarefas que cabem no período disponível./.test(result()) &&
-    /Curta de 30 min|Longa de 120 min/.test(result()),
+    nowMin + 60 > 23 * 60 + 58 ||   // perto da meia-noite não dá para criar um compromisso a mais de 1 h daqui
+    (!/Exibindo somente tarefas que cabem no período disponível./.test(result()) &&
+    /Curta de 30 min|Longa de 120 min/.test(result())),
     'Home: compromisso mais longe do que o tempo livre não limita nem avisa'
   );
 
