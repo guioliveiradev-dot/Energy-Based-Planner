@@ -6,7 +6,7 @@ import { icon } from '../icons.js';
 const days = (n) => `${n} ${n === 1 ? 'dia' : 'dias'}`;
 const LETTERS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];   // domingo a sábado
 
-function streakCardHTML(streak) {
+export function streakCardHTML(streak) {
   let title, hint;
   if (streak.current === 0) { title = 'Sua sequência'; hint = 'Conclua uma tarefa hoje para iniciar uma sequência'; }
   else {

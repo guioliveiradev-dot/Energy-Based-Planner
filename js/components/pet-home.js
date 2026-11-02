@@ -30,7 +30,7 @@ export async function mountPetHome(slot, userId, tasks, now = Date.now()) {
   slot.innerHTML = `
     <section class="glass-card pad stack pet-home" aria-label="${escapeHtml(pet.name)}, seu pet">
       <div class="row" style="gap:0.75rem">
-        <span class="pet-thumb pet-thumb-lg">${petFaceHTML(pet, { bond, pose, size: 72 })}</span>
+        <span class="pet-thumb">${petFaceHTML(pet, { bond, pose, size: 48 })}</span>
         <div><p class="small"><strong>${escapeHtml(pet.name)}</strong><span class="muted"> · vínculo nível ${level}${form}</span></p>
         <p class="small muted">${message}</p></div>
       </div>${missionHTML}

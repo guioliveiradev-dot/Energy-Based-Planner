@@ -67,3 +67,5 @@
 .ch-title { font-weight: 600; font-size: 0.9375rem; }
 .ch-bonus { margin-left: auto; font-size: 0.8125rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 999px; background: hsl(var(--muted)); border: 1px solid hsl(var(--border)); white-space: nowrap; display: inline-flex; gap: 0.25rem; align-items: center; }
 .ch-bonus.got { background: hsl(var(--success) / 0.16); border-color: hsl(var(--success) / 0.45); color: hsl(var(--success)); }
+.goal-custom { display: flex; flex-direction: column; gap: 0.25rem; max-width: 14rem; }
+.goal-error { font-size: 0.8125rem; color: hsl(var(--destructive)); }

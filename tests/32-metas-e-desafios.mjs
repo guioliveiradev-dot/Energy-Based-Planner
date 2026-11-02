@@ -78,7 +78,8 @@ c = G.weekProgress({ tasks: [D(12, 9, { category: catId }), D(13, 9, { category:
 ok(c.done && c.v === 3 && /^Conclua 3 tarefas de /.test(c.title) && !!c.icon, 'Desafio de categoria: 3 tarefas daquela categoria, com o nome dela no título');
 
 // ---------- estado guardado ----------
-ok(JSON.stringify(G.cleanGoalState(null)) === JSON.stringify({ target: null, claimed: {} }) && G.cleanGoalState({ target: 6 }).target === null && G.cleanGoalState({ target: 10 }).target === 10, 'Estado: só aceita as metas permitidas');
+ok(JSON.stringify(G.cleanGoalState(null)) === JSON.stringify({ target: null, claimed: {} }) && G.cleanGoalState({ target: 6 }).target === 6 && G.cleanGoalState({ target: 1 }).target === 1 && G.cleanGoalState({ target: 50 }).target === 50, 'Estado: aceita qualquer meta de 1 a 50 (as opções prontas e as digitadas)');
+ok([0, 51, 2.5, -3, '7', NaN, null].every((v) => G.cleanGoalState({ target: v }).target === null) && G.GOAL_MAX === 50, 'Estado: fora de 1 a 50, com vírgula ou texto, vira "sem meta"');
 const sujo = G.cleanGoalState({ target: 5, claimed: { 'lixo': { goal: true }, '2026-10-12': { goal: true, ch: ['focus', 'nao-existe', 'focus', 'cat:work', 'cat:xx'] } } });
 ok(Object.keys(sujo.claimed).join() === '2026-10-12' && sujo.claimed['2026-10-12'].ch.join() === 'cat:work,focus', 'Estado: ignora semana e desafio inválidos, sem repetir');
 const muitas = {}; for (let i = 0; i < 20; i++) muitas[G.weekKey(at(2026, 1, 5 + 7 * i))] = { goal: true, ch: [] };
@@ -103,7 +104,9 @@ const uid2 = 'outra-pessoa';
 r = await G.claimWeekRewards({ userId: uid2, tasks: tasksMeta, now: NOW });
 ok(!r.items.some((i) => i.kind === 'goal'), 'Receber: a meta é de cada pessoa (outra conta sem meta não recebe)');
 await G.setGoalTarget(uid, 99);
-ok((await G.getGoalState(uid)).target === null, 'Meta: valor fora da lista tira a meta');
+ok((await G.getGoalState(uid)).target === null, 'Meta: valor acima de 50 tira a meta');
+await G.setGoalTarget(uid, 12);
+ok((await G.getGoalState(uid)).target === 12, 'Meta: um número digitado (12) fica guardado');
 await G.setGoalTarget(uid, 5);
 ok((await G.getGoalState(uid)).target === 5 && Object.keys((await G.getGoalState(uid)).claimed).length >= 1, 'Meta: escolher 5 fica guardado, junto do que já foi recebido');
 
@@ -121,20 +124,47 @@ const root = document.getElementById('app');
 const silencia = async () => { const k = G.weekKey(); const u = auth.state.user.id; const s = await G.getGoalState(u); await G.saveGoalState(u, { ...s, claimed: { ...s.claimed, [k]: { goal: s.claimed[k]?.goal || false, ch: G.challengeIds(u) } } }); };
 await silencia();
 T.setActivePetStorage(uid, null);
+const { renderGoals } = await import(base + 'pages/goals.js');
 let cleanup = await renderHome(root); await wait(120);
-let slot = root.querySelector('#goal-slot');
-ok(slot && /Meta da semana/.test(slot.textContent) && slot.querySelectorAll('[data-goal-pick]').length === 5 && /Definir minha meta/.test(slot.textContent), 'Home: sem meta, mostra um convite com as 5 opções (sem cobrança)');
+let glance = root.querySelector('#goal-slot .glance');
+ok(!!glance && glance.getAttribute('href') === '#/goals' && /Definir/.test(glance.textContent) && !/\d de \d/.test(glance.textContent), 'Home: sem meta, a linha da meta é só um convite ("Definir") que leva à página Metas');
+ok(!root.querySelector('[data-goal-pick]') && !root.querySelector('.goal-card') && !root.querySelector('.ch-card'), 'Home: a meta completa e os desafios não ficam mais na Home');
+cleanup?.(); root.innerHTML = '';
+
+// página Metas
+cleanup = await renderGoals(root); await wait(150);
+let slot = root.querySelector('#goals-slot');
+ok(slot.querySelectorAll('[data-goal-pick]').length === 6 && slot.querySelector('[data-goal-pick="other"]').textContent === 'Outro' && /Definir minha meta/.test(slot.textContent), 'Metas: sem meta, mostra um convite com as 5 opções prontas e "Outro" (sem cobrança)');
 slot.querySelector('[data-goal-pick="3"]').click(); await wait();
-ok(root.querySelector('[data-goal-pick="3"]').getAttribute('aria-pressed') === 'true', 'Home: escolher um número marca a opção');
+ok(root.querySelector('[data-goal-pick="3"]').getAttribute('aria-pressed') === 'true', 'Metas: escolher um número marca a opção');
 root.querySelector('[data-goal-save]').click(); await wait(120);
-slot = root.querySelector('#goal-slot');
-ok((await G.getGoalState(uid)).target === 3 && /0\/3/.test(slot.textContent) && /Mais 3 tarefas para ganhar \+50 pontos/.test(slot.textContent) && !!slot.querySelector('.ring[role="img"]'), 'Home: meta 3 salva; mostra o anel 0/3 e quanto falta para o bônus');
-ok(!!slot.querySelector('[data-goal-edit]') && !!slot.querySelector('[data-goal-link]'), 'Home: tem "Mudar" e "Ver desafios"');
+slot = root.querySelector('#goals-slot');
+ok((await G.getGoalState(uid)).target === 3 && /0\/3/.test(slot.textContent) && /Mais 3 tarefas para ganhar \+50 pontos/.test(slot.textContent) && !!slot.querySelector('.ring[role="img"]'), 'Metas: meta 3 salva; mostra o anel 0/3 e quanto falta para o bônus');
+ok(slot.querySelectorAll('.goal-card').length === 1 && slot.querySelectorAll('.ch-card').length === 3 && slot.querySelectorAll('.streak-card').length === 1, 'Metas: a página tem a meta, a sequência e os 3 desafios da semana');
 root.querySelector('[data-goal-edit]').click(); await wait();
-ok(!!root.querySelector('[data-goal-clear]') && !!root.querySelector('[data-goal-cancel]') && root.querySelector('[data-goal-pick="3"]').classList.contains('active'), 'Home: "Mudar" abre as opções com a meta atual marcada, "Cancelar" e "Tirar a meta"');
+ok(!!root.querySelector('[data-goal-clear]') && !!root.querySelector('[data-goal-cancel]') && root.querySelector('[data-goal-pick="3"]').classList.contains('active'), 'Metas: "Mudar" abre as opções com a meta atual marcada, "Cancelar" e "Tirar a meta"');
 root.querySelector('[data-goal-cancel]').click(); await wait();
-root.querySelector('[data-goal-link]').click(); await wait();
-ok(location.hash === '#/profile' && G.takeRequestedProfileTab() === 'goals' && G.takeRequestedProfileTab() === null, 'Home: "Ver desafios" leva ao Perfil, aba Metas (o pedido vale uma vez)');
+// meta personalizada ("Outro")
+root.querySelector('[data-goal-edit]').click(); await wait();
+root.querySelector('[data-goal-pick="other"]').click(); await wait();
+let inp = root.querySelector('[data-goal-custom]');
+ok(!inp.closest('.goal-custom').hidden && root.querySelector('[data-goal-pick="other"]').getAttribute('aria-pressed') === 'true' && root.querySelector('[data-goal-pick="3"]').getAttribute('aria-pressed') === 'false' && document.activeElement === inp && !!root.querySelector('label[for="goal-custom"]'), 'Metas: "Outro" mostra um campo com rótulo, leva o foco para ele e desmarca as opções prontas');
+inp.value = '0'; inp.dispatchEvent(new w.Event('input', { bubbles: true }));
+ok(!root.querySelector('#goal-error').hidden && root.querySelector('#goal-error').getAttribute('role') === 'alert', 'Metas: número inválido mostra um aviso (sem cobrança, só o intervalo permitido)');
+root.querySelector('[data-goal-save]').click(); await wait();
+ok((await G.getGoalState(uid)).target === 3 && !!root.querySelector('[data-goal-custom]'), 'Metas: número inválido não salva e continua na edição');
+inp = root.querySelector('[data-goal-custom]'); inp.value = '12'; inp.dispatchEvent(new w.Event('input', { bubbles: true }));
+ok(root.querySelector('#goal-error').hidden, 'Metas: número válido esconde o aviso');
+inp.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); await wait(120);
+ok((await G.getGoalState(uid)).target === 12 && /0\/12/.test(root.querySelector('#goals-slot').textContent) && /Mais 12 tarefas/.test(root.querySelector('#goals-slot').textContent), 'Metas: digitar 12 e apertar Enter salva a meta (anel 0/12)');
+root.querySelector('[data-goal-edit]').click(); await wait();
+ok(root.querySelector('[data-goal-pick="other"]').getAttribute('aria-pressed') === 'true' && root.querySelector('[data-goal-custom]').value === '12', 'Metas: ao mudar, a meta digitada aparece em "Outro"');
+root.querySelector('[data-goal-pick="3"]').click(); await wait();
+ok(root.querySelector('.goal-custom').hidden && root.querySelector('[data-goal-pick="3"]').getAttribute('aria-pressed') === 'true', 'Metas: voltar para uma opção pronta esconde o campo');
+root.querySelector('[data-goal-save]').click(); await wait(120);
+ok((await G.getGoalState(uid)).target === 3, 'Metas: meta de volta para 3');
+ok([...root.querySelectorAll('.progress')].every((b) => b.getAttribute('aria-label') && b.getAttribute('role') === 'progressbar'), 'Acessibilidade: as barras de progresso têm nome');
+ok(!/falhou|perdeu|atrasad|não conseguiu|pena|culp/i.test(root.textContent), 'Tom sem culpa: nenhum texto de cobrança ou de fracasso');
 cleanup?.(); root.innerHTML = '';
 
 // concluir uma tarefa que bate a meta: parabéns mostra o bônus e o saldo sobe
@@ -148,19 +178,6 @@ ok(auth.state.user.xp - xp0 === 65 + 50 && /Meta da semana batida: \+50 pontos/.
 cleanup?.(); root.innerHTML = '';
 document.querySelectorAll('.modal-overlay').forEach((n) => n.remove());
 cleanup = await renderHome(root); await wait(120);
-ok(/3\/3/.test(root.querySelector('#goal-slot').textContent) && /Meta batida/.test(root.querySelector('#goal-slot').textContent) && !!root.querySelector('#goal-slot .goal-note.ok') && /success/.test(root.querySelector('#goal-slot circle:last-child').getAttribute('stroke')), 'Home: meta batida aparece em verde, com "Meta batida!"');
-cleanup?.(); root.innerHTML = '';
-
-// aba Metas do Perfil
-cleanup = await renderProfile(root); await wait(80);
-root.querySelector('[data-tab="goals"]').click(); await wait(150);
-const g = root.querySelector('#tab-content');
-ok(g.querySelectorAll('.goal-card').length === 1 && g.querySelectorAll('.ch-card').length === 3 && !g.querySelector('[data-goal-link]'), 'Perfil, aba Metas: a meta e os 3 desafios da semana (sem o botão "Ver desafios")');
-ok(root.querySelector('[data-tab="goals"]').getAttribute('aria-selected') === 'true', 'Perfil: a aba Metas fica marcada');
-ok([...g.querySelectorAll('.progress')].every((b) => b.getAttribute('aria-label') && b.getAttribute('role') === 'progressbar'), 'Acessibilidade: as barras de progresso têm nome');
-ok(!/falhou|perdeu|atrasad|não conseguiu|pena|culp/i.test(g.textContent), 'Tom sem culpa: nenhum texto de cobrança ou de fracasso');
-cleanup?.(); root.innerHTML = '';
-G.requestProfileTab('goals');
-cleanup = await renderProfile(root); await wait(150);
-ok(root.querySelector('[data-tab="goals"]').classList.contains('active') && root.querySelectorAll('.ch-card').length === 3, 'Perfil: aberto pelo botão da Home, já vem na aba Metas');
+glance = root.querySelector('#goal-slot .glance');
+ok(/Meta batida/.test(glance.textContent) && !!glance.querySelector('.text-success') && /batida/.test(glance.getAttribute('aria-label')), 'Home: meta batida aparece em verde, com "Meta batida!"');
 cleanup?.(); root.innerHTML = '';

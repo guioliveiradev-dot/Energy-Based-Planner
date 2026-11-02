@@ -1,7 +1,7 @@
 // Metas e desafios da semana (segunda a domingo). Tudo é calculado a partir das tarefas já concluídas;
 // só o que a pessoa escolheu (a meta) e o que ela já recebeu ficam guardados, na tabela 'meta' do banco
 // (sem mudar a versão do banco), por usuário. Entra no backup e na importação (união: nunca perde o que a conta já tem).
-//   target:   quantas tarefas quer concluir na semana (ou null = sem meta)
+//   target:   quantas tarefas quer concluir na semana, de 1 a 50 (ou null = sem meta)
 //   claimed:  { "2026-10-12": { goal: true, ch: ["focus", ...] } }  o que já foi recebido em cada semana (chave = segunda-feira)
 // Tom do app: sem culpa. Nada pune: quem não bate a meta só começa a semana nova do zero.
 
@@ -9,7 +9,9 @@ import { getMeta, setMeta, deleteMeta } from './db.js';
 import { dayKey } from './progress.js';
 import { CATEGORY_LABELS, CATEGORY_ICON } from './categories.js';
 
-export const GOAL_TARGETS = [3, 5, 7, 10, 15];
+export const GOAL_TARGETS = [3, 5, 7, 10, 15];   // opções prontas; a pessoa também pode digitar o número que quiser
+export const GOAL_MAX = 50;
+export const isValidTarget = (n) => Number.isInteger(n) && n >= 1 && n <= GOAL_MAX;
 export const GOAL_BONUS = 50;               // pontos ao bater a meta (entram no saldo, não no nível)
 const KEEP_WEEKS = 12;                      // semanas antigas guardadas no estado
 
@@ -64,7 +66,7 @@ export function cleanGoalState(raw) {
     const c = src[wk] || {};
     claimed[wk] = { goal: c.goal === true, ch: [...new Set((Array.isArray(c.ch) ? c.ch : []).filter((id) => typeof id === 'string' && defOf(id)))].sort() };
   }
-  return { target: GOAL_TARGETS.includes(r.target) ? r.target : null, claimed };
+  return { target: isValidTarget(r.target) ? r.target : null, claimed };
 }
 export function mergeGoalState(a, b) {
   const x = cleanGoalState(a), y = cleanGoalState(b);
@@ -81,7 +83,7 @@ export const clearGoalState = (userId) => deleteMeta(key(userId));
 export async function importGoalState(userId, raw) { if (raw) await saveGoalState(userId, mergeGoalState(await getGoalState(userId), raw)); }
 export async function setGoalTarget(userId, target) {
   const state = await getGoalState(userId);
-  await saveGoalState(userId, { ...state, target: GOAL_TARGETS.includes(target) ? target : null });
+  await saveGoalState(userId, { ...state, target: isValidTarget(target) ? target : null });
 }
 
 // ---------- Progresso da semana ----------
@@ -113,8 +115,3 @@ export async function claimWeekRewards({ userId, tasks, now = Date.now() }) {
   await saveGoalState(userId, { ...state, claimed });
   return { items, total: items.reduce((a, i) => a + i.bonus, 0) };
 }
-
-// Pedido para abrir o Perfil já na aba "Metas" (usado pelo botão da Home).
-let requestedTab = null;
-export const requestProfileTab = (tab) => { requestedTab = tab; };
-export const takeRequestedProfileTab = () => { const t = requestedTab; requestedTab = null; return t; };

@@ -7,8 +7,7 @@ import { bondProgress, petFaceHTML } from '../pets.js';
 import { powerText, getStreakExtra } from '../pet-powers.js';
 import { petInfoHTML } from '../components/pet-info.js';
 import { importPetState } from '../pet-state.js';
-import { importGoalState, takeRequestedProfileTab } from '../goals.js';
-import { mountGoals } from '../components/goal-cards.js';
+import { importGoalState } from '../goals.js';
 import { onDataChanged } from '../events.js';
 import { APP_VERSION } from '../version.js';
 import { computeStats } from '../stats.js';
@@ -71,14 +70,14 @@ export async function renderProfile(container) {
   const user = () => auth.state.user;
   let tasks = [], inventory = [], activeTheme = DEFAULT_THEME, activePet = null;
   let backupState = null, persisted = null, petBonds = {}, streakExtra = {};
-  let activeTab = takeRequestedProfileTab() === 'goals' ? 'goals' : 'profile';
+  let activeTab = 'profile';
   let statsSection = 'resumo';
 
   container.innerHTML = `
     <section class="page" style="gap:1.25rem">
       <h1 style="font-size:1.125rem;font-weight:700">Perfil</h1>
-      <div class="tabs tabs-4 profile-tabs" role="tablist">
-        ${[['profile', 'user', 'Perfil'], ['stats', 'bar-chart-3', 'Estatísticas'], ['goals', 'target', 'Metas'], ['inventory', 'backpack', 'Inventário']].map(([id, ic, label]) => `<button class="tab ${id === activeTab ? 'active' : ''}" role="tab" aria-selected="${id === activeTab}" data-tab="${id}">${icon(ic, 16, 'ico')} ${label}</button>`).join('')}
+      <div class="tabs tabs-3 profile-tabs" role="tablist">
+        ${[['profile', 'user', 'Perfil'], ['stats', 'bar-chart-3', 'Estatísticas'], ['inventory', 'backpack', 'Inventário']].map(([id, ic, label]) => `<button class="tab ${id === activeTab ? 'active' : ''}" role="tab" aria-selected="${id === activeTab}" data-tab="${id}">${icon(ic, 16, 'ico')} ${label}</button>`).join('')}
       </div>
       <div id="tab-content" class="stack" style="gap:1.25rem"></div>
       <input type="file" id="import-file" accept="application/json,.json" hidden>
@@ -200,12 +199,7 @@ export async function renderProfile(container) {
     content.innerHTML = statsHTML(computeStats(tasks, Date.now(), streakExtra), statsSection);
   }
 
-  function renderGoalsTab() {
-    content.innerHTML = '<div id="goals-slot"></div>';
-    mountGoals(content.querySelector('#goals-slot'), { userId: user().id, awardXP: auth.addXP, withChallenges: true, tasks });
-  }
-
-  const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : activeTab === 'stats' ? renderStatsTab() : activeTab === 'goals' ? renderGoalsTab() : renderInventoryTab());
+  const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : activeTab === 'stats' ? renderStatsTab() : renderInventoryTab());
 
   async function load() {
     const u = user();

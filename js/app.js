@@ -17,6 +17,7 @@ import { renderHome } from './pages/home.js';
 import { renderTasks } from './pages/tasks.js';
 import { renderRoutine } from './pages/routine.js';
 import { renderShop } from './pages/shop.js';
+import { renderGoals } from './pages/goals.js';
 import { renderProfile } from './pages/profile.js';
 
 const root = document.getElementById('app');
@@ -25,6 +26,7 @@ const ROUTES = {
   '/': renderHome,
   '/tasks': renderTasks,
   '/routine': renderRoutine,
+  '/goals': renderGoals,
   '/shop': renderShop,
   '/profile': renderProfile,
 };
@@ -33,6 +35,7 @@ const NAV = [
   { path: '/',        label: 'Home',    icon: 'home' },
   { path: '/tasks',   label: 'Tarefas', icon: 'list-todo' },
   { path: '/routine', label: 'Rotina',  icon: 'calendar' },
+  { path: '/goals',   label: 'Metas',   icon: 'target' },
   { path: '/shop',    label: 'Loja',    icon: 'shopping-bag' },
   { path: '/profile', label: 'Perfil',  icon: 'user' },
 ];

@@ -150,7 +150,7 @@ T.setActivePetStorage(uid, 'dog');
 document.getElementById('toasts').innerHTML = '';
 await renderHome(root); await wait(300);
 ok(/Cão Guardião protegeu a sua sequência/.test(document.getElementById('toasts').textContent), 'Home: ao abrir, o Cão avisa que protegeu a sequência');
-ok(/6/.test(root.querySelector('#progress-slot').textContent) && (await S.getPetState(uid)).shields.length === 1, 'Home: o cartão de sequência mostra 6 dias e o escudo ficou registrado');
+ok(/6\s*dias/.test(root.querySelector('#chips-slot').textContent) && (await S.getPetState(uid)).shields.length === 1, 'Home: a faixa mostra a sequência de 6 dias e o escudo ficou registrado');
 root.innerHTML = '';
 
 // ---------- Fênix ao concluir tarefa de verdade ----------

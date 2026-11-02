@@ -90,7 +90,7 @@ emitDataChanged('teste'); await wait(300);
 ok(root.querySelector('#pet-slot') === slot && /vínculo nível 3 · Chama/.test(slot.textContent), 'Home: o cartão sobe para o nível 3 (Chama) sozinho, sem trocar de aba');
 await AT.createTestStreak(uid, 'alive');
 emitDataChanged('teste'); await wait(300);
-ok(/5/.test(root.querySelector('#progress-slot').textContent), 'Home: a sequência de teste aparece sozinha no cartão de nível');
+ok(/6\s*dias/.test(root.querySelector('#chips-slot').textContent), 'Home: a sequência de teste (5 dias até ontem + a tarefa de hoje) aparece sozinha na faixa: 6 dias');
 homeCleanup();
 await AT.giveBond(uid, 60);
 emitDataChanged('teste'); await wait(200);

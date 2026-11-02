@@ -12,6 +12,7 @@ const db = await import(base + 'db.js');
 const P = await import(base + 'progress.js');
 const { ACHIEVEMENTS, getUnlocked } = await import(base + 'achievements.js');
 const { renderHome } = await import(base + 'pages/home.js');
+const { renderGoals } = await import(base + 'pages/goals.js');
 const { renderTasks } = await import(base + 'pages/tasks.js');
 const { renderProfile } = await import(base + 'pages/profile.js');
 const wait = (ms = 40) => new Promise((r) => setTimeout(r, ms));
@@ -81,10 +82,10 @@ await db.createTask(mk({ id: 'p1', title: 'Pendente', startedAt: Date.now() - 31
 
 let cleanup = await renderHome(root);
 await wait(80);
-let card = root.querySelector('.progress-card')?.parentElement;
-ok(!!card && card.textContent.includes('Nível 2 · Novato') && card.textContent.includes('95 / 150'), 'Home: cartão mostra nível 2 e 95/150 pontos (195 ganhos)');
-ok(card.textContent.includes('3 dias seguidos') && /conclua uma tarefa hoje para manter/i.test(card.textContent), 'Home: sequência de 3 dias, avisa para concluir hoje');
-ok(card.querySelector('[role="progressbar"]').getAttribute('aria-valuenow') === '63' && card.querySelector('.progress-bar').style.width === '63%', 'Home: barra em 63% e acessível (aria-valuenow)');
+let chips = root.querySelector('#chips-slot');
+ok(chips.textContent.includes('Nv 2') && chips.textContent.includes('Novato') && !root.querySelector('.progress-card'), 'Home: a faixa mostra o nível 2 (Novato); o cartão grande de nível saiu da Home');
+ok(/3\s*dias/.test(chips.textContent), 'Home: a faixa mostra a sequência de 3 dias');
+ok([...chips.querySelectorAll('a')].map((a) => a.getAttribute('href')).join() === '#/profile,#/goals,#/shop' && [...chips.querySelectorAll('a')].every((a) => a.getAttribute('aria-label')), 'Home: a faixa leva ao Perfil, às Metas e à Loja, com nomes acessíveis');
 root.querySelector('#generate').click(); await wait(80);
 root.querySelector('[data-action="continue"]').click(); await wait(80);
 document.querySelector('.timer-panel [data-action="collect"]').click(); await wait(250);
@@ -93,9 +94,13 @@ ok(modal && modal.textContent.includes('+65 Pontos Planner'), 'Home: modal mostr
 ok(modal.textContent.includes('Nível 3: Aprendiz!'), 'Home: 195 + 65 = 260 → modal avisa subida para o nível 3');
 ok(modal.textContent.includes('4 dias seguidos'), 'Home: modal mostra sequência de 4 dias');
 modal.querySelector('[data-role="ok"]').click();
-card = root.querySelector('.progress-card')?.parentElement;
-ok(card.textContent.includes('Nível 3 · Aprendiz') && card.textContent.includes('10 / 200'), 'Home: cartão atualiza para nível 3 (10/200)');
-ok(card.textContent.includes('4 dias seguidos') && !/conclua uma tarefa hoje/i.test(card.textContent), 'Home: sequência 4 e não pede mais para concluir hoje');
+chips = root.querySelector('#chips-slot');
+ok(chips.textContent.includes('Nv 3') && chips.textContent.includes('Aprendiz'), 'Home: a faixa atualiza para o nível 3');
+ok(/4\s*dias/.test(chips.textContent), 'Home: a faixa mostra a sequência de 4 dias');
+const metas = await renderGoals(root); await wait(150);
+const sc = root.querySelector('.streak-card');
+ok(!!sc && sc.textContent.includes('4 dias seguidos') && /Você já fez uma tarefa hoje/.test(sc.textContent) && root.querySelectorAll('.week-dots > div').length === 7, 'Metas: o cartão da sequência mostra 4 dias seguidos, o aviso de hoje e os 7 últimos dias');
+metas?.();
 cleanup(); root.innerHTML = '';
 
 // Tarefas: concluir sem subir de nível, depois uma grande que sobe
@@ -115,7 +120,7 @@ cleanup(); root.innerHTML = '';
 
 // Perfil
 cleanup = await renderProfile(root);
-card = root.querySelector('.progress-card')?.parentElement;
+const card = root.querySelector('.progress-card')?.parentElement;
 ok(card && card.textContent.includes('Nível 4 · Aprendiz') && card.textContent.includes('100 / 250') && card.textContent.includes('4 dias seguidos'), 'Perfil: cartão de nível 4 (100/250) e sequência de 4 dias');
 ok(root.textContent.includes('550'), 'Perfil: "Pts Ganhos" = 550');
 cleanup(); root.innerHTML = '';

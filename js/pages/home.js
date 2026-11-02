@@ -1,4 +1,4 @@
-// Tela Home: nível de energia, tempo disponível e missão sugerida. Porte de Home.tsx.
+// Tela Home: faixa de situação, energia e tempo (em 2 passos), missão sugerida, meta da semana e pet. Porte de Home.tsx.
 
 import * as auth from '../auth.js';
 import { getUserTasks, getUserRoutineBlocks, updateTask, createTask } from '../db.js';
@@ -10,14 +10,23 @@ import { applyPetPowers, applyShield, getStreakExtra } from '../pet-powers.js';
 import { mountPetHome } from '../components/pet-home.js';
 import { CATEGORY_LABELS } from '../categories.js';
 import { createEnergySlider } from '../components/energy-slider.js';
-import { progressCardHTML } from '../components/progress-card.js';
-import { mountGoals } from '../components/goal-cards.js';
+import { statusChipsHTML, fmtPoints } from '../components/status-chips.js';
+import { mountGoalGlance } from '../components/goal-cards.js';
 import { claimWeekRewards } from '../goals.js';
 import { pointsForTask, totalPoints, levelInfo, streakInfo } from '../progress.js';
 import { isAvailable, nextInstance } from '../recurrence.js';
+import { currentCommitment, nextCommitment, fitMinutes } from '../routine-fit.js';
 import { createTaskTimer } from '../components/task-timer.js';
 import { showCongratsModal } from '../components/congrats-modal.js';
 import { mountBackupReminder } from '../components/backup-reminder.js';
+
+// Atalhos de tempo da Home
+const TIME_CHOICES = [
+  { label: '15 min', hours: 0, minutes: 15 },
+  { label: '30 min', hours: 0, minutes: 30 },
+  { label: '1 h', hours: 1, minutes: 0 },
+  { label: '2 h', hours: 2, minutes: 0 },
+];
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -34,6 +43,7 @@ export async function renderHome(container) {
   let mission = null;
   let blocked = false;
   let noTasks = false;
+  let fit = null;          // próximo compromisso de hoje que limitou o tempo da missão (ou null)
   let timer = null;
   let candidates = [];     // todas as tarefas compatíveis, em ordem de prioridade
   let missionIndex = 0;    // qual delas está sendo sugerida
@@ -47,28 +57,20 @@ export async function renderHome(container) {
 
       <div id="backup-slot"></div>
 
-      <div id="pet-slot"></div>
+      <div id="chips-slot"></div>
 
-      <div class="glass-card points-card">
-        <div class="row" style="gap:0.75rem">
-          <div class="icon-tile">${icon('trophy', 20)}</div>
-          <div>
-            <p class="muted xs">Pontos Planner</p>
-            <p class="points-value text-accent" id="xp">${user.xp || 0}</p>
-          </div>
+      <section class="glass-card pad-lg stack" aria-labelledby="step-energy">
+        <h2 class="step-title" id="step-energy"><span class="step-n" aria-hidden="true">1</span> Sua energia agora</h2>
+        <div id="slider-slot"></div>
+      </section>
+
+      <section class="glass-card pad-lg stack" aria-labelledby="step-time">
+        <h2 class="step-title" id="step-time"><span class="step-n" aria-hidden="true">2</span> Quanto tempo você tem?</h2>
+        <div class="quick" role="group" aria-label="Tempo disponível">
+          ${TIME_CHOICES.map((c, i) => `<button type="button" class="chip${i === 2 ? ' active' : ''}" aria-pressed="${i === 2}" data-time="${i}">${c.label}</button>`).join('')}
+          <button type="button" class="chip" aria-pressed="false" data-time="other">Outro</button>
         </div>
-        <span class="text-accent" style="opacity:0.5">${icon('sparkles', 18)}</span>
-      </div>
-
-      <div id="progress-slot"></div>
-
-      <div id="goal-slot"></div>
-
-      <div class="glass-card pad-lg" id="slider-slot"></div>
-
-      <div class="glass-card pad-lg stack">
-        <div class="row text-medium"><span class="text-primary">${icon('clock', 18)}</span> Tempo Disponível</div>
-        <div class="row" style="gap:0.75rem;align-items:flex-start">
+        <div class="row" style="gap:0.75rem;align-items:flex-start" id="time-fields" hidden>
           <div style="flex:1">
             <label class="label muted xs" for="hours">Horas (0-24)</label>
             <input class="input" id="hours" type="number" min="0" max="24" value="1">
@@ -78,13 +80,17 @@ export async function renderHome(container) {
             <input class="input" id="minutes" type="number" min="0" max="59" value="0">
           </div>
         </div>
-      </div>
+      </section>
 
       <button class="btn-neon btn-block row-center" id="generate" style="justify-content:center;font-weight:700">
         ${icon('zap', 18)} Gerar Missão ${icon('chevron-right', 16)}
       </button>
 
       <div id="result" aria-live="polite"></div>
+
+      <div id="goal-slot"></div>
+
+      <div id="pet-slot"></div>
     </section>`;
 
   const $ = (sel) => container.querySelector(sel);
@@ -95,14 +101,31 @@ export async function renderHome(container) {
 
   $('#slider-slot').appendChild(createEnergySlider({ value: energy, onChange: (v) => { energy = v; } }));
 
+  // Atalhos de tempo (15 min, 30 min, 1 h, 2 h) ou "Outro", que abre os campos de horas e minutos
+  const timeFields = $('#time-fields');
+  const timeChips = [...container.querySelectorAll('[data-time]')];
+  const markTime = (key) => timeChips.forEach((b) => { const on = b.dataset.time === String(key); b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
+  container.querySelector('.quick').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-time]');
+    if (!btn) return;
+    markTime(btn.dataset.time);
+    if (btn.dataset.time === 'other') { timeFields.hidden = false; hoursEl.focus(); return; }
+    const c = TIME_CHOICES[Number(btn.dataset.time)];
+    timeFields.hidden = true;
+    hoursEl.value = String(c.hours);
+    minutesEl.value = String(c.minutes);
+    minutesEl.disabled = false;
+    generateBtn.disabled = false;
+  });
+
   mountBackupReminder($('#backup-slot'), user.id);
 
   // ---------- Nível e sequência de dias ----------
-  const progressSlot = $('#progress-slot');
+  const chipsSlot = $('#chips-slot');
   async function refreshProgress(list) {
     const all = list || await getUserTasks(user.id);
-    progressSlot.innerHTML = progressCardHTML(levelInfo(totalPoints(all)), streakInfo(all, Date.now(), await getStreakExtra(user.id)));
-    await mountGoals($('#goal-slot'), { userId: user.id, awardXP: auth.addXP, showLink: true, tasks: all });
+    chipsSlot.innerHTML = statusChipsHTML({ level: levelInfo(totalPoints(all)), streak: streakInfo(all, Date.now(), await getStreakExtra(user.id)), xp: auth.state.user?.xp ?? user.xp });
+    await mountGoalGlance($('#goal-slot'), { userId: user.id, tasks: all });
   }
   // Ao abrir: o Cão protege a sequência se preciso, depois o cartão do pet e a missão do Robô
   (async () => {
@@ -165,20 +188,19 @@ export async function renderHome(container) {
     missionIndex = 0;
     blocked = false;
     noTasks = false;
+    fit = null;
     resetTimer();
 
+    let minutes = availableMinutes();
     if (!bypass) {
-      const now = new Date();
-      const currentDay = now.getDay();
-      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const blocks = await getUserRoutineBlocks(user.id);
-      const isBlocked = blocks.some(
-        (b) => b.dayOfWeek === currentDay && b.startTime <= currentTime && b.endTime > currentTime
-      );
-      if (isBlocked) { blocked = true; renderResult(); return; }
+      if (currentCommitment(blocks)) { blocked = true; renderResult(); return; }
+      // Só sugere tarefas que cabem antes do próximo compromisso de hoje
+      const next = nextCommitment(blocks);
+      const usable = fitMinutes(minutes, next);
+      if (usable < minutes) { fit = next; minutes = usable; }
     }
 
-    const minutes = availableMinutes();
     const tasks = await getUserTasks(user.id);
     const compatible = tasks
       .filter((t) => !t.completed && isAvailable(t) && t.energyCost <= energy && t.durationMinutes <= minutes)
@@ -247,6 +269,9 @@ export async function renderHome(container) {
     resultEl.querySelector('[data-action="next"]')?.focus();   // mantém o foco no botão
   }
 
+  // "do compromisso "Reunião" (às 14:00)" ou "do seu próximo compromisso (às 14:00)"
+  const fitName = (f) => (f.label ? `o compromisso "${escapeHtml(f.label)}" (às ${f.startTime})` : `o seu próximo compromisso (às ${f.startTime})`);
+
   function renderResult() {
     if (blocked) {
       resultEl.innerHTML = `
@@ -254,6 +279,13 @@ export async function renderHome(container) {
           <div class="row text-warning" style="margin-bottom:0.5rem">${icon('alert-triangle', 18)}<strong class="small">Horário Bloqueado</strong></div>
           <p class="muted xs" style="margin-bottom:0.75rem">Você está em horário de compromisso fixo! Verifique sua rotina.</p>
           <button class="btn-warning btn-block" data-action="bypass">${icon('alert-triangle', 14, 'ico')} Gerar mesmo assim</button>
+        </div>`;
+    } else if (noTasks && fit) {
+      resultEl.innerHTML = `
+        <div class="glass-card pad stack">
+          <p class="small">${icon('calendar', 14, 'ico')} Nenhuma tarefa cabe antes d${fitName(fit)}.</p>
+          <p class="muted xs">Faltam ${formatDuration(fit.minutes)} para ele. Você pode adicionar uma tarefa mais curta ou ver as outras sem considerar a rotina.</p>
+          <button class="btn btn-block" data-action="bypass">Ver tarefas sem considerar a rotina</button>
         </div>`;
     } else if (noTasks) {
       resultEl.innerHTML = `
@@ -271,6 +303,7 @@ export async function renderHome(container) {
             <span class="ico-line">${icon('zap', 14, 'ico')} ${mission.energyCost}</span>
             <span class="ico-line">${icon('clock', 14, 'ico')} ${formatDuration(mission.durationMinutes)}</span>
           </div>
+          ${fit && !mission.startedAt ? `<p class="muted xs">${icon('calendar', 14, 'ico')} Você tem ${fit.label ? `"${escapeHtml(fit.label)}"` : 'um compromisso'} às ${fit.startTime} (daqui a ${formatDuration(fit.minutes)}). Exibindo somente tarefas que cabem no período disponível.</p>` : ''}
           <button class="btn-neon btn-block row-center" data-action="${mission.startedAt ? 'continue' : 'start'}" style="justify-content:center">
             ${icon('play', 16)} ${mission.startedAt ? 'Continuar Missão' : 'Iniciar Missão'}
           </button>
@@ -294,7 +327,7 @@ export async function renderHome(container) {
   // Atualiza os pontos quando o XP muda
   const unsubscribe = auth.subscribe((s) => {
     const xpEl = container.querySelector('#xp');
-    if (xpEl && s.user) xpEl.textContent = s.user.xp || 0;
+    if (xpEl && s.user) xpEl.textContent = fmtPoints(s.user.xp);
   });
 
   // Quando o painel admin (ou outra parte) muda vínculo, sequência ou tarefas: atualiza o cartão do pet e o nível sem trocar de aba
