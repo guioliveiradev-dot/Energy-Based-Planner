@@ -84,5 +84,7 @@ export function streakInfo(tasks, now = Date.now(), extra = {}) {
     best = Math.max(best, run + (bonusAt.get(runStart) || 0));
     prev = day;
   }
-  return { current, best, doneToday, alive: current > 0 };
+  // Últimos 7 dias (o mais antigo primeiro; o último é hoje): teve tarefa (ou escudo) naquele dia? weekday: 0 = domingo.
+  const recent = Array.from({ length: 7 }, (_, i) => ({ done: days.has(today - 6 + i), weekday: (today - 6 + i + 4) % 7 }));
+  return { current, best, doneToday, alive: current > 0, recent };
 }

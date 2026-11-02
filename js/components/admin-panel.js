@@ -90,9 +90,9 @@ export function openAdminPanel() {
         <button class="glass-card card-btn" data-act="tutorial"><span class="text-primary">${icon('book-open', 18)}</span>
           <span style="flex:1"><span class="card-title">Resetar Tutorial</span><span class="card-sub">Ver o tutorial novamente</span></span></button>
         <button class="glass-card card-btn" data-act="reset"><span class="text-warning">${icon('rotate-ccw', 18)}</span>
-          <span style="flex:1"><span class="card-title text-warning">${confirmReset ? '⚠️ Confirmar Reset?' : 'Resetar Conta'}</span><span class="card-sub">${confirmReset ? 'Toque novamente para confirmar' : 'Zerar dados, manter conta'}</span></span></button>
+          <span style="flex:1"><span class="card-title text-warning">${confirmReset ? `${icon('alert-triangle', 16, 'ico')} Confirmar Reset?` : 'Resetar Conta'}</span><span class="card-sub">${confirmReset ? 'Toque novamente para confirmar' : 'Zerar dados, manter conta'}</span></span></button>
         <button class="glass-card card-btn" data-act="delete"><span style="color:hsl(var(--destructive))">${icon('trash', 18)}</span>
-          <span style="flex:1"><span class="card-title" style="color:hsl(var(--destructive))">${confirmDelete ? '⚠️ Confirmar Exclusão?' : 'Apagar Conta'}</span><span class="card-sub">${confirmDelete ? 'Toque novamente para confirmar' : 'Remover tudo permanentemente'}</span></span></button>
+          <span style="flex:1"><span class="card-title" style="color:hsl(var(--destructive))">${confirmDelete ? `${icon('alert-triangle', 16, 'ico')} Confirmar Exclusão?` : 'Apagar Conta'}</span><span class="card-sub">${confirmDelete ? 'Toque novamente para confirmar' : 'Remover tudo permanentemente'}</span></span></button>
       </div>`;
   }
 

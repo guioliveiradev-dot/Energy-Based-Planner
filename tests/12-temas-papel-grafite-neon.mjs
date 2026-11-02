@@ -106,7 +106,8 @@ ok(parseImport(JSON.stringify({ tasks: [], inventory: ['neon', 'sunset', 'xyz'] 
 // ---------- cores de energia seguem o tema ----------
 ok(getEnergyConfig(2).color === 'hsl(var(--energy-low))' && getEnergyConfig(5).color === 'hsl(var(--energy-mid))' && getEnergyConfig(9).color === 'hsl(var(--energy-high))', 'Energia: cores vêm das variáveis do tema');
 T.applyTheme('neon');
-ok(cssVar('energy-low') === '0 85% 55%' && cssVar('energy-mid') === '45 100% 55%' && cssVar('energy-high') === '150 100% 50%', 'Energia: Neon mantém exatamente as cores de antes');
+// O vermelho (energia baixa) clareou de 55% para 63% de luz para passar no contraste 4,5; o resto do Neon é igual.
+ok(cssVar('energy-low') === '0 85% 63%' && cssVar('energy-mid') === '45 100% 55%' && cssVar('energy-high') === '150 100% 50%', 'Energia: Neon mantém as cores, com o vermelho um pouco mais claro (contraste)');
 
 // ---------- contraste de texto no Papel (categorias e selos) ----------
 const rule = (sel) => { const i = css.indexOf(sel); return css.slice(i, css.indexOf('}', i)); };

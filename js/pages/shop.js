@@ -15,10 +15,10 @@ import { powerSummary } from '../pet-powers.js';
 import { petInfoHTML } from '../components/pet-info.js';
 
 const TABS = [
-  { id: 'rewards', label: '🎁 Recompensas' },
-  { id: 'store', label: '🛒 Loja' },
-  { id: 'achievements', label: '🏆 Conquistas' },
-  { id: 'history', label: '📜 Histórico' },
+  { id: 'rewards', icon: 'gift', label: 'Recompensas' },
+  { id: 'store', icon: 'shopping-cart', label: 'Loja' },
+  { id: 'achievements', icon: 'trophy', label: 'Conquistas' },
+  { id: 'history', icon: 'scroll-text', label: 'Histórico' },
 ];
 
 export async function renderShop(container) {
@@ -39,7 +39,7 @@ export async function renderShop(container) {
       </div>
 
       <div class="tabs tabs-4" role="tablist">
-        ${TABS.map((t) => `<button class="tab ${t.id === activeTab ? 'active' : ''}" role="tab" aria-selected="${t.id === activeTab}" data-tab="${t.id}">${t.label}</button>`).join('')}
+        ${TABS.map((t) => `<button class="tab ${t.id === activeTab ? 'active' : ''}" role="tab" aria-selected="${t.id === activeTab}" data-tab="${t.id}">${icon(t.icon, 16, 'ico')} ${t.label}</button>`).join('')}
       </div>
 
       <div id="tab-content" class="stack"></div>
@@ -135,7 +135,7 @@ export async function renderShop(container) {
     else if (activeTab === 'store') {
       const owned = (id) => inventory.includes(id);
       const action = (item) => owned(item.id)
-        ? '<span class="xs text-success" style="font-weight:600">✓ Obtido</span>'
+        ? `<span class="xs text-success" style="font-weight:600">${icon('check', 12, 'ico')} Obtido</span>`
         : buyButton('buy', item.id, item.cost);
 
       content.innerHTML = `
@@ -187,7 +187,7 @@ export async function renderShop(container) {
               <p style="font-weight:600;font-size:0.875rem">${a.title}</p>
               <p class="muted xs">${a.description}</p>
             </div>
-            ${on ? '<span class="badge-ok">✓</span>' : ''}
+            ${on ? `<span class="badge-ok">${icon('check', 12, 'ico')}</span>` : ''}
           </div>`;
         }).join('')}`;
     }
@@ -236,7 +236,7 @@ export async function renderShop(container) {
     await addRedemptionRecord({ id: crypto.randomUUID(), userId: user.id, rewardTitle: reward.title, cost: reward.cost, redeemedAt: Date.now() });
     await deleteReward(reward.id);
     celebrate('reward');
-    toast(`🎉 ${reward.title} resgatado!`, 'success');
+    toast(`${reward.title} resgatado!`, 'success');
     load();
   }
 
@@ -247,7 +247,7 @@ export async function renderShop(container) {
     await auth.addXP(-item.cost);
     addToInventory(user.id, item.id);
     celebrate('reward');
-    toast(`🎉 ${item.name} comprado!`, 'success');
+    toast(`${item.name} comprado!`, 'success');
     load();
   }
 

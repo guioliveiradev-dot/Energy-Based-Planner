@@ -32,11 +32,11 @@ export function startAchievementWatcher({ pollMs = 3000, delayMs = 1200, settleM
     modal.panel.innerHTML = `
       <div class="achv-icon" style="background:radial-gradient(circle, color-mix(in srgb, ${ach.color} 19%, transparent), transparent);box-shadow:0 0 40px color-mix(in srgb, ${ach.color} 25%, transparent);color:${ach.color}">${icon(ach.icon, 36)}</div>
       <div class="stack" style="gap:0.5rem">
-        <p class="achv-kicker" style="color:${ach.color}">🏆 Conquista Desbloqueada!</p>
+        <p class="achv-kicker" style="color:${ach.color}">${icon('trophy', 14, 'ico')} Conquista Desbloqueada!</p>
         <h3 style="font-size:1.25rem;font-weight:700">${ach.title}</h3>
         <p class="muted small">${ach.description}</p>
       </div>
-      <button class="btn-neon btn-block" data-role="ok">Incrível! ✨</button>`;
+      <button class="btn-neon btn-block" data-role="ok">Incrível! ${icon('sparkles', 16, 'ico')}</button>`;
     modal.panel.querySelector('[data-role="ok"]').addEventListener('click', () => modal.close());
     modal.open();
     modal.panel.querySelector('[data-role="ok"]').focus();

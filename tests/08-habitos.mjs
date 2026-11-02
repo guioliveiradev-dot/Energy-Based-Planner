@@ -100,7 +100,7 @@ for (const v of ['1', '3', '5']) dlg.querySelector(`#t-days input[value="${v}"]`
 dlg.querySelector('#t-create').click(); await wait(100);
 let tasks = await db.getUserTasks(uid);
 ok(tasks.length === 1 && tasks[0].repeat.days.join() === '1,3,5' && tasks[0].availableFrom === null, 'Criar: hábito salvo com dias 1,3,5 e disponível agora');
-ok(root.textContent.includes('🔁 Seg, Qua, Sex'), 'Lista: mostra "🔁 Seg, Qua, Sex"');
+ok(root.textContent.includes('Seg, Qua, Sex'), 'Lista: mostra "Seg, Qua, Sex"');
 
 // criar hábito diário por preset
 root.querySelector('#fab').click(); dlg = document.querySelector('.modal-panel');
@@ -111,7 +111,7 @@ type(dlg.querySelector('#t-hours'), '0'); type(dlg.querySelector('#t-minutes'), 
 dlg.querySelector('#t-create').click(); await wait(100);
 tasks = await db.getUserTasks(uid);
 const water = tasks.find((t) => t.title === 'Beber água');
-ok(water.repeat.days.join() === '0,1,2,3,4,5,6' && root.textContent.includes('🔁 Todos os dias'), 'Criar: "Todos os dias" salva os 7 dias');
+ok(water.repeat.days.join() === '0,1,2,3,4,5,6' && root.textContent.includes('Todos os dias'), 'Criar: "Todos os dias" salva os 7 dias');
 
 // tarefa sem repetição continua sem repetir
 root.querySelector('#fab').click(); dlg = document.querySelector('.modal-panel');

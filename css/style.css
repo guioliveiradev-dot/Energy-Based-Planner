@@ -17,17 +17,17 @@
   --secondary-foreground: 210 40% 98%;
   --muted: 217 33% 20%;
   --muted-foreground: 215 20% 62%;
-  --accent: 265 100% 68%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 85% 55%;
-  --destructive-foreground: 210 40% 98%;
+  --accent: 265 100% 71%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 85% 63%;
+  --destructive-foreground: 222 47% 11%;
   --border: 217 33% 25%;
   --input: 217 33% 25%;
   --ring: 190 100% 50%;
   --radius: 0.75rem;
   --success: 150 100% 45%;
   --warning: 45 100% 55%;
-  --energy-low: 0 85% 55%;
+  --energy-low: 0 85% 63%;
   --energy-mid: 45 100% 55%;
   --energy-high: 150 100% 50%;
 
@@ -48,6 +48,7 @@ html[data-theme="sunset"] {
   --secondary: 15 25% 18%; --muted: 15 25% 16%;
   --border: 15 25% 22%; --input: 15 25% 22%; --ring: 20 100% 55%;
   --success: 45 100% 50%; --warning: 30 100% 50%;
+  --destructive: 0 85% 61%; --destructive-foreground: 15 40% 8%; --energy-low: 0 85% 61%;
 }
 html[data-theme="forest"] {
   --background: 140 35% 7%; --card: 140 25% 13%; --popover: 140 25% 15%;
@@ -56,37 +57,42 @@ html[data-theme="forest"] {
   --secondary: 140 20% 17%; --muted: 140 20% 15%;
   --border: 140 20% 21%; --input: 140 20% 21%; --ring: 150 80% 40%;
   --success: 120 70% 45%;
+  --destructive: 0 85% 63%; --destructive-foreground: 140 35% 7%; --energy-low: 0 85% 63%;
 }
 html[data-theme="ocean"] {
   --background: 210 50% 8%; --card: 210 35% 14%; --popover: 210 35% 16%;
   --primary: 200 100% 50%; --primary-foreground: 200 20% 10%;
-  --accent: 240 70% 60%; --accent-foreground: 240 20% 10%;
+  --accent: 240 70% 70%; --accent-foreground: 240 20% 10%;
   --secondary: 210 30% 18%; --muted: 210 30% 16%;
   --border: 210 30% 22%; --input: 210 30% 22%; --ring: 200 100% 50%;
+  --destructive: 0 85% 62%; --destructive-foreground: 210 50% 8%; --energy-low: 0 85% 62%;
 }
 html[data-theme="silver"] {
   --background: 220 15% 10%; --card: 215 12% 16%; --popover: 215 12% 18%;
   --primary: 210 10% 70%; --primary-foreground: 220 15% 10%;
-  --accent: 220 20% 55%; --accent-foreground: 210 10% 98%;
+  --accent: 220 20% 57%; --accent-foreground: 220 15% 10%;
   --secondary: 215 10% 20%; --muted: 215 10% 18%;
   --border: 215 10% 24%; --input: 215 10% 24%; --ring: 210 10% 70%;
   --success: 160 50% 45%; --warning: 45 60% 55%;
+  --destructive: 0 85% 64%; --destructive-foreground: 220 15% 10%; --energy-low: 0 85% 64%;
 }
 html[data-theme="gold"] {
   --background: 30 30% 6%; --card: 35 25% 12%; --popover: 35 25% 14%;
   --primary: 43 90% 55%; --primary-foreground: 30 30% 6%;
-  --accent: 25 80% 45%; --accent-foreground: 43 10% 98%;
+  --accent: 25 80% 46%; --accent-foreground: 30 30% 6%;
   --secondary: 35 20% 16%; --muted: 35 20% 14%;
   --border: 35 20% 20%; --input: 35 20% 20%; --ring: 43 90% 55%;
   --success: 140 60% 40%; --warning: 50 90% 55%;
+  --destructive: 0 85% 60%; --destructive-foreground: 30 30% 6%; --energy-low: 0 85% 60%;
 }
 html[data-theme="midnight"] {
   --background: 260 40% 5%; --card: 260 30% 11%; --popover: 260 30% 13%;
-  --primary: 270 70% 55%; --primary-foreground: 270 10% 98%;
-  --accent: 300 60% 50%; --accent-foreground: 300 10% 98%;
+  --primary: 270 70% 63%; --primary-foreground: 260 40% 5%;
+  --accent: 300 60% 52%; --accent-foreground: 260 40% 5%;
   --secondary: 260 25% 15%; --muted: 260 25% 13%;
-  --border: 260 25% 19%; --input: 260 25% 19%; --ring: 270 70% 55%;
+  --border: 260 25% 19%; --input: 260 25% 19%; --ring: 270 70% 63%;
   --success: 160 70% 40%; --warning: 45 90% 55%;
+  --destructive: 0 85% 57%; --destructive-foreground: 260 40% 5%; --energy-low: 0 85% 57%;
 }
 
 /* ---------- Neon (clássico): o visual antigo (cores em :root) e a única fonte Orbitron ---------- */
@@ -702,19 +708,6 @@ html[data-theme="gold"] { --pet-body: #666462; --pet-base: #504E4C; --pet-face: 
 .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
 .stat-tile { display: flex; flex-direction: column; gap: 0.125rem; padding: 0.75rem; border-radius: 0.75rem; background: hsl(var(--secondary) / 0.6); }
 .stat-value { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; }
-.heat-wrap { display: flex; flex-direction: column; gap: 0.25rem; }
-.heat-months, .heat { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; }
-.heat-months span { font-size: 0.75rem; line-height: 1rem; color: hsl(var(--muted-foreground)); white-space: nowrap; overflow: visible; }
-.heat { grid-template-rows: repeat(7, auto); grid-auto-flow: column; }
-.heat-cell { display: inline-block; aspect-ratio: 1; border-radius: 3px; background: hsl(var(--muted)); box-shadow: inset 0 0 0 1px hsl(var(--border)); }
-.heat-cell.h1 { background: hsl(var(--accent) / 0.28); box-shadow: none; }
-.heat-cell.h2 { background: hsl(var(--accent) / 0.5); box-shadow: none; }
-.heat-cell.h3 { background: hsl(var(--accent) / 0.75); box-shadow: none; }
-.heat-cell.h4 { background: hsl(var(--accent)); box-shadow: none; }
-.heat-cell.future { opacity: 0.35; }
-.heat-cell.today { outline: 2px solid hsl(var(--foreground)); outline-offset: 1px; }
-.heat-legend { display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
-.heat-legend .heat-cell { width: 0.875rem; }
 .stat-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
 .stat-list li { display: grid; grid-template-columns: minmax(6.5rem, 1fr) 2fr auto; align-items: center; gap: 0.5rem; }
 .stat-track { height: 0.5rem; border-radius: 999px; background: hsl(var(--muted)); overflow: hidden; box-shadow: inset 0 0 0 1px hsl(var(--border)); }
@@ -756,3 +749,31 @@ html[data-theme="gold"] { --pet-body: #666462; --pet-base: #504E4C; --pet-face: 
 .timer-panel.focus-mode .timer-ring .timer-time { font-size: clamp(3rem, 14vmin, 7rem); }
 .timer-panel.focus-mode .timer-title { font-size: 1.125rem; }
 .timer-panel.focus-mode [data-role="actions"] { width: min(24rem, 100%); }
+
+/* ---------- Ícones do app no lugar de emoji (js/icons.js) ---------- */
+.ico { flex-shrink: 0; vertical-align: -0.15em; }
+.ico-line { display: inline-flex; align-items: center; gap: 0.25rem; }
+.tab, .btn-warning { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; }
+.chip { gap: 0.375rem; }
+.energy-label { display: flex; align-items: center; justify-content: center; gap: 0.25rem; }
+.onb-tip { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.onb-tip .ico { color: hsl(var(--accent)); }
+.pet-celebrate span { color: hsl(var(--accent)); line-height: 0; }
+.pet-celebrate span:nth-child(even) { color: hsl(var(--primary)); }
+.congrats-pet .ico, .congrats-levelup .ico { margin-right: 0.125rem; }
+
+/* ---------- Estatísticas: números em destaque e colunas da semana ---------- */
+.stat-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.stat-tiles .stat-tile { text-align: center; align-items: center; justify-content: center; }
+.stat-tiles .stat-value { font-size: 1.125rem; overflow-wrap: anywhere; }
+.stats-tabs { margin-bottom: 0.75rem; }
+.week-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.375rem; height: 6.5rem; }
+.week-bars.weeks { grid-template-columns: repeat(6, 1fr); }
+.week-bars > div { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 0.25rem; height: 100%; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+.week-bars b { font-size: 0.875rem; color: hsl(var(--foreground)); min-height: 1.25rem; }
+.week-bars i { display: block; width: 100%; border-radius: 0.375rem 0.375rem 0.125rem 0.125rem; background: hsl(var(--accent)); }
+.week-bars i.zero { background: hsl(var(--muted)); box-shadow: inset 0 0 0 1px hsl(var(--border)); }
+.week-bars .future i { background: transparent; box-shadow: inset 0 0 0 1px hsl(var(--border)); opacity: 0.6; }
+.week-bars .today span { color: hsl(var(--foreground)); font-weight: 700; }
+.insight { display: flex; gap: 0.625rem; align-items: flex-start; }
+.insight .ico { color: hsl(var(--accent)); margin-top: 0.125rem; }

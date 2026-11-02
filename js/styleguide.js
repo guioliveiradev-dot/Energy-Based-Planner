@@ -13,13 +13,10 @@ import { progressCardHTML } from './components/progress-card.js';
 import { levelInfo, streakInfo } from './progress.js';
 import { celebrate } from './celebrate.js';
 import { showCongratsModal } from './components/congrats-modal.js';
-import { hslToRgb, contrast } from './contrast.js';
+import { CONTRAST_PAIRS, MIN_CONTRAST, SOLID_CARD_THEMES, themeContrast } from './contrast.js';
 
 const THEMES = [...FREE_THEMES, ...SHOP_THEMES].map((t) => ({ id: t.id, name: t.name }));
-const SOLID_CARD = ['papel', 'grafite'];   // nestes temas o cartão é sólido; nos outros é 60% sobre o fundo
 const root = document.documentElement;
-
-const blend = (top, bottom, alpha) => top.map((c, i) => c * alpha + bottom[i] * (1 - alpha));
 
 const VARS = ['background', 'foreground', 'card', 'primary', 'primary-foreground', 'accent', 'accent-foreground',
   'secondary', 'muted', 'muted-foreground', 'destructive', 'destructive-foreground', 'success', 'warning', 'border',
@@ -29,30 +26,6 @@ const readVars = () => {
   return Object.fromEntries(VARS.map((v) => [v, cs.getPropertyValue(`--${v}`).trim()]));
 };
 
-const PAIRS = [
-  ['Texto no fundo', (c) => [c.foreground, c.background]],
-  ['Texto secundário no fundo', (c) => [c['muted-foreground'], c.background]],
-  ['Texto no cartão', (c) => [c.foreground, 'card']],
-  ['Texto secundário no cartão', (c) => [c['muted-foreground'], 'card']],
-  ['Texto do botão principal', (c) => [c['primary-foreground'], c.primary]],
-  ['Cor primária como texto (cartão)', (c) => [c.primary, 'card']],
-  ['Cor de destaque como texto (cartão)', (c) => [c.accent, 'card']],
-  ['Texto sobre destaque', (c) => [c['accent-foreground'], c.accent]],
-  ['Sucesso como texto (cartão)', (c) => [c.success, 'card']],
-  ['Atenção como texto (cartão)', (c) => [c.warning, 'card']],
-  ['Erro como texto (cartão)', (c) => [c.destructive, 'card']],
-  ['Energia baixa como texto (cartão)', (c) => [c['energy-low'], 'card']],
-  ['Energia média como texto (cartão)', (c) => [c['energy-mid'], 'card']],
-  ['Energia alta como texto (cartão)', (c) => [c['energy-high'], 'card']],
-];
-
-function ratio(vars, make, solid) {
-  const bg = hslToRgb(vars.background);
-  const cardBg = blend(hslToRgb(vars.card), bg, solid ? 1 : 0.6);
-  const [fg, back] = make(vars);
-  return contrast(hslToRgb(fg), back === 'card' ? cardBg : hslToRgb(back));
-}
-
 function buildContrastTable() {
   const original = root.getAttribute('data-theme');
   const perTheme = THEMES.map((t) => {
@@ -61,9 +34,10 @@ function buildContrastTable() {
   });
   applyTheme(original || 'papel');
   const head = `<thead><tr><th scope="col">Par de cores</th>${perTheme.map((t) => `<th scope="col">${t.name}</th>`).join('')}</tr></thead>`;
-  const body = PAIRS.map(([label, make]) => `<tr><th scope="row">${label}</th>${perTheme.map((t) => {
-    const r = ratio(t.vars, make, SOLID_CARD.includes(t.id));
-    return r >= 4.5 ? `<td>${r.toFixed(1)} ✓</td>` : `<td class="fail">${r.toFixed(1)} ✗</td>`;
+  const results = perTheme.map((t) => themeContrast(t.vars, SOLID_CARD_THEMES.includes(t.id)));
+  const body = CONTRAST_PAIRS.map(([label], row) => `<tr><th scope="row">${label}</th>${results.map((res) => {
+    const r = res[row].ratio;
+    return r >= MIN_CONTRAST ? `<td>${r.toFixed(1)} ✓</td>` : `<td class="fail">${r.toFixed(1)} ✗</td>`;
   }).join('')}</tr>`).join('');
   document.getElementById('contrast').innerHTML = `${head}<tbody>${body}</tbody>`;
 }

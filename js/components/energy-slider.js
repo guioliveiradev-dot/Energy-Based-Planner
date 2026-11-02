@@ -3,9 +3,9 @@
 import { icon } from '../icons.js';
 
 export function getEnergyConfig(value) {
-  if (value <= 3) return { color: 'hsl(var(--energy-low))',   colorDim: 'hsl(var(--energy-low) / 0.3)',   label: '⚡ Exausto', iconName: 'battery-low' };
-  if (value <= 7) return { color: 'hsl(var(--energy-mid))', colorDim: 'hsl(var(--energy-mid) / 0.3)', label: '⚡ Bem',     iconName: 'battery-medium' };
-  return            { color: 'hsl(var(--energy-high))', colorDim: 'hsl(var(--energy-high) / 0.3)', label: '⚡ Focado!', iconName: 'battery-full' };
+  if (value <= 3) return { color: 'hsl(var(--energy-low))',   colorDim: 'hsl(var(--energy-low) / 0.3)',   label: 'Exausto', iconName: 'battery-low' };
+  if (value <= 7) return { color: 'hsl(var(--energy-mid))', colorDim: 'hsl(var(--energy-mid) / 0.3)', label: 'Bem',     iconName: 'battery-medium' };
+  return            { color: 'hsl(var(--energy-high))', colorDim: 'hsl(var(--energy-high) / 0.3)', label: 'Focado!', iconName: 'battery-full' };
 }
 
 export function createEnergySlider({ value = 5, onChange = () => {} } = {}) {
@@ -37,10 +37,10 @@ export function createEnergySlider({ value = 5, onChange = () => {} } = {}) {
     valueEl.textContent = v;
     valueEl.style.color = color;
     valueEl.style.textShadow = `0 0 10px ${color}`;
-    labelEl.textContent = label;
+    labelEl.innerHTML = `${icon('zap', 14, 'ico')} ${label}`;
     labelEl.style.color = color;
     input.value = v;
-    input.setAttribute('aria-valuetext', `${v} de 10, ${label.replace('⚡', '').trim()}`);
+    input.setAttribute('aria-valuetext', `${v} de 10, ${label}`);
     input.style.setProperty('--energy-color', color);
     input.style.setProperty('--energy-color-dim', colorDim);
     input.style.setProperty('--energy-percent', `${((v - 1) / 9) * 100}%`);
@@ -60,5 +60,5 @@ export function createEnergySlider({ value = 5, onChange = () => {} } = {}) {
 export function energyBadge(cost) {
   const { color } = getEnergyConfig(cost);
   const bolts = Math.ceil(cost / 3);
-  return `<span class="energy-badge" style="color:${color}">${'⚡'.repeat(bolts)} ${cost}</span>`;
+  return `<span class="energy-badge" style="color:${color}">${icon('zap', 12, 'ico').repeat(bolts)} ${cost}</span>`;
 }

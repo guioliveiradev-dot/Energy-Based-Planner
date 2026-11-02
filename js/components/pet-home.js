@@ -1,5 +1,6 @@
 // Cartão do pet na Home: carinha, mensagem do dia e, para o Robô, a missão do dia.
 import { petFaceHTML, bondLevel } from '../pets.js';
+import { icon } from '../icons.js';
 import { getActivePet, ALL_PETS } from '../themes.js';
 import { getUserPetBonds } from '../db.js';
 import { streakInfo, dayKey } from '../progress.js';
@@ -23,7 +24,7 @@ export async function mountPetHome(slot, userId, tasks, now = Date.now()) {
     <div class="pet-mission" role="group" aria-label="Missão do dia">
       <p class="muted xs">Missão do dia</p>
       <p class="small"><strong>${escapeHtml(mission.task.title)}</strong></p>
-      <p class="xs">${mission.done ? 'Missão cumprida! 🎉' : `Concluir essa tarefa dá +${mission.pct}% de pontos extras.`}</p>
+      <p class="xs">${mission.done ? `Missão cumprida! ${icon('sparkles', 14, 'ico')}` : `Concluir essa tarefa dá +${mission.pct}% de pontos extras.`}</p>
       ${mission.done ? '' : '<a class="btn btn-sm" href="#/tasks">Ver em Tarefas</a>'}
     </div>` : '';
   slot.innerHTML = `

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metas e desafios: opções</title>
+<meta name="robots" content="noindex">
+<script>document.documentElement.setAttribute('data-theme', 'forest');</script>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/progress.css">
+<style>
+  .pg { max-width: 64rem; margin: 0 auto; padding: 1rem 1rem 4rem; display: flex; flex-direction: column; gap: 2rem; }
+  .pg-bar { position: sticky; top: 0; z-index: 5; background: hsl(var(--background)); padding: 0.75rem 0; border-bottom: 1px solid hsl(var(--border)); display: flex; flex-direction: column; gap: 0.5rem; }
+  .pg-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 1rem; align-items: start; }
+  .pg-col { display: flex; flex-direction: column; gap: 0.75rem; }
+  .pg-label { font-weight: 700; font-size: 0.9375rem; }
+  .pg-state { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); margin: 0.25rem 0 0; }
+  .pg select { min-height: 2.75rem; padding: 0 0.75rem; border-radius: 0.5rem; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); }
+  .pg ul.rules { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.375rem; font-size: 0.875rem; }
+
+  /* Meta da semana */
+  .goal-head { display: flex; align-items: center; gap: 0.75rem; }
+  .goal-head .grow { flex: 1; min-width: 0; }
+  .goal-ico { width: 2.75rem; height: 2.75rem; flex-shrink: 0; border-radius: 0.75rem; display: grid; place-items: center; background: hsl(var(--accent) / 0.16); color: hsl(var(--accent)); border: 1px solid hsl(var(--accent) / 0.45); }
+  .goal-ico.done { background: hsl(var(--success) / 0.16); color: hsl(var(--success)); border-color: hsl(var(--success) / 0.45); }
+  .goal-title { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; }
+  .goal-big { font-size: 0.9375rem; }
+  .goal-big strong { font-family: var(--font-display); font-size: 1.75rem; line-height: 1; }
+  .goal-note { font-size: 0.8125rem; color: hsl(var(--muted-foreground)); }
+  .goal-note.ok { color: hsl(var(--success)); font-weight: 600; }
+  .goal-ring { display: flex; align-items: center; gap: 1rem; }
+  .goal-ring .ring { position: relative; width: 5rem; height: 5rem; flex-shrink: 0; }
+  .goal-ring svg.r { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .goal-ring .num { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 1.125rem; }
+  .goal-pick { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .goal-pick .chip { min-width: 3rem; justify-content: center; }
+
+  /* Desafios */
+  .ch-card { display: flex; flex-direction: column; gap: 0.5rem; }
+  .ch-row { display: flex; align-items: center; gap: 0.75rem; }
+  .ch-ico { width: 2.5rem; height: 2.5rem; flex-shrink: 0; border-radius: 0.625rem; display: grid; place-items: center; background: hsl(var(--primary) / 0.14); color: hsl(var(--primary)); }
+  .ch-ico.done { background: hsl(var(--success) / 0.16); color: hsl(var(--success)); }
+  .ch-title { font-weight: 600; font-size: 0.9375rem; }
+  .ch-bonus { margin-left: auto; font-size: 0.8125rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 999px; background: hsl(var(--muted)); border: 1px solid hsl(var(--border)); white-space: nowrap; display: inline-flex; gap: 0.25rem; align-items: center; }
+  .ch-bonus.got { background: hsl(var(--success) / 0.16); border-color: hsl(var(--success) / 0.45); color: hsl(var(--success)); }
+  .ch-list { display: flex; flex-direction: column; }
+  .ch-li { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid hsl(var(--border)); }
+  .ch-li:last-child { border-bottom: 0; }
+  .ch-box { width: 1.5rem; height: 1.5rem; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 2px hsl(var(--border)); color: hsl(var(--background)); }
+  .ch-box.done { background: hsl(var(--success)); box-shadow: none; }
+  .ch-li .grow { flex: 1; min-width: 0; }
+  .ch-li.done .ch-title { color: hsl(var(--muted-foreground)); }
+</style>
+</head>
+<body>
+<div class="pg">
+  <header class="pg-bar">
+    <h1 class="page-title">Metas e desafios: opções</h1>
+    <p class="muted small">Tudo aqui é de exemplo. Use o seletor para ver em outros temas.</p>
+    <label class="small">Tema: <select id="tema" aria-label="Tema da página">
+      <option value="forest">Floresta</option><option value="papel">Papel</option><option value="grafite">Grafite</option><option value="neon">Neon</option>
+      <option value="sunset">Pôr do Sol</option><option value="ocean">Oceano</option><option value="midnight">Meia-Noite</option><option value="silver">Prata</option><option value="gold">Ouro</option></select></label>
+  </header>
+
+  <section class="stack" aria-labelledby="h-regras">
+    <h2 class="mission-title" id="h-regras">As regras que eu proponho</h2>
+    <div class="glass-card pad-lg stack">
+      <ul class="rules">
+        <li><strong>Meta da semana:</strong> você escolhe quantas tarefas quer concluir de segunda a domingo (3, 5, 7, 10 ou 15). Pode mudar quando quiser. Ao bater a meta, ganha <strong>+50 pontos</strong>, uma vez por semana.</li>
+        <li><strong>Desafios da semana:</strong> 3 desafios opcionais que mudam toda segunda-feira, por exemplo "concluir 3 tarefas de Saúde" ou "uma tarefa antes das 10h". Cada um dá <strong>+20, +30 ou +40 pontos</strong>.</li>
+        <li><strong>Sem culpa:</strong> não existe "falhou". Na segunda-feira tudo recomeça do zero, sem aviso do que ficou para trás. Quem não define meta não vê cobrança nenhuma, só um convite.</li>
+        <li><strong>Os pontos entram no saldo da Loja, não no nível</strong> (igual aos poderes dos pets). Tudo é calculado a partir das tarefas que você já conclui, sem nada novo para preencher.</li>
+        <li><strong>Pets:</strong> nesta primeira versão ficam de fora. Podem entrar depois, por exemplo o Robô escolhendo o desafio do dia.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="stack" aria-labelledby="h-meta">
+    <h2 class="mission-title" id="h-meta">1 · Meta da semana (cartão)</h2>
+    <div class="pg-cols" id="meta"></div>
+  </section>
+
+  <section class="stack" aria-labelledby="h-ch">
+    <h2 class="mission-title" id="h-ch">2 · Desafios da semana</h2>
+    <div class="pg-cols" id="ch"></div>
+  </section>
+</div>
+
+<script type="module">
+import { icon } from '../js/icons.js';
+document.getElementById('tema').addEventListener('change', (e) => document.documentElement.setAttribute('data-theme', e.target.value));
+
+const bar = (p) => `<div class="progress" role="progressbar" aria-label="Progresso da meta" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}"><div class="progress-bar" style="width:${p}%"></div></div>`;
+const pick = (sel) => `<div class="goal-pick" role="group" aria-label="Escolher a meta">${[3, 5, 7, 10, 15].map((n) => `<button type="button" class="chip${n === sel ? ' active' : ''}">${n}</button>`).join('')}</div>`;
+
+const METAS = [
+  { nome: 'Sem meta definida', n: null },
+  { nome: '3 de 5 tarefas', n: 5, v: 3 },
+  { nome: 'Meta batida (+50 recebidos)', n: 5, v: 5 },
+  { nome: 'Meta batida, com tarefas a mais', n: 5, v: 7 },
+];
+const metaA = (m) => {
+  if (m.n === null) return `<div class="glass-card pad-lg stack"><div class="goal-head"><span class="goal-ico">${icon('target', 22, 'ico')}</span><div class="grow"><p class="goal-title">Meta da semana</p><p class="muted xs">De segunda a domingo</p></div></div>
+    <p class="small">Que tal uma meta para esta semana? Você escolhe o tamanho e pode mudar quando quiser.</p>${pick(5)}<button class="btn-neon btn-sm" type="button">Definir minha meta</button></div>`;
+  const done = m.v >= m.n; const extra = m.v - m.n;
+  return `<div class="glass-card pad-lg stack"><div class="goal-head"><span class="goal-ico ${done ? 'done' : ''}">${icon(done ? 'check' : 'target', 22, 'ico')}</span><div class="grow"><p class="goal-title">Meta da semana</p><p class="muted xs">De segunda a domingo</p></div><button class="btn btn-sm" type="button">Mudar</button></div>
+    <p class="goal-big"><strong>${Math.min(m.v, m.n)}</strong> de ${m.n} tarefas${extra > 0 ? ` <span class="muted small">· ${extra} a mais</span>` : ''}</p>${bar(Math.min(100, Math.round(m.v / m.n * 100)))}
+    <p class="goal-note ${done ? 'ok' : ''}">${done ? `${icon('sparkles', 14, 'ico')} Meta batida! +50 pontos no seu saldo` : `Mais ${m.n - m.v} ${m.n - m.v === 1 ? 'tarefa' : 'tarefas'} para ganhar +50 pontos`}</p></div>`;
+};
+const metaB = (m) => {
+  if (m.n === null) return metaA(m);
+  const done = m.v >= m.n; const extra = m.v - m.n; const p = Math.min(1, m.v / m.n); const C = 2 * Math.PI * 34;
+  return `<div class="glass-card pad-lg"><div class="goal-ring"><div class="ring"><svg class="r" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="none" stroke="hsl(var(--muted))" stroke-width="8"/><circle cx="40" cy="40" r="34" fill="none" stroke="${done ? 'hsl(var(--success))' : 'hsl(var(--accent))'}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}"/></svg><span class="num">${Math.min(m.v, m.n)}/${m.n}</span></div>
+    <div class="stack" style="gap:0.25rem;min-width:0"><p class="goal-title">Meta da semana</p>
+    <p class="goal-note ${done ? 'ok' : ''}">${done ? `Meta batida! +50 pontos no seu saldo${extra > 0 ? ` · ${extra} a mais` : ''}` : `Mais ${m.n - m.v} ${m.n - m.v === 1 ? 'tarefa' : 'tarefas'} para ganhar +50 pontos`}</p>
+    <button class="btn btn-sm" type="button" style="align-self:flex-start">Mudar</button></div></div></div>`;
+};
+document.getElementById('meta').innerHTML = [['A · Número grande e barra', metaA], ['B · Anel com o número dentro', metaB]].map(([t, f]) =>
+  `<div class="pg-col"><span class="pg-label">${t}</span>${METAS.map((m) => `<p class="pg-state">${m.nome}</p>${f(m)}`).join('')}</div>`).join('');
+
+const CH = [
+  { ico: 'heart', t: 'Conclua 3 tarefas de Saúde', v: 1, n: 3, b: 30 },
+  { ico: 'zap', t: 'Conclua uma tarefa de energia 8 ou mais', v: 1, n: 1, b: 20 },
+  { ico: 'clock', t: 'Fique 2 horas focado na semana', v: 45, n: 120, b: 40, unit: 'min' },
+];
+const frac = (c) => `${c.v >= c.n ? c.n : c.v} de ${c.n}${c.unit ? ` ${c.unit}` : ''}`;
+const chA = () => CH.map((c) => { const d = c.v >= c.n; return `<div class="glass-card pad ch-card"><div class="ch-row"><span class="ch-ico ${d ? 'done' : ''}">${icon(d ? 'check' : c.ico, 20, 'ico')}</span><div><p class="ch-title">${c.t}</p><p class="muted xs">${d ? 'Concluído' : frac(c)}</p></div><span class="ch-bonus ${d ? 'got' : ''}">${icon('gift', 12, 'ico')} +${c.b}</span></div>${d ? '' : bar(Math.round(c.v / c.n * 100))}</div>`; }).join('');
+const chB = () => `<div class="glass-card pad"><div class="ch-list">${CH.map((c) => { const d = c.v >= c.n; return `<div class="ch-li ${d ? 'done' : ''}"><span class="ch-box ${d ? 'done' : ''}">${d ? icon('check', 14, 'ico') : ''}</span><div class="grow"><p class="ch-title">${c.t}</p><p class="muted xs">${d ? 'Concluído' : frac(c)}</p></div><span class="ch-bonus ${d ? 'got' : ''}">+${c.b}</span></div>`; }).join('')}</div></div>`;
+document.getElementById('ch').innerHTML = `
+  <div class="pg-col"><span class="pg-label">A · Um cartão por desafio, com barra</span><p class="pg-state">Semana em andamento</p>${chA()}</div>
+  <div class="pg-col"><span class="pg-label">B · Lista compacta, estilo checklist</span><p class="pg-state">Semana em andamento</p>${chB()}</div>`;
+</script>
+</body>
+</html>

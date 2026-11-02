@@ -26,35 +26,34 @@ export function formatMinutes(total) {
   return r === 0 ? `${h} h` : `${h} h ${r} min`;
 }
 
-const levelFor = (count) => (count === 0 ? 0 : count === 1 ? 1 : count === 2 ? 2 : count <= 4 ? 3 : 4);
-
-// Mapa de calor: `weeks` colunas (a mais antiga primeiro), cada uma com 7 dias de segunda a domingo.
-export function heatmap(tasks, now = Date.now(), weeks = 16) {
+// Esta semana (segunda a domingo): quantas tarefas em cada dia. Dias que ainda não chegaram ficam vazios (sem número).
+export const WEEKDAY_LETTERS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+export function thisWeek(tasks, now = Date.now()) {
   const counts = new Map();
   for (const t of done(tasks)) counts.set(dayKey(t.completedAt), (counts.get(dayKey(t.completedAt)) || 0) + 1);
   const n = new Date(now);
   const todayStart = new Date(n.getFullYear(), n.getMonth(), n.getDate());
-  const first = new Date(todayStart.getFullYear(), todayStart.getMonth(), todayStart.getDate() - mondayIndex(now) - (weeks - 1) * 7);
-  const columns = [];
-  let activeDays = 0, total = 0, best = { key: null, count: 0 };
-  for (let w = 0; w < weeks; w++) {
-    const col = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(first.getFullYear(), first.getMonth(), first.getDate() + w * 7 + i);
-      const key = dayKey(date.getTime());
-      const future = date.getTime() > todayStart.getTime();
-      const count = future ? 0 : counts.get(key) || 0;
-      if (count > 0) { activeDays++; total += count; if (count > best.count) best = { key, count }; }
-      col.push({ key, date: date.getTime(), count, future, today: date.getTime() === todayStart.getTime(), level: levelFor(count) });
-    }
-    columns.push(col);
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(todayStart.getFullYear(), todayStart.getMonth(), todayStart.getDate() - mondayIndex(now) + i);
+    const future = date.getTime() > todayStart.getTime();
+    days.push({ name: WEEKDAY_NAMES[i], letter: WEEKDAY_LETTERS[i], count: future ? 0 : counts.get(dayKey(date.getTime())) || 0, future, today: date.getTime() === todayStart.getTime() });
   }
-  // nome do mês acima da coluna em que ele começa
-  const months = columns.map((col, i) => {
-    const m = new Date(col[0].date).getMonth();
-    return i === 0 || m !== new Date(columns[i - 1][0].date).getMonth() ? MONTH_SHORT[m] : '';
-  });
-  return { columns, months, activeDays, total, best, weeks };
+  return { days, total: days.reduce((a, d) => a + d.count, 0), max: Math.max(...days.map((d) => d.count)) };
+}
+
+// Semana a semana: total das últimas `weeks` semanas (a mais antiga primeiro; a última é a atual). Rótulo = dia/mês da segunda-feira.
+export function weeklyTotals(tasks, now = Date.now(), weeks = 6) {
+  const n = new Date(now);
+  const thisMonday = new Date(n.getFullYear(), n.getMonth(), n.getDate() - mondayIndex(now));
+  const list = [];
+  for (let w = weeks - 1; w >= 0; w--) {
+    const start = new Date(thisMonday.getFullYear(), thisMonday.getMonth(), thisMonday.getDate() - w * 7);
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+    const count = done(tasks).filter((t) => t.completedAt >= start.getTime() && t.completedAt < end.getTime()).length;
+    list.push({ start: start.getTime(), label: `${start.getDate()}/${start.getMonth() + 1}`, count, current: w === 0 });
+  }
+  return { weeks: list, max: Math.max(...list.map((x) => x.count)) };
 }
 
 // Minutos focados (soma da duração das tarefas concluídas): hoje, 7 dias, 30 dias e total.
@@ -119,7 +118,6 @@ export function habitHistory(tasks, now = Date.now(), limit = 8) {
 
 export function computeStats(tasks, now = Date.now(), streakExtra = {}) {
   const completed = done(tasks);
-  const heat = heatmap(tasks, now);
   const allDays = new Set(completed.map((t) => dayKey(t.completedAt))).size;
   const streak = streakInfo(tasks, now, streakExtra);
   return {
@@ -129,7 +127,8 @@ export function computeStats(tasks, now = Date.now(), streakExtra = {}) {
     points: totalPoints(tasks),
     streak,
     focus: focusTime(tasks, now),
-    heat,
+    week: thisWeek(tasks, now),
+    weekly: weeklyTotals(tasks, now),
     categories: byCategory(tasks),
     weekdays: weekdayStats(tasks),
     periods: periodStats(tasks),

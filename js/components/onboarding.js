@@ -7,22 +7,22 @@ import { lockBackground, unlockBackground } from './modal.js';
 const STEPS = [
   { icon: 'logo', title: 'Bem-vindo ao Energy Based Planner!',
     description: 'Gerencie suas tarefas com base no seu nível de energia, não apenas no horário.',
-    tip: 'Deslize para ver como funciona →', color: 'hsl(190, 100%, 50%)' },
+    tipIcon: 'arrow-right', tip: 'Deslize para ver como funciona.', color: 'hsl(190, 100%, 50%)' },
   { icon: 'zap', title: 'Home — Gerar Missão',
     description: 'Ajuste o slider de energia (1-10) e informe quanto tempo você tem. Toque em "Gerar Missão" e o app sugere a tarefa ideal para o momento.',
-    tip: '💡 O app verifica se você está em horário bloqueado pela rotina.', color: 'hsl(190, 100%, 50%)' },
+    tipIcon: 'lightbulb', tip: 'O app verifica se você está em horário bloqueado pela rotina.', color: 'hsl(190, 100%, 50%)' },
   { icon: 'list-todo', title: 'Tarefas — Organize Tudo',
     description: 'Crie tarefas com título, custo de energia (1-10), duração, prazo e categoria. Inicie o cronômetro e ganhe Pontos Planner ao concluir!',
-    tip: '💡 Fórmula: Pontos = (Energia × 10) + (Minutos × 0.5)', color: 'hsl(150, 100%, 50%)' },
+    tipIcon: 'lightbulb', tip: 'Fórmula: Pontos = (Energia × 10) + (Minutos × 0.5)', color: 'hsl(150, 100%, 50%)' },
   { icon: 'calendar', title: 'Rotina — Bloqueie Horários',
     description: 'Adicione blocos fixos como escola, trabalho ou academia. O app não vai sugerir tarefas nesses horários.',
-    tip: '💡 Cada dia da semana pode ter blocos diferentes.', color: 'hsl(45, 100%, 55%)' },
+    tipIcon: 'lightbulb', tip: 'Cada dia da semana pode ter blocos diferentes.', color: 'hsl(45, 100%, 55%)' },
   { icon: 'shopping-bag', title: 'Loja — Recompensas, Temas & Pets',
     description: 'Crie recompensas personalizadas, compre temas de cores e pets que acompanham seu cronômetro! Tudo com Pontos Planner.',
-    tip: '💡 Ex: "Jogar Videogame" por 500 Pontos.', color: 'hsl(265, 100%, 68%)' },
+    tipIcon: 'lightbulb', tip: 'Ex: "Jogar Videogame" por 500 Pontos.', color: 'hsl(265, 100%, 68%)' },
   { icon: 'trophy', title: 'Conquistas — Desbloqueie Todas!',
     description: 'Complete tarefas e resgate recompensas para desbloquear badges especiais. Quanto mais você produz, mais conquistas acumula!',
-    tip: '🎯 Pronto para começar? Vamos lá!', color: 'hsl(45, 100%, 55%)' },
+    tipIcon: 'target', tip: 'Pronto para começar? Vamos lá!', color: 'hsl(45, 100%, 55%)' },
 ];
 
 export function showOnboarding({ onComplete }) {
@@ -42,7 +42,7 @@ export function showOnboarding({ onComplete }) {
         <div class="onb-icon animate-float" style="background:linear-gradient(135deg, ${step.color}, hsl(265, 100%, 68%))">${step.icon === 'logo' ? '<span class="logo-mark" style="--s:3.25rem"></span>' : icon(step.icon, 36)}</div>
         <h2 class="onb-title" id="onb-title">${step.title}</h2>
         <p class="onb-desc">${step.description}</p>
-        <div class="glass-card onb-tip">${step.tip}</div>
+        <div class="glass-card onb-tip">${icon(step.tipIcon, 16, 'ico')}<span>${step.tip}</span></div>
       </div>
       <div class="onb-dots">${STEPS.map((_, i) => `<span class="${i === current ? 'active' : ''}"></span>`).join('')}</div>
       <div class="onb-actions">

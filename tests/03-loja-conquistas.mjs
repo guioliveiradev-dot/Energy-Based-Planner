@@ -68,7 +68,7 @@ cleanup(); root.innerHTML = ''; cleanup = await renderShop(root);
 root.querySelector('[data-tab="store"]').click();
 root.querySelector('[data-action="buy"][data-id="sunset"]').click(); await wait(100);
 ok(auth.state.user.xp === 200 && themes.getInventory(uid).includes('sunset'), 'Loja: comprou tema (xp 1000→200, inventário ok)');
-ok(root.textContent.includes('✓ Obtido'), 'Loja: mostra "Obtido"');
+ok(root.textContent.includes('Obtido'), 'Loja: mostra "Obtido"');
 
 // conquistas + histórico
 root.querySelector('[data-tab="achievements"]').click();

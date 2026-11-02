@@ -26,14 +26,14 @@ import { notifyTimerDone } from '../alerts.js';
 import { remainingSeconds, pausedTask, resumedTask } from '../task-time.js';
 
 const PET_MESSAGES = {
-  cat:     ['Miau! Continue!', 'Purrfecto! 🐾', 'Foco, humano!', 'Ronron... ✨'],
-  dog:     ['Au au! Vai lá!', 'Bom garoto! 🦴', 'Você consegue!', 'Woof! 💪'],
-  dragon:  ['Fogo total! 🔥', 'Poder máximo!', 'Dracarys! ⚡', 'Imbatível!'],
-  phoenix: ['Renasça! 🔥', 'Brilhe forte!', 'Asas ao alto!', 'Imortal! ✨'],
-  robot:   ['Processando... ✅', 'Eficiência 100%!', 'Modo turbo! ⚡', 'Beep boop! 🤖'],
-  unicorn: ['Magia pura! ✨', 'Arco-íris! 🌈', 'Brilhante!', 'Encantador! 💫'],
+  cat:     ['Miau! Continue!', 'Purrfecto!', 'Foco, humano!', 'Ronron...'],
+  dog:     ['Au au! Vai lá!', 'Bom garoto!', 'Você consegue!', 'Woof!'],
+  dragon:  ['Fogo total!', 'Poder máximo!', 'Dracarys!', 'Imbatível!'],
+  phoenix: ['Renasça!', 'Brilhe forte!', 'Asas ao alto!', 'Imortal!'],
+  robot:   ['Processando...', 'Eficiência 100%!', 'Modo turbo!', 'Beep boop!'],
+  unicorn: ['Magia pura!', 'Arco-íris!', 'Brilhante!', 'Encantador!'],
 };
-const CELEBRATE = ['⭐', '✨', '🎉', '💫', '🌟', '🔥', '💎', '🎊'];
+const CELEBRATE = ['star', 'sparkles', 'gem', 'sparkles', 'star', 'flame', 'gem', 'sparkles'];   // ícones do app
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
@@ -44,7 +44,7 @@ function petHTML(pet) {
   }).join('');
   const celebrate = CELEBRATE.map((c, i) => {
     const a = (i * Math.PI * 2) / 8;
-    return `<span style="--dx:${Math.round(Math.cos(a) * 55)}px;--dy:${Math.round(Math.sin(a) * 55)}px;--delay:${(i * 0.2).toFixed(1)}s">${c}</span>`;
+    return `<span style="--dx:${Math.round(Math.cos(a) * 55)}px;--dy:${Math.round(Math.sin(a) * 55)}px;--delay:${(i * 0.2).toFixed(1)}s">${icon(c, 14)}</span>`;
   }).join('');
   const zs = [0, 1, 2].map((i) =>
     `<span class="pet-z" style="--i:${i}">Z</span>`).join('');
@@ -100,7 +100,7 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
         </svg>
         <p class="timer-time" data-role="time">00:00</p>
       </div>
-      <p class="timer-paused" data-role="paused" hidden>⏸ Pausado</p>
+      <p class="timer-paused" data-role="paused" hidden>${icon('pause', 12, 'ico')} Pausado</p>
     </div>
     ${pet ? petHTML(pet) : ''}
     <div data-role="actions"></div>`;
@@ -153,7 +153,7 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
     timeEl.textContent = isDone ? '00:00' : `${pad2(Math.floor(shown / 60))}:${pad2(Math.floor(shown % 60))}`;
     timeEl.dataset.state = state;
     if (modal.isOpen) {
-      document.title = isDone ? `✅ Tempo esgotado · ${taskTitle}` : `${timeEl.textContent}${isPaused ? ' (pausado)' : ''} · ${taskTitle}`;
+      document.title = isDone ? `Tempo esgotado · ${taskTitle}` : `${timeEl.textContent}${isPaused ? ' (pausado)' : ''} · ${taskTitle}`;
     }
     arcEl.style.strokeDashoffset = String(Math.round((1 - progress) * 1000) / 10);   // anel que se enche
     arcEl.dataset.state = state;
@@ -167,9 +167,9 @@ export function createTaskTimer({ userId, taskTitle, durationMinutes, startedAt,
       stage.dataset.hot = String(progress > 0.75 && !isDone);
       stage.dataset.particles = String((progress > 0.5 || isDone) && !isPaused);
       status.textContent = isDone
-        ? `${pet.name} está comemorando! 🎉`
-        : isPaused ? `${pet.name} está esperando... 💤`
-        : `${pet.name} está te ajudando! ⚡`;
+        ? `${pet.name} está comemorando!`
+        : isPaused ? `${pet.name} está esperando...`
+        : `${pet.name} está te ajudando!`;
     }
   }
 

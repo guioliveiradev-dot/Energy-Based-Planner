@@ -70,14 +70,15 @@ export async function renderProfile(container) {
   let tasks = [], inventory = [], activeTheme = DEFAULT_THEME, activePet = null;
   let backupState = null, persisted = null, petBonds = {}, streakExtra = {};
   let activeTab = 'profile';
+  let statsSection = 'resumo';
 
   container.innerHTML = `
     <section class="page" style="gap:1.25rem">
       <h1 style="font-size:1.125rem;font-weight:700">Perfil</h1>
       <div class="tabs tabs-3" role="tablist">
-        <button class="tab active" role="tab" aria-selected="true" data-tab="profile">👤 Perfil</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="stats">📊 Estatísticas</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="inventory">🎒 Inventário</button>
+        <button class="tab active" role="tab" aria-selected="true" data-tab="profile">${icon('user', 16, 'ico')} Perfil</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="stats">${icon('bar-chart-3', 16, 'ico')} Estatísticas</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="inventory">${icon('backpack', 16, 'ico')} Inventário</button>
       </div>
       <div id="tab-content" class="stack" style="gap:1.25rem"></div>
       <input type="file" id="import-file" accept="application/json,.json" hidden>
@@ -196,7 +197,7 @@ export async function renderProfile(container) {
   }
 
   function renderStatsTab() {
-    content.innerHTML = statsHTML(computeStats(tasks, Date.now(), streakExtra));
+    content.innerHTML = statsHTML(computeStats(tasks, Date.now(), streakExtra), statsSection);
   }
 
   const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : activeTab === 'stats' ? renderStatsTab() : renderInventoryTab());
@@ -311,11 +312,12 @@ export async function renderProfile(container) {
   });
 
   // ---------- Eventos ----------
-  container.querySelector('.tabs').addEventListener('click', (e) => {
+  const mainTabs = container.querySelector('.tabs');
+  mainTabs.addEventListener('click', (e) => {
     const tab = e.target.closest('[data-tab]');
     if (!tab) return;
     activeTab = tab.dataset.tab;
-    container.querySelectorAll('.tabs .tab').forEach((b) => {
+    mainTabs.querySelectorAll('.tab').forEach((b) => {
       b.classList.toggle('active', b === tab);
       b.setAttribute('aria-selected', String(b === tab));
     });
@@ -330,6 +332,13 @@ export async function renderProfile(container) {
   });
 
   content.addEventListener('click', async (e) => {
+    const statsTab = e.target.closest('button[data-stats-tab]');
+    if (statsTab) {
+      statsSection = statsTab.dataset.statsTab;
+      renderStatsTab();
+      content.querySelector(`[data-stats-tab="${statsSection}"]`)?.focus();
+      return;
+    }
     const themeBtn = e.target.closest('button[data-theme-id]');
     if (themeBtn) {
       const id = themeBtn.dataset.themeId;

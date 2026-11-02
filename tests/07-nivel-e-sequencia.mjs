@@ -81,9 +81,9 @@ await db.createTask(mk({ id: 'p1', title: 'Pendente', startedAt: Date.now() - 31
 
 let cleanup = await renderHome(root);
 await wait(80);
-let card = root.querySelector('.progress-card');
+let card = root.querySelector('.progress-card')?.parentElement;
 ok(!!card && card.textContent.includes('Nível 2 · Novato') && card.textContent.includes('95 / 150'), 'Home: cartão mostra nível 2 e 95/150 pontos (195 ganhos)');
-ok(card.textContent.includes('3 dias seguidos') && card.textContent.includes('conclua uma tarefa hoje para manter'), 'Home: sequência de 3 dias, avisa para concluir hoje');
+ok(card.textContent.includes('3 dias seguidos') && /conclua uma tarefa hoje para manter/i.test(card.textContent), 'Home: sequência de 3 dias, avisa para concluir hoje');
 ok(card.querySelector('[role="progressbar"]').getAttribute('aria-valuenow') === '63' && card.querySelector('.progress-bar').style.width === '63%', 'Home: barra em 63% e acessível (aria-valuenow)');
 root.querySelector('#generate').click(); await wait(80);
 root.querySelector('[data-action="continue"]').click(); await wait(80);
@@ -91,11 +91,11 @@ document.querySelector('.timer-panel [data-action="collect"]').click(); await wa
 let modal = document.querySelector('.congrats-panel');
 ok(modal && modal.textContent.includes('+65 Pontos Planner'), 'Home: modal mostra os pontos');
 ok(modal.textContent.includes('Nível 3: Aprendiz!'), 'Home: 195 + 65 = 260 → modal avisa subida para o nível 3');
-ok(modal.textContent.includes('🔥 4 dias seguidos'), 'Home: modal mostra sequência de 4 dias');
+ok(modal.textContent.includes('4 dias seguidos'), 'Home: modal mostra sequência de 4 dias');
 modal.querySelector('[data-role="ok"]').click();
-card = root.querySelector('.progress-card');
+card = root.querySelector('.progress-card')?.parentElement;
 ok(card.textContent.includes('Nível 3 · Aprendiz') && card.textContent.includes('10 / 200'), 'Home: cartão atualiza para nível 3 (10/200)');
-ok(card.textContent.includes('4 dias seguidos') && !card.textContent.includes('conclua uma tarefa hoje'), 'Home: sequência 4 e não pede mais para concluir hoje');
+ok(card.textContent.includes('4 dias seguidos') && !/conclua uma tarefa hoje/i.test(card.textContent), 'Home: sequência 4 e não pede mais para concluir hoje');
 cleanup(); root.innerHTML = '';
 
 // Tarefas: concluir sem subir de nível, depois uma grande que sobe
@@ -105,7 +105,7 @@ cleanup = await renderTasks(root);
 root.querySelector('[data-action="collect"][data-id="t1"]').click(); await wait(200);
 modal = document.querySelector('.congrats-panel');
 ok(modal.textContent.includes('+40 Pontos Planner') && !modal.querySelector('.congrats-levelup'), 'Tarefas: 260 + 40 = 300 continua no nível 3 (sem aviso de nível)');
-ok(modal.textContent.includes('🔥 4 dias seguidos'), 'Tarefas: sequência continua 4 (já tinha feito hoje)');
+ok(modal.textContent.includes('4 dias seguidos'), 'Tarefas: sequência continua 4 (já tinha feito hoje)');
 modal.querySelector('[data-role="ok"]').click();
 root.querySelector('[data-action="collect"][data-id="t2"]').click(); await wait(200);
 modal = document.querySelector('.congrats-panel');
@@ -115,7 +115,7 @@ cleanup(); root.innerHTML = '';
 
 // Perfil
 cleanup = await renderProfile(root);
-card = root.querySelector('.progress-card');
+card = root.querySelector('.progress-card')?.parentElement;
 ok(card && card.textContent.includes('Nível 4 · Aprendiz') && card.textContent.includes('100 / 250') && card.textContent.includes('4 dias seguidos'), 'Perfil: cartão de nível 4 (100/250) e sequência de 4 dias');
 ok(root.textContent.includes('550'), 'Perfil: "Pts Ganhos" = 550');
 cleanup(); root.innerHTML = '';

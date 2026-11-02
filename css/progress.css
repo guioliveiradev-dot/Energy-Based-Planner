@@ -11,8 +11,21 @@
 }
 .level-title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; }
 
-.streak-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; font-size: 0.875rem; color: hsl(var(--muted-foreground)); }
-.streak-line.on { color: hsl(var(--foreground)); }
+/* Cartão da sequência: chama quente, número grande e os últimos 7 dias */
+.streak-card { display: flex; flex-direction: column; gap: 0.75rem; }
+.streak-top { display: flex; align-items: center; gap: 0.75rem; }
+.streak-flame { width: 3.25rem; height: 3.25rem; flex-shrink: 0; border-radius: 1rem; display: grid; place-items: center; background: hsl(var(--warning) / 0.16); color: hsl(var(--warning)); border: 1px solid hsl(var(--warning) / 0.45); }
+.streak-flame svg { fill: currentColor; fill-opacity: 0.3; }
+.streak-flame.off { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-color: hsl(var(--border)); }
+.streak-flame.off svg { fill-opacity: 0; }
+.streak-big { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1.15; }
+.streak-hint { font-size: 0.8125rem; color: hsl(var(--muted-foreground)); }
+.week-dots { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; }
+.week-dots > div { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+.week-dots i { width: 1.75rem; height: 1.75rem; border-radius: 50%; display: grid; place-items: center; background: hsl(var(--muted)); box-shadow: inset 0 0 0 1px hsl(var(--border)); color: hsl(var(--background)); }
+.week-dots i.done { background: hsl(var(--warning)); box-shadow: none; }
+.week-dots i.today { outline: 2px solid hsl(var(--foreground)); outline-offset: 2px; }
+.week-dots b { font-weight: 700; color: hsl(var(--foreground)); }
 
 /* Linhas extras na janela de parabéns */
 .congrats-levelup { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: hsl(var(--primary)); text-shadow: 0 0 12px hsl(var(--primary) / 0.5); }

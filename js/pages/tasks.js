@@ -9,7 +9,7 @@ import { onDataChanged } from '../events.js';
 import { MAX_SUBTASKS, newSubtask, cleanSubtasks, cleanNotes, subtaskProgress, toggleSubtask } from '../subtasks.js';
 import { SORTS, DEFAULT_SORT, isSortId, matchesSearch, sortTasks, isOverdue, deadlineNote } from '../task-view.js';
 import { applyPetPowers, getStreakExtra } from '../pet-powers.js';
-import { CATEGORY_LABELS, CATEGORY_EMOJI } from '../categories.js';
+import { CATEGORY_LABELS, categoryIcon } from '../categories.js';
 import { energyBadge } from '../components/energy-slider.js';
 import { createTaskTimer } from '../components/task-timer.js';
 import { showCongratsModal } from '../components/congrats-modal.js';
@@ -113,7 +113,7 @@ export async function renderTasks(container) {
       <div>
         <label class="label muted xs" for="t-category">Categoria</label>
         <select class="input" id="t-category">
-          ${Object.keys(CATEGORY_LABELS).map((c) => `<option value="${c}">${CATEGORY_EMOJI[c]} ${CATEGORY_LABELS[c]}</option>`).join('')}
+          ${Object.keys(CATEGORY_LABELS).map((c) => `<option value="${c}">${CATEGORY_LABELS[c]}</option>`).join('')}
         </select>
       </div>
       <div>
@@ -311,7 +311,7 @@ export async function renderTasks(container) {
       ? `<button class="icon-btn neutral" data-action="edit" data-id="${task.id}" aria-label="Editar ${escapeHtml(task.title)}">${icon('pencil', 14)}</button>` : '';
     if (scheduled) action = '';
     else if (status === 'idle') action = `<button class="icon-btn primary" data-action="start" data-id="${task.id}" aria-label="Iniciar ${escapeHtml(task.title)}">${icon('play', 14)}</button>`;
-    else if (status === 'running') action = `<button class="pill-btn primary" data-action="continue" data-id="${task.id}">⏱ Continuar</button>`;
+    else if (status === 'running') action = `<button class="pill-btn primary" data-action="continue" data-id="${task.id}">${icon('timer', 12)} Continuar</button>`;
     else action = `<button class="pill-btn success" data-action="collect" data-id="${task.id}">${icon('gift', 12)} Coletar</button>`;
 
     return `
@@ -323,9 +323,9 @@ export async function renderTasks(container) {
               <span class="badge category-${task.category}">${CATEGORY_LABELS[task.category] || ''}</span>
               ${energyBadge(task.energyCost)}
               <span class="muted tiny">${formatDuration(task.durationMinutes)}</span>
-              ${task.deadline ? `<span class="muted tiny">📅 ${pad2(new Date(task.deadline).getDate())}/${pad2(new Date(task.deadline).getMonth() + 1)}</span>` : ''}
+              ${task.deadline ? `<span class="muted tiny ico-line">${icon('calendar', 12, 'ico')} ${pad2(new Date(task.deadline).getDate())}/${pad2(new Date(task.deadline).getMonth() + 1)}</span>` : ''}
               ${deadlineNote(task) ? `<span class="badge-soft overdue-note ${isOverdue(task) ? 'is-overdue' : ''}">${icon('calendar', 12)} ${deadlineNote(task)}</span>` : ''}
-              ${isRecurring(task) ? `<span class="muted tiny">🔁 ${repeatLabel(task.repeat.days)}</span>` : ''}
+              ${isRecurring(task) ? `<span class="muted tiny ico-line">${icon('repeat', 12, 'ico')} ${repeatLabel(task.repeat.days)}</span>` : ''}
               ${scheduled ? `<span class="badge-soft">${comesBackLabel(task)}</span>` : ''}
             </div>
           </div>
@@ -365,7 +365,7 @@ export async function renderTasks(container) {
       <div class="chips">
         <button class="chip ${!filterCategory && !filterOverdue ? 'active' : ''}" data-filter="" aria-pressed="${!filterCategory && !filterOverdue}">Todas</button>
         ${overdueCount ? `<button class="chip ${filterOverdue ? 'active' : ''}" data-overdue="1" aria-pressed="${filterOverdue}">${icon('calendar', 12)} Prazo passou (${overdueCount})</button>` : ''}
-        ${categories.map((c) => `<button class="chip ${filterCategory === c ? `category-${c}` : ''}" data-filter="${c}" aria-pressed="${filterCategory === c}">${CATEGORY_EMOJI[c]} ${CATEGORY_LABELS[c]}</button>`).join('')}
+        ${categories.map((c) => `<button class="chip ${filterCategory === c ? `category-${c}` : ''}" data-filter="${c}" aria-pressed="${filterCategory === c}">${categoryIcon(c, 14)} ${CATEGORY_LABELS[c]}</button>`).join('')}
       </div>` : '';
 
     const cards = shown.map((task) => cardHTML(task)).join('');

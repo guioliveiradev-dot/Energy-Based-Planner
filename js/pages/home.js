@@ -245,7 +245,7 @@ export async function renderHome(container) {
         <div class="glass-card pad warning-card">
           <div class="row text-warning" style="margin-bottom:0.5rem">${icon('alert-triangle', 18)}<strong class="small">Horário Bloqueado</strong></div>
           <p class="muted xs" style="margin-bottom:0.75rem">Você está em horário de compromisso fixo! Verifique sua rotina.</p>
-          <button class="btn-warning btn-block" data-action="bypass">⚠️ Gerar mesmo assim</button>
+          <button class="btn-warning btn-block" data-action="bypass">${icon('alert-triangle', 14, 'ico')} Gerar mesmo assim</button>
         </div>`;
     } else if (noTasks) {
       resultEl.innerHTML = `
@@ -260,8 +260,8 @@ export async function renderHome(container) {
           <h3 class="mission-title">${escapeHtml(mission.title)}</h3>
           <div class="row muted xs" style="gap:0.75rem">
             <span class="badge category-${mission.category}">${CATEGORY_LABELS[mission.category] || ''}</span>
-            <span>⚡ ${mission.energyCost}</span>
-            <span>🕐 ${formatDuration(mission.durationMinutes)}</span>
+            <span class="ico-line">${icon('zap', 14, 'ico')} ${mission.energyCost}</span>
+            <span class="ico-line">${icon('clock', 14, 'ico')} ${formatDuration(mission.durationMinutes)}</span>
           </div>
           <button class="btn-neon btn-block row-center" data-action="${mission.startedAt ? 'continue' : 'start'}" style="justify-content:center">
             ${icon('play', 16)} ${mission.startedAt ? 'Continuar Missão' : 'Iniciar Missão'}

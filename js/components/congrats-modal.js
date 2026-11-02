@@ -3,6 +3,7 @@
 // os pontos sobem contando e as linhas de bônus aparecem uma a uma. Quem pediu "menos movimento" vê tudo pronto.
 
 import { createModal } from './modal.js';
+import { icon } from '../icons.js';
 import { escapeHtml } from '../ui.js';
 import { petLevelUpHTML, levelUpInfo } from './pet-levelup.js';
 
@@ -46,11 +47,11 @@ export function showCongratsModal({ taskTitle, points, petBonus = null, petNote 
     <p class="muted small">Você completou:</p>
     <p style="font-size:1.125rem;font-weight:700">${escapeHtml(taskTitle)}</p>
     <p class="congrats-points"><span aria-hidden="true">+<span data-count>${points}</span> Pontos Planner</span><span class="sr-only">+${points} Pontos Planner</span></p>
-    ${petBonus ? `<p ${reveal()} role="status"><span class="congrats-pet small">✨ ${escapeHtml(petBonus.message)}</span></p>` : ''}
-    ${petNote ? `<p ${reveal()} role="status"><span class="congrats-pet small">🔥 ${escapeHtml(petNote)}</span></p>` : ''}
+    ${petBonus ? `<p ${reveal()} role="status"><span class="congrats-pet small">${icon('sparkles', 14, 'ico')} ${escapeHtml(petBonus.message)}</span></p>` : ''}
+    ${petNote ? `<p ${reveal()} role="status"><span class="congrats-pet small">${icon('flame', 14, 'ico')} ${escapeHtml(petNote)}</span></p>` : ''}
     ${petUp ? `<div ${reveal()}><div class="levelup-inline">${petLevelUpHTML(petUp, { size: 84 })}</div></div>` : ''}
-    ${levelUp ? `<p ${reveal()}><span class="congrats-levelup">⬆️ Nível ${levelUp.level}: ${levelUp.title}!</span></p>` : ''}
-    ${streak > 0 ? `<p ${reveal()}><span class="muted small">🔥 ${streak} ${streak === 1 ? 'dia' : 'dias'} seguidos</span></p>` : ''}
+    ${levelUp ? `<p ${reveal()}><span class="congrats-levelup">${icon('arrow-up', 16, 'ico')} Nível ${levelUp.level}: ${levelUp.title}!</span></p>` : ''}
+    ${streak > 0 ? `<p ${reveal()}><span class="muted small">${icon('flame', 14, 'ico')} ${streak} ${streak === 1 ? 'dia' : 'dias'} seguidos</span></p>` : ''}
     <button class="btn-neon btn-block" data-role="ok" style="margin-top:1rem">Continuar</button>`;
   modal.panel.querySelector('[data-role="ok"]').addEventListener('click', () => modal.close());
   modal.open();

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sequência na Home e Estatísticas: opções</title>
+<meta name="robots" content="noindex">
+<script>document.documentElement.setAttribute('data-theme', 'forest');</script>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/progress.css">
+<style>
+  .pg { max-width: 64rem; margin: 0 auto; padding: 1rem 1rem 4rem; display: flex; flex-direction: column; gap: 2rem; }
+  .pg-bar { position: sticky; top: 0; z-index: 5; background: hsl(var(--background)); padding: 0.75rem 0; border-bottom: 1px solid hsl(var(--border)); display: flex; flex-direction: column; gap: 0.5rem; }
+  .pg-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 1rem; align-items: start; }
+  .pg-col { display: flex; flex-direction: column; gap: 0.75rem; }
+  .pg-label { font-weight: 700; font-size: 0.9375rem; }
+  .pg-state { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); margin: 0.25rem 0 0; }
+  .pg select { min-height: 2.75rem; padding: 0 0.75rem; border-radius: 0.5rem; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); }
+
+  /* ----- Sequência: opção A (selo no cartão de nível) ----- */
+  .level-row { display: flex; align-items: center; gap: 0.75rem; }
+  .level-row .grow { flex: 1; min-width: 0; }
+  .streak-pill { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 4rem; padding: 0.375rem 0.625rem; border-radius: 0.875rem;
+    background: hsl(var(--warning) / 0.14); color: hsl(var(--warning)); border: 1px solid hsl(var(--warning) / 0.45); }
+  .streak-pill svg { fill: currentColor; fill-opacity: 0.3; }
+  .streak-pill strong { font-family: var(--font-display); font-size: 1.375rem; line-height: 1.1; color: hsl(var(--foreground)); }
+  .streak-pill span { font-size: 0.75rem; }
+  .streak-pill.off { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-color: hsl(var(--border)); }
+  .streak-pill.off svg { fill-opacity: 0; }
+  .streak-hint { font-size: 0.8125rem; color: hsl(var(--muted-foreground)); }
+
+  /* ----- Sequência: opção B (cartão próprio com os 7 últimos dias) ----- */
+  .streak-card { display: flex; flex-direction: column; gap: 0.75rem; }
+  .streak-top { display: flex; align-items: center; gap: 0.75rem; }
+  .streak-flame { width: 3.25rem; height: 3.25rem; flex-shrink: 0; border-radius: 1rem; display: grid; place-items: center;
+    background: hsl(var(--warning) / 0.16); color: hsl(var(--warning)); border: 1px solid hsl(var(--warning) / 0.45); }
+  .streak-flame svg { fill: currentColor; fill-opacity: 0.3; }
+  .streak-flame.off { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-color: hsl(var(--border)); }
+  .streak-flame.off svg { fill-opacity: 0; }
+  .streak-big { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1.15; }
+  .week-dots { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; }
+  .week-dots div { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+  .week-dots i { width: 1.75rem; height: 1.75rem; border-radius: 50%; display: grid; place-items: center; background: hsl(var(--muted)); box-shadow: inset 0 0 0 1px hsl(var(--border)); color: hsl(var(--primary-foreground)); }
+  .week-dots i.done { background: hsl(var(--warning)); box-shadow: none; }
+  .week-dots i.today { outline: 2px solid hsl(var(--foreground)); outline-offset: 2px; }
+  .week-dots b { font-weight: 600; }
+
+  /* ----- Estatísticas ----- */
+  .st-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; padding: 0.25rem; background: hsl(var(--muted)); border-radius: var(--radius); }
+  .st-tabs button { min-height: 2.75rem; border: 0; background: transparent; border-radius: 0.5rem; color: hsl(var(--muted-foreground)); font-size: 0.75rem; font-weight: 600; padding: 0.25rem; }
+  .st-tabs button[aria-selected="true"] { background: hsl(var(--card)); color: hsl(var(--primary)); }
+  .tiles3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  .tiles3 .stat-tile { text-align: center; align-items: center; }
+  .week-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.375rem; align-items: end; height: 6rem; }
+  .week-bars div { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 0.25rem; height: 100%; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+  .week-bars i { width: 100%; border-radius: 0.375rem 0.375rem 0.125rem 0.125rem; background: hsl(var(--accent)); min-height: 0.25rem; }
+  .week-bars i.zero { background: hsl(var(--muted)); box-shadow: inset 0 0 0 1px hsl(var(--border)); }
+  .week-bars b { color: hsl(var(--foreground)); font-size: 0.8125rem; }
+  .insight { display: flex; gap: 0.625rem; align-items: flex-start; }
+  .insight svg { color: hsl(var(--accent)); flex-shrink: 0; margin-top: 0.125rem; }
+  details.more { border-radius: 0.75rem; }
+  details.more > summary { min-height: 2.75rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-weight: 600; font-size: 0.875rem; list-style: none; padding: 0 0.25rem; }
+  details.more > summary::-webkit-details-marker { display: none; }
+  details.more[open] > summary svg { transform: rotate(90deg); }
+  details.more > .body { padding-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+</style>
+</head>
+<body>
+<div class="pg">
+  <header class="pg-bar">
+    <h1 class="page-title">Sequência na Home e Estatísticas</h1>
+    <p class="muted small">Duas coisas para você escolher olhando. Os números são de exemplo. Use o seletor para ver em outros temas.</p>
+    <label class="small">Tema: <select id="tema" aria-label="Tema da página">
+      <option value="forest">Floresta</option><option value="papel">Papel</option><option value="grafite">Grafite</option><option value="neon">Neon</option>
+      <option value="sunset">Pôr do Sol</option><option value="ocean">Oceano</option><option value="midnight">Meia-Noite</option><option value="silver">Prata</option><option value="gold">Ouro</option></select></label>
+  </header>
+
+  <!-- ===================== SEQUÊNCIA ===================== -->
+  <section aria-labelledby="h-seq" class="stack">
+    <h2 class="mission-title" id="h-seq">1 · Sequência de dias na Home</h2>
+    <p class="muted small">Hoje a sequência é só uma linha pequena no pé do cartão de nível. Nas opções A e B ela ganha cor quente e um número grande. Cada opção aparece em 3 situações.</p>
+    <div class="pg-cols" id="seq"></div>
+  </section>
+
+  <!-- ===================== ESTATÍSTICAS ===================== -->
+  <section aria-labelledby="h-est" class="stack">
+    <h2 class="mission-title" id="h-est">2 · Estatísticas (aba do Perfil)</h2>
+    <p class="muted small">Hoje são 7 cartões numa rolagem longa, com números repetidos (a sequência aparece em dois lugares) e dois gráficos de barras parecidos. As duas opções mostram menos coisa de cada vez.</p>
+    <div class="pg-cols" id="est"></div>
+  </section>
+</div>
+
+<script type="module">
+import { icon } from '../js/icons.js';
+
+document.getElementById('tema').addEventListener('change', (e) => document.documentElement.setAttribute('data-theme', e.target.value));
+
+/* ---------- Sequência ---------- */
+const STATES = [
+  { nome: 'Sem sequência ainda', n: 0, today: false, best: 0 },
+  { nome: '6 dias, já fez hoje', n: 6, today: true, best: 9 },
+  { nome: '6 dias, falta fazer hoje', n: 6, today: false, best: 9 },
+];
+const days = (n) => `${n} ${n === 1 ? 'dia' : 'dias'}`;
+const hint = (s) => s.n === 0 ? 'Conclua uma tarefa hoje para iniciar uma sequência' : s.today ? 'Você já fez uma tarefa hoje' : 'Conclua uma tarefa hoje para manter';
+
+const levelHead = (s, pill) => `
+  <div class="level-row">
+    <span class="level-badge" aria-hidden="true">3</span>
+    <div class="grow"><p class="level-title">Nível 3 · Aprendiz</p><p class="muted xs">63 / 200 pontos para o nível 4</p></div>
+    ${pill || ''}
+  </div>
+  <div class="progress" role="progressbar" aria-label="Progresso para o próximo nível" aria-valuemin="0" aria-valuemax="100" aria-valuenow="32"><div class="progress-bar" style="width:32%"></div></div>`;
+
+const seqHoje = (s) => `<div class="glass-card pad-lg stack progress-card" style="gap:0.75rem">${levelHead(s)}
+  <p class="streak-line ${s.n ? 'on' : ''}">${icon('flame', 16, 'ico')}<span>${s.n ? `${days(s.n)} seguidos${s.today ? '' : ' · conclua uma tarefa hoje para manter'}` : 'Conclua uma tarefa hoje para iniciar uma sequência'}</span></p></div>`;
+
+const seqA = (s) => {
+  const pill = `<div class="streak-pill ${s.n ? '' : 'off'}" role="img" aria-label="Sequência: ${days(s.n)}">${icon('flame', 22, 'ico')}<strong>${s.n}</strong><span>${s.n === 1 ? 'dia' : 'dias'}</span></div>`;
+  return `<div class="glass-card pad-lg stack progress-card" style="gap:0.75rem">${levelHead(s, pill)}
+    <p class="streak-hint">${hint(s)}${s.best > s.n && s.n ? ` · recorde: ${days(s.best)}` : ''}</p></div>`;
+};
+
+const LET = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+const seqB = (s) => {
+  const dots = LET.map((l, i) => {
+    const isToday = i === 6;
+    const antes = Math.min(s.today ? s.n - 1 : s.n, 6);   // dias anteriores da sequência (os 6 quadradinhos antes de hoje)
+    const done = isToday ? s.today && s.n > 0 : i >= 6 - antes;
+    return `<div><i class="${done ? 'done' : ''}${isToday ? ' today' : ''}" aria-hidden="true">${done ? icon('check', 14, 'ico') : ''}</i><span>${isToday ? '<b>Hoje</b>' : l}</span></div>`;
+  }).join('');
+  return `<div class="glass-card pad-lg streak-card progress-card">
+      <div class="streak-top"><span class="streak-flame ${s.n ? '' : 'off'}" aria-hidden="true">${icon('flame', 28, 'ico')}</span>
+        <div><p class="streak-big">${s.n ? `${days(s.n)} seguidos` : 'Sua sequência'}</p><p class="streak-hint">${hint(s)}${s.best > s.n && s.n ? ` · recorde: ${days(s.best)}` : ''}</p></div></div>
+      <div class="week-dots" role="img" aria-label="Últimos 7 dias">${dots}</div></div>
+    <div class="glass-card pad-lg stack progress-card" style="gap:0.75rem">${levelHead(s)}</div>`;
+};
+
+document.getElementById('seq').innerHTML = [['Hoje (como está)', seqHoje], ['A · Selo ao lado do nível', seqA], ['B · Cartão próprio com os 7 dias', seqB]].map(([t, f]) =>
+  `<div class="pg-col"><span class="pg-label">${t}</span>${STATES.map((s) => `<p class="pg-state">${s.nome}</p>${f(s)}`).join('')}</div>`).join('');
+
+/* ---------- Estatísticas ---------- */
+const card = (title, body) => `<section class="glass-card pad stack"><h3 class="section-title">${title}</h3>${body}</section>`;
+const bar = (p) => `<span class="stat-track" aria-hidden="true"><i style="width:${p}%"></i></span>`;
+const tiles3 = `<div class="tiles3">
+  <div class="stat-tile"><span class="muted xs">Tarefas</span><strong class="stat-value">23</strong></div>
+  <div class="stat-tile"><span class="muted xs">Tempo focado</span><strong class="stat-value">9 h 40</strong></div>
+  <div class="stat-tile"><span class="muted xs">Sequência</span><strong class="stat-value">6 dias</strong></div></div>`;
+
+let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+const heat = () => { seed = 7; return `<div class="heat-wrap"><div class="heat" role="img" aria-label="Mapa dos últimos 16 semanas">${Array.from({ length: 112 }, () => { const r = rnd(); const l = r < 0.4 ? 0 : r < 0.65 ? 1 : r < 0.82 ? 2 : r < 0.93 ? 3 : 4; return `<span class="heat-cell h${l}"></span>`; }).join('')}</div></div>
+  <p class="muted xs">34 dias com tarefas nas últimas 16 semanas.</p>`; };
+const list = (rows, best) => `<ul class="stat-list">${rows.map(([l, n, p], i) => `<li${i === best ? ' class="best"' : ''}><span class="stat-label small">${l}${i === best ? ` ${icon('star', 12, 'ico')}` : ''}</span>${bar(p)}<span class="stat-num small">${n}</span></li>`).join('')}</ul>`;
+const WEEK = [['Segunda', 3, 50], ['Terça', 4, 67], ['Quarta', 6, 100], ['Quinta', 3, 50], ['Sexta', 4, 67], ['Sábado', 2, 33], ['Domingo', 1, 17]];
+const PERIOD = [['Manhã (6h às 12h)', 12, 100], ['Tarde (12h às 18h)', 8, 67], ['Noite (18h às 24h)', 3, 25], ['Madrugada', 0, 0]];
+const CAT = [[`${icon('briefcase', 14, 'ico')} Trabalho`, '9 (39%)', 100], [`${icon('book-open', 14, 'ico')} Estudo`, '7 (30%)', 78], [`${icon('home', 14, 'ico')} Pessoal`, '5 (22%)', 56], [`${icon('dumbbell', 14, 'ico')} Saúde`, '2 (9%)', 22]];
+const habits = `<ul class="stat-list habits"><li><span class="stat-label small">Beber água</span><span class="habit-weeks" aria-hidden="true"><i style="height:60%"></i><i style="height:80%"></i><i style="height:100%"></i><i style="height:70%"></i></span><span class="stat-num small">22 vezes</span></li>
+  <li><span class="stat-label small">Alongar</span><span class="habit-weeks" aria-hidden="true"><i style="height:40%"></i><i class="zero" style="height:12%"></i><i style="height:60%"></i><i style="height:50%"></i></span><span class="stat-num small">9 vezes</span></li></ul><p class="muted xs">Últimas 4 semanas.</p>`;
+
+const estHoje = () => `${card('Resumo', `<div class="stat-grid">
+  <div class="stat-tile"><span class="muted xs">Tarefas concluídas</span><strong class="stat-value">23</strong></div>
+  <div class="stat-tile"><span class="muted xs">Tempo focado</span><strong class="stat-value">9 h 40</strong></div>
+  <div class="stat-tile"><span class="muted xs">Sequência atual</span><strong class="stat-value">6 dias</strong><span class="muted xs">recorde: 9 dias</span></div>
+  <div class="stat-tile"><span class="muted xs">Média nos dias ativos</span><strong class="stat-value">2,1</strong><span class="muted xs">tarefas por dia</span></div></div>`)}
+  ${card('Seus dias', heat())}${card('Tempo focado', '<div class="stat-grid"><div class="stat-tile"><span class="muted xs">Hoje</span><strong class="stat-value">40 min</strong></div><div class="stat-tile"><span class="muted xs">Últimos 7 dias</span><strong class="stat-value">3 h</strong></div></div>')}
+  ${card('Tarefas por categoria', list(CAT, -1))}${card('Melhores dias da semana', list(WEEK, 2))}${card('Melhor horário', list(PERIOD, 0))}${card('Histórico de hábitos', habits)}
+  <p class="muted xs center">…e assim por diante: são 7 cartões seguidos.</p>`;
+
+/* A: abas internas, uma coisa de cada vez */
+const abas = [
+  ['Resumo', () => `${tiles3}${card('Seus dias', heat())}${card('Tempo focado', '<p class="small">Hoje <strong>40 min</strong> · 7 dias <strong>3 h</strong> · 30 dias <strong>9 h 40</strong></p>')}`],
+  ['Dias e horários', () => `${card('Você conclui mais tarefas', '<p class="small"><strong>de manhã</strong>, e <strong>nas quartas</strong>.</p>')}${card('Por dia da semana', list(WEEK, 2))}${card('Por horário', list(PERIOD, 0))}`],
+  ['Categorias', () => card('Tarefas por categoria', list(CAT, 0))],
+  ['Hábitos', () => card('Histórico de hábitos', habits)],
+];
+const estA = () => `<div id="estA" class="stack"><div class="st-tabs" role="tablist" aria-label="Estatísticas">${abas.map(([n], i) => `<button type="button" role="tab" aria-selected="${i === 0}" data-i="${i}">${n}</button>`).join('')}</div><div id="estA-body" class="stack">${abas[0][1]()}</div></div>`;
+
+/* B: uma tela enxuta + "ver mais" fechado */
+const more = (t, body) => `<details class="glass-card pad more"><summary>${t}${icon('chevron-right', 16, 'ico')}</summary><div class="body">${body}</div></details>`;
+const estB = () => `<div class="stack">${tiles3}
+  ${card('Esta semana', `<div class="week-bars" role="img" aria-label="Tarefas concluídas por dia nesta semana">${[['S', 3], ['T', 4], ['Q', 6], ['Q', 3], ['S', 4], ['S', 2], ['D', 0]].map(([l, n]) => `<div><b>${n}</b><i class="${n ? '' : 'zero'}" style="height:${Math.max(4, n * 14)}%"></i><span>${l}</span></div>`).join('')}</div>`)}
+  <section class="glass-card pad stack"><div class="insight">${icon('lightbulb', 18, 'ico')}<p class="small">Você costuma concluir mais tarefas <strong>de manhã</strong>, principalmente <strong>nas quartas</strong>.</p></div></section>
+  ${more('Mapa dos seus dias', heat())}${more('Tarefas por categoria', list(CAT, 0))}${more('Tempo focado', '<p class="small">Hoje <strong>40 min</strong> · 7 dias <strong>3 h</strong> · 30 dias <strong>9 h 40</strong></p>')}${more('Histórico de hábitos', habits)}</div>`;
+
+document.getElementById('est').innerHTML = [['Hoje (como está)', estHoje()], ['A · Abas dentro das Estatísticas', estA()], ['B · Uma tela enxuta, detalhes recolhidos', estB()]].map(([t, h]) => `<div class="pg-col"><span class="pg-label">${t}</span>${h}</div>`).join('');
+const root = document.getElementById('estA');
+root.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  root.querySelectorAll('[role="tab"]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+  document.getElementById('estA-body').innerHTML = abas[Number(b.dataset.i)][1]();
+});
+</script>
+</body>
+</html>

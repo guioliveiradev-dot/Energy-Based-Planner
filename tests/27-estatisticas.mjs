@@ -1,4 +1,4 @@
-// Estatísticas: cálculos (mapa de calor, tempo focado, categorias, melhores dias, hábitos) e a aba do Perfil.
+// Estatísticas: cálculos (esta semana, semana a semana, tempo focado, categorias, melhores dias, hábitos) e a aba do Perfil.
 import 'fake-indexeddb/auto';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
@@ -34,15 +34,16 @@ const tasks = [
   done(200),                                              // muito antiga: fora do mapa
   { ...done(1), completed: false, completedAt: null },    // pendente: não conta
 ];
-const heat = S.heatmap(tasks, NOW);
-ok(heat.columns.length === 16 && heat.columns.every((c) => c.length === 7), 'Mapa: 16 semanas x 7 dias');
-ok(heat.columns[0][0].date === new Date(2026, 9, 17 - 5 - 15 * 7).getTime() && new Date(heat.columns[0][0].date).getDay() === 1, 'Mapa: cada coluna começa na segunda-feira (a 1ª semana é a de 15 semanas atrás)');
-const last = heat.columns[15];
-ok(last[5].today && last[5].count === 5 && last[5].level === 4 && last[6].future && last[6].count === 0 && !last[4].future, 'Mapa: hoje (sábado) está na 6ª linha da última coluna; domingo é futuro');
-ok(last[4].count === 3 && last[4].level === 3 && last[3].level === 2 && last[2].level === 1 && last[1].level === 0, 'Mapa: níveis por quantidade (0, 1, 2, 3 a 4, 5 ou mais)');
-ok(heat.total === 11 && heat.activeDays === 4 && heat.best.count === 5, 'Mapa: 11 tarefas em 4 dias; a de 200 dias atrás não entra');
-ok(heat.months.length === 16 && heat.months[0] !== '' && heat.months.filter(Boolean).length >= 3 && heat.months.filter(Boolean).every((m) => /^(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)$/.test(m)), 'Mapa: nome do mês acima da coluna em que ele começa');
-ok(S.heatmap([], NOW).total === 0 && S.heatmap([], NOW, 4).columns.length === 4, 'Mapa: sem tarefas, vazio (e o número de semanas pode mudar)');
+const wk0 = S.thisWeek(tasks, NOW);
+ok(wk0.days.length === 7 && wk0.days.map((d) => d.letter).join('') === 'STQQSSD', 'Semana: 7 dias, de segunda a domingo');
+ok(wk0.days.map((d) => d.count).join() === '0,0,1,2,3,5,0' && wk0.total === 11 && wk0.max === 5, 'Semana: tarefas por dia (qua 1, qui 2, sex 3, sáb 5); a pendente e a de 200 dias atrás não entram');
+ok(wk0.days[5].today && !wk0.days[5].future && wk0.days[6].future && wk0.days[6].count === 0 && !wk0.days[4].future, 'Semana: hoje (sábado) marcado; domingo ainda não chegou (fica vazio, sem número)');
+ok(S.thisWeek([], NOW).total === 0 && S.thisWeek([], NOW).max === 0, 'Semana: sem tarefas, tudo zerado');
+const wly = S.weeklyTotals(tasks, NOW);
+ok(wly.weeks.length === 6 && wly.weeks[5].current && !wly.weeks[4].current && wly.weeks[5].count === 11 && wly.weeks[4].count === 0 && wly.max === 11, 'Semana a semana: 6 semanas; a última é a atual (11 tarefas)');
+ok(wly.weeks[5].label === '12/10' && wly.weeks[0].label === '7/9' && S.weeklyTotals([], NOW, 3).weeks.length === 3, 'Semana a semana: rótulo é a data da segunda-feira (12/10 e 7/9); o número de semanas pode mudar');
+const wlyBorda = S.weeklyTotals([done(5), done(6)], NOW);   // sexta 12/10 (semana atual começa na segunda 12/10)
+ok(wlyBorda.weeks[5].count === 1 && wlyBorda.weeks[4].count === 1, 'Semana a semana: domingo (11/10) é da semana anterior; segunda-feira começa a semana nova');
 
 // ---------- tempo focado ----------
 const f = S.focusTime([done(0, { durationMinutes: 45 }), done(3, { durationMinutes: 60 }), done(6, { durationMinutes: 15 }), done(7, { durationMinutes: 100 }), done(29, { durationMinutes: 10 }), done(30, { durationMinutes: 1000 })], NOW);
@@ -78,16 +79,20 @@ ok(withShield.streak.current === 4, 'Resumo: dias protegidos pelo escudo do Cão
 
 // ---------- a tela (HTML) ----------
 const html = statsHTML(all);
-ok(['st-heat', 'st-focus', 'st-cat', 'st-week', 'st-period', 'st-habit'].every((id) => html.includes(`id="${id}"`)) && /Tarefas concluídas/.test(html) && /Sequência atual/.test(html), 'Tela: resumo, mapa, tempo, categorias, dias, horário e hábitos');
-ok((html.match(/class="heat-cell h\d/g) || []).length === 112 + 5, 'Tela: 112 quadradinhos do mapa (16 x 7) e 5 na legenda');
-ok(/role="img" aria-label="Mapa de calor das últimas 16 semanas/.test(html) && /4 dias com tarefas nas últimas 16 semanas/.test(html), 'Acessibilidade: o mapa tem descrição em texto para leitor de tela');
-ok(!/<span class="stat-track"(?![^>]*aria-hidden)/.test(html) && /class="heat-months" aria-hidden="true"/.test(html), 'Acessibilidade: barras e nomes de mês só decoram (os números estão no texto)');
-ok(/Você conclui mais tarefas <strong>aos sábados<\/strong> \(5 tarefas\)/.test(html) || /Você conclui mais tarefas <strong>[^<]+<\/strong> \(\d+ tarefas?\)/.test(html), 'Tela: frase do melhor dia da semana');
-ok(/Você rende mais <strong>à tarde<\/strong>/.test(html) && /5 \(\d+%\)|\d+ \(\d+%\)/.test(html), 'Tela: frase do melhor horário e números com porcentagem');
-ok(/Semana a semana \(da mais antiga para a atual\)/.test(statsHTML(S.computeStats([done(0, { title: 'Caminhar', ...rep })], NOW))), 'Tela: hábitos com os números semana a semana em texto');
-ok(!/falt|perdeu|atrasad|culpa|deveria/i.test(html), 'Tom: só mostra o que você fez, nunca o que faltou');
-ok(!/<img/.test(statsHTML(S.computeStats([done(0, { title: '<img src=x onerror=alert(1)>', ...rep })], NOW))) && /&lt;img/.test(statsHTML(S.computeStats([done(0, { title: '<img src=x onerror=alert(1)>', ...rep })], NOW))), 'Segurança: nome de hábito é escapado (nada de HTML do usuário)');
-ok(/Conclua sua primeira tarefa/.test(statsHTML(S.computeStats([], NOW))) && !/st-heat/.test(statsHTML(S.computeStats([], NOW))), 'Tela: sem tarefas concluídas, convite gentil em vez de gráficos vazios');
+const htmlQuando = statsHTML(all, 'quando'), htmlCat = statsHTML(all, 'categorias'), htmlHab = statsHTML(all, 'habitos');
+ok(['st-week-now', 'st-weekly', 'st-focus'].every((id) => html.includes(`id="${id}"`)) && /Tarefas<\/span>/.test(html) && /Sequência<\/span>/.test(html) && /Tempo focado<\/span>/.test(html), 'Tela: o Resumo mostra números, esta semana, semana a semana e tempo focado');
+ok(['st-week', 'st-period'].every((id) => htmlQuando.includes(`id="${id}"`)) && htmlCat.includes('id="st-cat"') && htmlHab.includes('id="st-habit"') && !html.includes('id="st-cat"'), 'Tela: cada aba mostra só o seu assunto (Dias e horários, Categorias, Hábitos)');
+ok((html.match(/<div class="tabs tabs-4 stats-tabs"/g) || []).length === 1 && (html.match(/data-stats-tab=/g) || []).length === 4 && /aria-selected="true"[^>]*data-stats-tab="resumo"/.test(html) && /role="tabpanel"/.test(html), 'Tela: 4 abas internas (Resumo, Dias e horários, Categorias, Hábitos), com a escolhida marcada');
+ok(statsHTML(all, 'qualquer-coisa').includes('id="st-week-now"'), 'Tela: aba desconhecida volta para o Resumo');
+ok(/class="week-bars" role="img" aria-label="Tarefas concluídas por dia nesta semana: Segunda 0, Terça 0, Quarta 1, Quinta 2, Sexta 3, Sábado 5\./.test(html) && !/Domingo \d/.test(html), 'Acessibilidade: as colunas da semana têm descrição em texto (sem o domingo, que ainda não chegou)');
+ok(/<div class="[^"]*future[^"]*">\s*<b><\/b>/.test(html), 'Semana: dia que ainda não chegou fica sem número');
+ok(!/<span class="stat-track"(?![^>]*aria-hidden)/.test(htmlQuando) && !/<span class="stat-track"(?![^>]*aria-hidden)/.test(htmlCat), 'Acessibilidade: barras só decoram (os números estão no texto)');
+ok(/Você conclui mais tarefas <strong>aos sábados<\/strong> \(5 tarefas\)/.test(htmlQuando) || /Você conclui mais tarefas <strong>[^<]+<\/strong> \(\d+ tarefas?\)/.test(htmlQuando), 'Tela: frase do melhor dia da semana');
+ok(/Você conclui mais tarefas <strong>à tarde<\/strong>/.test(htmlQuando) && /5 \(\d+%\)|\d+ \(\d+%\)/.test(htmlCat), 'Tela: frase do melhor horário e números com porcentagem');
+ok(/Semana a semana \(da mais antiga para a atual\)/.test(statsHTML(S.computeStats([done(0, { title: 'Caminhar', ...rep })], NOW), 'habitos')), 'Tela: hábitos com os números semana a semana em texto');
+ok(!/falt|perdeu|atrasad|culpa|deveria/i.test(html + htmlQuando + htmlCat + htmlHab), 'Tom: só mostra o que você fez, nunca o que faltou');
+ok(!/<img/.test(statsHTML(S.computeStats([done(0, { title: '<img src=x onerror=alert(1)>', ...rep })], NOW), 'habitos')) && /&lt;img/.test(statsHTML(S.computeStats([done(0, { title: '<img src=x onerror=alert(1)>', ...rep })], NOW), 'habitos')), 'Segurança: nome de hábito é escapado (nada de HTML do usuário)');
+ok(/Conclua sua primeira tarefa/.test(statsHTML(S.computeStats([], NOW))) && !/st-week-now/.test(statsHTML(S.computeStats([], NOW))), 'Tela: sem tarefas concluídas, convite gentil em vez de gráficos vazios');
 
 // ---------- aba no Perfil ----------
 await auth.register('Ana', 'ana@x.com', 'segredo1');
@@ -103,11 +108,16 @@ const nowReal = Date.now();
 for (let i = 0; i < 6; i++) await db.createTask({ id: 'p' + i, userId: uid, title: 'Ler ' + i, energyCost: 4, durationMinutes: 20, deadline: null, category: i % 2 ? 'study' : 'work', completed: true, completedAt: nowReal - i * 3600000, createdAt: nowReal - 1e7 });
 cleanup = await renderProfile(app); await wait();
 app.querySelector('[data-tab="stats"]').click(); await wait();
-ok(/6<\/strong>/.test(app.innerHTML) && !!app.querySelector('.heat') && !!app.querySelector('#st-cat') && /Tempo focado/.test(app.textContent), 'Perfil: com tarefas concluídas, mostra resumo, mapa e categorias de verdade');
+ok(/6<\/strong>/.test(app.innerHTML) && !!app.querySelector('.week-bars') && /Tempo focado/.test(app.textContent), 'Perfil: com tarefas concluídas, mostra o resumo e esta semana de verdade');
+app.querySelector('[data-stats-tab="categorias"]').click(); await wait();
+ok(!!app.querySelector('#st-cat') && !app.querySelector('.week-bars') && app.querySelector('[data-stats-tab="categorias"]').getAttribute('aria-selected') === 'true' && app.querySelector('[data-tab="stats"]').getAttribute('aria-selected') === 'true', 'Perfil: a aba interna Categorias troca o conteúdo sem sair das Estatísticas');
 app.querySelector('[data-tab="inventory"]').click(); await wait();
-ok(!app.querySelector('.heat') && !!app.querySelector('[data-pet]'), 'Perfil: trocar de aba troca o conteúdo');
+app.querySelector('[data-tab="stats"]').click(); await wait();
+ok(app.querySelector('[data-stats-tab="categorias"]').getAttribute('aria-selected') === 'true' && app.querySelectorAll('.tabs')[0].querySelectorAll('.tab').length === 3, 'Perfil: ao voltar para Estatísticas, lembra a aba interna escolhida (e as 3 abas do Perfil continuam 3)');
+app.querySelector('[data-tab="inventory"]').click(); await wait();
+ok(!app.querySelector('.week-bars') && !app.querySelector('#st-cat') && !!app.querySelector('[data-pet]'), 'Perfil: trocar de aba troca o conteúdo');
 cleanup?.();
 
 // ---------- CSS ----------
 const css = readFileSync(new URL('../css/style.css', import.meta.url), 'utf8');
-ok(/\.heat \{[^}]*grid-auto-flow: column/.test(css) && /repeat\(16, minmax\(0, 1fr\)\)/.test(css) && /\.heat-cell\.today \{[^}]*outline/.test(css), 'CSS: mapa em grade (16 colunas, 7 linhas) e o dia de hoje com contorno');
+ok(/\.week-bars \{[^}]*grid-template-columns: repeat\(7, 1fr\)/.test(css) && /\.stat-tiles \{[^}]*repeat\(3, 1fr\)/.test(css) && !/\.heat/.test(css), 'CSS: colunas da semana (7), números em 3 colunas, e o mapa de calor saiu');

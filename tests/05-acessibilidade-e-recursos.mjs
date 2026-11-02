@@ -179,7 +179,7 @@ t0.close();
 ok(document.title === 'Home · Energy Planner', 'Cronômetro: título restaurado ao fechar');
 const t1 = createTaskTimer({ userId: uid, taskTitle: 'Acabou', durationMinutes: 1, startedAt: Date.now() - 5 * 60000, onComplete() {} });
 t1.open(); await wait(30);
-ok(calls.vibrate === 1 && document.title.startsWith('✅ Tempo esgotado'), 'Cronômetro: terminou -> vibra e muda título');
+ok(calls.vibrate === 1 && document.title.startsWith('Tempo esgotado'), 'Cronômetro: terminou -> vibra e muda título');
 t1.destroy();
 ok(document.title === 'Home · Energy Planner', 'Cronômetro: destroy restaura título');
 

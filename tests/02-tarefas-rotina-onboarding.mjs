@@ -44,8 +44,8 @@ ok(tasks.length === 1 && tasks[0].title === 'Estudar <i>React</i>' && tasks[0].d
 ok(new Date(tasks[0].deadline).getDate() === 25 && new Date(tasks[0].deadline).getMonth() === 11, 'Tarefas: prazo 25/12 salvo');
 ok(!document.querySelector('.modal-panel'), 'Tarefas: diálogo fecha após criar');
 ok(root.querySelector('.task-title')?.textContent === 'Estudar <i>React</i>' && !root.querySelector('.task-title i'), 'Tarefas: título escapado na lista');
-ok(root.textContent.includes('📅 25/12') && root.textContent.includes('45min'), 'Tarefas: mostra prazo e duração');
-ok(root.querySelector('.chips .chip') && root.textContent.includes('📚 Estudo'), 'Tarefas: filtro por categoria');
+ok(root.textContent.includes('25/12') && root.textContent.includes('45min'), 'Tarefas: mostra prazo e duração');
+ok(root.querySelector('.chips .chip') && root.textContent.includes('Estudo') && root.querySelector('.chips .chip svg'), 'Tarefas: filtro por categoria');
 
 // segunda tarefa para testar filtro e exclusão
 await db.createTask({ id: 'x2', userId: uid, title: 'Treinar', energyCost: 6, durationMinutes: 60, deadline: null, category: 'health', completed: false, completedAt: null, startedAt: null, createdAt: Date.now() + 5 });

@@ -67,7 +67,7 @@ const buttons = [...w.document.querySelectorAll('#themes [data-theme-id]')];
 ok(buttons.length === 9 && buttons[0].dataset.themeId === 'papel' && buttons[1].dataset.themeId === 'grafite', 'Guia: botões de tema (Papel, Grafite + 7 da loja)');
 const rows = [...w.document.querySelectorAll('#contrast tbody tr')];
 const cells = rows.flatMap((r) => [...r.querySelectorAll('td')]);
-ok(rows.length === 14 && cells.length === 14 * 9, 'Guia: tabela de contraste com 14 pares x 9 temas');
+ok(rows.length === 16 && cells.length === 16 * 9, 'Guia: tabela de contraste com 16 pares x 9 temas');
 ok(cells.every((c) => /^\d+\.\d (✓|✗)$/.test(c.textContent)), 'Guia: todas as células têm um número válido e ✓ ou ✗');
 ok(w.document.querySelectorAll('#swatches .sg-swatch').length === 18, 'Guia: amostras das 18 cores do tema');
 const themeBtn = (i) => w.document.querySelectorAll('#themes [data-theme-id]')[i];
