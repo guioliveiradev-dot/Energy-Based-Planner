@@ -20,6 +20,8 @@ const ev = (t) => new w.Event(t, { bubbles: true });
 const type = (el, v) => { el.value = v; el.dispatchEvent(ev('input')); };
 
 await auth.register('Ana', 'ana@x.com', 'segredo1');
+// Os desafios da semana podem pagar pontos extras (depende do dia e da hora): aqui marcamos como já recebidos, para os pontos serem sempre os mesmos.
+{ const G = await import(new URL('../js/goals.js', import.meta.url).href); const u = auth.state.user.id; await G.saveGoalState(u, { target: null, claimed: { [G.weekKey()]: { goal: true, ch: G.challengeIds(u) } } }); }
 const uid = auth.state.user.id;
 
 // ---------- Tarefas ----------

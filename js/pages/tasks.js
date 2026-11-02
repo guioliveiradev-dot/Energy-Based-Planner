@@ -16,6 +16,7 @@ import { showCongratsModal } from '../components/congrats-modal.js';
 import { createModal } from '../components/modal.js';
 import { remainingSeconds } from '../task-time.js';
 import { pointsForTask, totalPoints, levelInfo, streakInfo } from '../progress.js';
+import { claimWeekRewards } from '../goals.js';
 import {
   WEEKDAYS, PRESETS, presetOf, repeatLabel, isRecurring, isAvailable, nextInstance, comesBackLabel,
 } from '../recurrence.js';
@@ -447,7 +448,8 @@ export async function renderTasks(container) {
     if (next) await createTask(next);
     const fx = await applyPetPowers({ userId: auth.state.user.id, task, basePoints: points, tasksBefore: tasks, completedAt }).catch(() => ({ bonus: null, note: null }));   // poder do pet ativo
     const petBonus = fx.bonus;
-    await auth.addXP(points + (petBonus ? petBonus.amount : 0));
+    const goals = await claimWeekRewards({ userId: auth.state.user.id, tasks: afterTasks, now: completedAt }).catch(() => ({ items: [], total: 0 }));   // meta e desafios da semana
+    await auth.addXP(points + (petBonus ? petBonus.amount : 0) + goals.total);
     const bond = await recordTaskForPet(auth.state.user.id).catch(() => null);   // vínculo do pet ativo
     dropTimer(id);
     showCongratsModal({
@@ -456,6 +458,7 @@ export async function renderTasks(container) {
       petBonus,
       petNote: fx.note,
       petLevelUp: bond,
+      goalRewards: goals.items,
       levelUp: levelNow.level > levelBefore.level ? { level: levelNow.level, title: levelNow.title } : null,
       streak: streakInfo(afterTasks, completedAt, await getStreakExtra(auth.state.user.id)).current,
     });

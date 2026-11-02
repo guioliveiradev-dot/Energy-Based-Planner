@@ -36,7 +36,7 @@ const CHECK = `
 // streak (opcional): sequência de dias atual, mostrada se for 1 ou mais
 // petBonus: { message } quando o poder do pet deu pontos extras. petNote: frase extra (ex.: Fênix reacendeu a sequência).
 // petLevelUp: { petId, before, after } quando o vínculo do pet subiu de nível com esta tarefa
-export function showCongratsModal({ taskTitle, points, petBonus = null, petNote = null, petLevelUp = null, levelUp = null, streak = 0 }) {
+export function showCongratsModal({ taskTitle, points, petBonus = null, petNote = null, petLevelUp = null, goalRewards = [], levelUp = null, streak = 0 }) {
   const petUp = levelUpInfo(petLevelUp);
   const modal = createModal({ className: 'congrats-panel neon-glow', overlayClass: 'soft' });
   let n = 0;
@@ -50,6 +50,7 @@ export function showCongratsModal({ taskTitle, points, petBonus = null, petNote 
     ${petBonus ? `<p ${reveal()} role="status"><span class="congrats-pet small">${icon('sparkles', 14, 'ico')} ${escapeHtml(petBonus.message)}</span></p>` : ''}
     ${petNote ? `<p ${reveal()} role="status"><span class="congrats-pet small">${icon('flame', 14, 'ico')} ${escapeHtml(petNote)}</span></p>` : ''}
     ${petUp ? `<div ${reveal()}><div class="levelup-inline">${petLevelUpHTML(petUp, { size: 84 })}</div></div>` : ''}
+    ${goalRewards.map((g) => `<p ${reveal()} role="status"><span class="congrats-pet small">${icon(g.kind === 'goal' ? 'trophy' : 'check', 14, 'ico')} ${escapeHtml(g.title)}: +${g.bonus} pontos</span></p>`).join('')}
     ${levelUp ? `<p ${reveal()}><span class="congrats-levelup">${icon('arrow-up', 16, 'ico')} Nível ${levelUp.level}: ${levelUp.title}!</span></p>` : ''}
     ${streak > 0 ? `<p ${reveal()}><span class="muted small">${icon('flame', 14, 'ico')} ${streak} ${streak === 1 ? 'dia' : 'dias'} seguidos</span></p>` : ''}
     <button class="btn-neon btn-block" data-role="ok" style="margin-top:1rem">Continuar</button>`;

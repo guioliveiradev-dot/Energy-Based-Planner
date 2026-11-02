@@ -11,6 +11,8 @@ import { mountPetHome } from '../components/pet-home.js';
 import { CATEGORY_LABELS } from '../categories.js';
 import { createEnergySlider } from '../components/energy-slider.js';
 import { progressCardHTML } from '../components/progress-card.js';
+import { mountGoals } from '../components/goal-cards.js';
+import { claimWeekRewards } from '../goals.js';
 import { pointsForTask, totalPoints, levelInfo, streakInfo } from '../progress.js';
 import { isAvailable, nextInstance } from '../recurrence.js';
 import { createTaskTimer } from '../components/task-timer.js';
@@ -60,6 +62,8 @@ export async function renderHome(container) {
 
       <div id="progress-slot"></div>
 
+      <div id="goal-slot"></div>
+
       <div class="glass-card pad-lg" id="slider-slot"></div>
 
       <div class="glass-card pad-lg stack">
@@ -98,6 +102,7 @@ export async function renderHome(container) {
   async function refreshProgress(list) {
     const all = list || await getUserTasks(user.id);
     progressSlot.innerHTML = progressCardHTML(levelInfo(totalPoints(all)), streakInfo(all, Date.now(), await getStreakExtra(user.id)));
+    await mountGoals($('#goal-slot'), { userId: user.id, awardXP: auth.addXP, showLink: true, tasks: all });
   }
   // Ao abrir: o Cão protege a sequência se preciso, depois o cartão do pet e a missão do Robô
   (async () => {
@@ -208,7 +213,9 @@ export async function renderHome(container) {
     if (next) await createTask(next);
     const fx = await applyPetPowers({ userId: user.id, task: done, basePoints: points, tasksBefore, completedAt }).catch(() => ({ bonus: null, note: null }));   // poder do pet ativo
     const petBonus = fx.bonus;
-    await auth.addXP(points + (petBonus ? petBonus.amount : 0));
+    const afterList = tasksBefore.map((t) => (t.id === done.id ? { ...t, completed: true, completedAt } : t));
+    const goals = await claimWeekRewards({ userId: user.id, tasks: afterList, now: completedAt }).catch(() => ({ items: [], total: 0 }));   // meta e desafios da semana
+    await auth.addXP(points + (petBonus ? petBonus.amount : 0) + goals.total);
     const bond = await recordTaskForPet(user.id).catch(() => null);   // vínculo do pet ativo
     resetTimer();
     mission = null;
@@ -223,6 +230,7 @@ export async function renderHome(container) {
       petBonus,
       petNote: fx.note,
       petLevelUp: bond,
+      goalRewards: goals.items,
       levelUp: levelNow.level > levelBefore ? { level: levelNow.level, title: levelNow.title } : null,
       streak: streakInfo(all, Date.now(), await getStreakExtra(user.id)).current,
     });

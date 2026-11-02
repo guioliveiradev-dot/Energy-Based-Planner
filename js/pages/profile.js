@@ -7,6 +7,8 @@ import { bondProgress, petFaceHTML } from '../pets.js';
 import { powerText, getStreakExtra } from '../pet-powers.js';
 import { petInfoHTML } from '../components/pet-info.js';
 import { importPetState } from '../pet-state.js';
+import { importGoalState, takeRequestedProfileTab } from '../goals.js';
+import { mountGoals } from '../components/goal-cards.js';
 import { onDataChanged } from '../events.js';
 import { APP_VERSION } from '../version.js';
 import { computeStats } from '../stats.js';
@@ -69,16 +71,14 @@ export async function renderProfile(container) {
   const user = () => auth.state.user;
   let tasks = [], inventory = [], activeTheme = DEFAULT_THEME, activePet = null;
   let backupState = null, persisted = null, petBonds = {}, streakExtra = {};
-  let activeTab = 'profile';
+  let activeTab = takeRequestedProfileTab() === 'goals' ? 'goals' : 'profile';
   let statsSection = 'resumo';
 
   container.innerHTML = `
     <section class="page" style="gap:1.25rem">
       <h1 style="font-size:1.125rem;font-weight:700">Perfil</h1>
-      <div class="tabs tabs-3" role="tablist">
-        <button class="tab active" role="tab" aria-selected="true" data-tab="profile">${icon('user', 16, 'ico')} Perfil</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="stats">${icon('bar-chart-3', 16, 'ico')} Estatísticas</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="inventory">${icon('backpack', 16, 'ico')} Inventário</button>
+      <div class="tabs tabs-4 profile-tabs" role="tablist">
+        ${[['profile', 'user', 'Perfil'], ['stats', 'bar-chart-3', 'Estatísticas'], ['goals', 'target', 'Metas'], ['inventory', 'backpack', 'Inventário']].map(([id, ic, label]) => `<button class="tab ${id === activeTab ? 'active' : ''}" role="tab" aria-selected="${id === activeTab}" data-tab="${id}">${icon(ic, 16, 'ico')} ${label}</button>`).join('')}
       </div>
       <div id="tab-content" class="stack" style="gap:1.25rem"></div>
       <input type="file" id="import-file" accept="application/json,.json" hidden>
@@ -200,7 +200,12 @@ export async function renderProfile(container) {
     content.innerHTML = statsHTML(computeStats(tasks, Date.now(), streakExtra), statsSection);
   }
 
-  const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : activeTab === 'stats' ? renderStatsTab() : renderInventoryTab());
+  function renderGoalsTab() {
+    content.innerHTML = '<div id="goals-slot"></div>';
+    mountGoals(content.querySelector('#goals-slot'), { userId: user().id, awardXP: auth.addXP, withChallenges: true, tasks });
+  }
+
+  const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : activeTab === 'stats' ? renderStatsTab() : activeTab === 'goals' ? renderGoalsTab() : renderInventoryTab());
 
   async function load() {
     const u = user();
@@ -287,6 +292,7 @@ export async function renderProfile(container) {
     try {
       const { counts, skipped } = await importUserData(u.id, parsed);
       await importPetState(u.id, parsed.petState);   // escudos, baú e Fênix: união com o que a conta já tem
+      await importGoalState(u.id, parsed.goalState); // meta da semana e recompensas recebidas: união
       parsed.inventory.forEach((id) => addToInventory(u.id, id));
       if (parsed.theme) setActiveThemeStorage(u.id, parsed.theme);
       if (parsed.pet) setActivePetStorage(u.id, parsed.pet);
