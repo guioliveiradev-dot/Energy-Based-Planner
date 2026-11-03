@@ -149,6 +149,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 
+/* Sensação de app: sem o retângulo azul ao tocar e sem selecionar/copiar texto (campos de digitar continuam normais). O anel de foco do teclado (:focus-visible) fica. */
+html { -webkit-tap-highlight-color: transparent; }
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
+
 /* ---------- Componentes (antigo @layer components) ---------- */
 .glass-card {
   background: hsl(var(--card) / 0.6);
@@ -288,6 +293,19 @@ button { cursor: pointer; }
 .toast { pointer-events: auto; padding: 0.75rem 1rem; border-radius: var(--radius); background: hsl(var(--popover)); border: 1px solid hsl(var(--border)); box-shadow: 0 8px 24px rgb(0 0 0 / 0.4); font-size: 0.9rem; }
 .toast.success { border-color: hsl(var(--success) / 0.6); }
 .toast.error { border-color: hsl(var(--destructive) / 0.7); }
+
+/* Troca de tela: só opacidade (transform quebraria os botões fixos, como o +) */
+#outlet.page-in { animation: page-in 0.22s ease-out; }
+@keyframes page-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Telas vazias (js/components/empty-state.js). O movimento some com "reduzir movimento". */
+.empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.75rem; padding: 1.5rem 1rem; }
+.empty-art { width: 7.5rem; height: auto; display: block; }
+.empty p { margin: 0; max-width: 18rem; }
+.empty .bob { animation: empty-bob 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
+.empty .twinkle { animation: empty-twinkle 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes empty-bob { 50% { transform: translateY(-3px); } }
+@keyframes empty-twinkle { 50% { opacity: 0.35; transform: scale(0.8); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }

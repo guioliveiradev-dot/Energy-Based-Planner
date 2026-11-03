@@ -10,6 +10,13 @@ let renderId = 0;
 let onRendered = () => {};
 let firstRender = true;
 
+// Transição suave ao trocar de tela: um desvanecer curto (o CSS desliga com "reduzir movimento").
+function fadeIn() {
+  outlet.classList.remove('page-in');
+  void outlet.offsetWidth;   // reinicia a animação mesmo em trocas seguidas
+  outlet.classList.add('page-in');
+}
+
 export const currentPath = () => location.hash.replace(/^#/, '') || '/';
 export const navigate = (path) => { location.hash = '#' + path; };
 
@@ -22,6 +29,7 @@ async function renderCurrent() {
   cleanup = null;
   outlet.innerHTML = '';
   onChange(path);
+  if (!firstRender) fadeIn();
 
   const result = await routes[path](outlet);
   // Se o usuário trocou de página enquanto esta carregava, descarta.

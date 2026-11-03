@@ -15,7 +15,7 @@ export const FAGULHA_POSE_NAMES = { idle: 'parada', work: 'trabalhando', sleep: 
 export const fagulhaStage = (level) => (level >= 5 ? 'aura' : level >= 3 ? 'flame' : 'spark');
 
 // Estilo chapado: cada cor segue o tema, mas pode ser trocada pelas variáveis --pet-body, --pet-face, --pet-bolt e --pet-aura.
-const THEME_COLORS = {
+export const THEME_COLORS = {
   ink: 'var(--pet-body, hsl(var(--foreground)))',                 // corpo
   base: 'var(--pet-base, var(--pet-body, hsl(var(--foreground))))', // base (pernas), um tom mais escura que o corpo
   bg: 'var(--pet-face, hsl(var(--background)))',                  // olhos e boca

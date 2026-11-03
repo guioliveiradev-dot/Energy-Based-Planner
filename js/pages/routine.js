@@ -1,6 +1,7 @@
 // Tela de Rotina semanal. Porte de Routine.tsx.
 
 import * as auth from '../auth.js';
+import { emptyState } from '../components/empty-state.js';
 import { getUserRoutineBlocks, createRoutineBlock, deleteRoutineBlock } from '../db.js';
 import { icon } from '../icons.js';
 import { escapeHtml, toast } from '../ui.js';
@@ -110,7 +111,7 @@ export async function renderRoutine(container) {
       .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
     if (dayBlocks.length === 0) {
-      listEl.innerHTML = `<div class="center muted small" style="padding:2rem 0">Nenhum bloco para ${dayLabel()}. Toque em + para adicionar.</div>`;
+      listEl.innerHTML = emptyState('routine', `Nenhum bloco para ${dayLabel()}. Toque em + para adicionar.`);
       return;
     }
     listEl.innerHTML = dayBlocks.map((b) => `

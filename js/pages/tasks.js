@@ -1,6 +1,7 @@
 // Tela de Tarefas. Porte de Tasks.tsx.
 
 import * as auth from '../auth.js';
+import { emptyState } from '../components/empty-state.js';
 import { getUserTasks, createTask, updateTask, deleteTask } from '../db.js';
 import { icon } from '../icons.js';
 import { escapeHtml, toast, formatDuration } from '../ui.js';
@@ -374,7 +375,7 @@ export async function renderTasks(container) {
     const noResults = pending.length > 0 && shown.length === 0
       ? `<div class="center muted small stack" style="padding:1.5rem 0;align-items:center" role="status">Nenhuma tarefa encontrada${searching ? ` para “${escapeHtml(searchText.trim())}”` : ''}.<button class="btn btn-sm" data-action="clear-filters">Limpar busca e filtros</button></div>` : '';
     const empty = pending.length === 0
-      ? `<div class="center muted small" style="padding:2rem 0">${scheduled.length ? 'Nada para agora. As tarefas agendadas voltam no dia certo.' : 'Nenhuma tarefa pendente. Toque em + para criar.'}</div>` : '';
+      ? emptyState('tasks', scheduled.length ? 'Nada para agora. As tarefas agendadas voltam no dia certo.' : 'Nenhuma tarefa pendente. Toque em + para criar.') : '';
 
     const scheduledList = scheduledShown.length > 0 ? `
       <div class="stack" style="gap:0.75rem;padding-top:1rem">

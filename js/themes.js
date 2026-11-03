@@ -21,19 +21,19 @@ export const SHOP_THEMES = [
   { id: 'gold',     name: 'Ouro Imperial',   cost: 10000, type: 'theme', preview: 'linear-gradient(135deg, hsl(43 90% 55%), hsl(30 80% 40%))' },
 ];
 
-// Pet inicial: de graça para todos, não aparece na Loja. Desenhada em SVG (js/pet-art.js).
+// Pet inicial: de graça para todos, não aparece na Loja. Desenhada em SVG (js/pet-art.js); os 6 da Loja em js/pet-drawings.js.
 export const DEFAULT_PET = 'fagulha';
 export const FREE_PETS = [
-  { id: 'fagulha', name: 'Fagulha', emoji: '🔥', cost: 0, type: 'pet', free: true, description: 'O espírito da sua logo: medita com você e cresce com o vínculo' },
+  { id: 'fagulha', name: 'Fagulha', cost: 0, type: 'pet', free: true, description: 'O espírito da sua logo: medita com você e cresce com o vínculo' },
 ];
 
 export const SHOP_PETS = [
-  { id: 'cat',     name: 'Gato Cósmico',      emoji: '🐱', cost: 500, type: 'pet', description: 'Ronrona enquanto você trabalha' },
-  { id: 'dragon',  name: 'Dragão Neon',       emoji: '🐉', cost: 500, type: 'pet', description: 'Cospe fogo de motivação' },
-  { id: 'unicorn', name: 'Unicórnio Mágico',  emoji: '🦄', cost: 500, type: 'pet', description: 'Espalha magia e arco-íris' },
-  { id: 'robot',   name: 'Robô Quântico',     emoji: '🤖', cost: 500, type: 'pet', description: 'Calcula seu sucesso' },
-  { id: 'dog',     name: 'Cão Guardião',      emoji: '🐶', cost: 800, type: 'pet', description: 'Te encoraja a continuar' },
-  { id: 'phoenix', name: 'Fênix Estelar',     emoji: '🦅', cost: 1000, type: 'pet', description: 'Renasce das cinzas com você' },
+  { id: 'cat',     name: 'Gato Cósmico',      cost: 500, type: 'pet', description: 'Ronrona enquanto você trabalha' },
+  { id: 'dragon',  name: 'Dragão Neon',       cost: 500, type: 'pet', description: 'Cospe fogo de motivação' },
+  { id: 'unicorn', name: 'Unicórnio Mágico',  cost: 500, type: 'pet', description: 'Espalha magia e arco-íris' },
+  { id: 'robot',   name: 'Robô Quântico',     cost: 500, type: 'pet', description: 'Calcula seu sucesso' },
+  { id: 'dog',     name: 'Cão Guardião',      cost: 800, type: 'pet', description: 'Te encoraja a continuar' },
+  { id: 'phoenix', name: 'Fênix Estelar',     cost: 1000, type: 'pet', description: 'Renasce das cinzas com você' },
 ];
 
 export const ALL_PETS = [...FREE_PETS, ...SHOP_PETS];

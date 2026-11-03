@@ -1,6 +1,7 @@
 // Loja: recompensas, temas e pets, conquistas e histórico. Porte de Shop.tsx.
 
 import * as auth from '../auth.js';
+import { emptyState } from '../components/empty-state.js';
 import {
   getUserRewards, createReward, deleteReward, getUserTasks,
   getUserRedemptionHistory, addRedemptionRecord, updateReward,
@@ -12,6 +13,7 @@ import { ACHIEVEMENTS, getUnlocked, loadPetContext } from '../achievements.js';
 import { celebrate } from '../celebrate.js';
 import { createModal } from '../components/modal.js';
 import { powerSummary } from '../pet-powers.js';
+import { petFaceHTML } from '../pets.js';
 import { petInfoHTML } from '../components/pet-info.js';
 
 const TABS = [
@@ -114,7 +116,7 @@ export async function renderShop(container) {
   function renderTab() {
     if (activeTab === 'rewards') {
       content.innerHTML = rewards.length === 0
-        ? `<div class="center muted small" style="padding:2rem 0"><span style="display:inline-flex;opacity:0.5;margin-bottom:0.5rem">${icon('sparkles', 24)}</span><br>Crie recompensas para se motivar!</div>`
+        ? emptyState('rewards', 'Crie recompensas para se motivar!')
         : rewards.map((r) => `
           <div class="glass-card pad row-between">
             <div class="row" style="gap:0.75rem">
@@ -159,7 +161,7 @@ export async function renderShop(container) {
             <div class="glass-card pad stack" style="gap:0.25rem">
               <div class="row-between">
               <div class="row" style="gap:0.75rem">
-                <div class="icon-tile" style="font-size:1.5rem;background:hsl(var(--accent) / 0.1)">${p.emoji}</div>
+                <div class="icon-tile" style="width:3rem;height:3rem;background:hsl(var(--accent) / 0.1)">${petFaceHTML(p, { size: 40 })}</div>
                 <div>
                   <p style="font-weight:600;font-size:0.875rem">${p.name}</p>
                   <p class="muted tiny">${p.description}</p>

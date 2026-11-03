@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telas vazias: opções de desenho</title>
+<meta name="robots" content="noindex">
+<script>document.documentElement.setAttribute('data-theme', 'papel');</script>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/progress.css">
+<style>
+  .pg { max-width: 64rem; margin: 0 auto; padding: 1rem 1rem 4rem; display: flex; flex-direction: column; gap: 2rem; }
+  .pg-bar { position: sticky; top: 0; z-index: 5; background: hsl(var(--background)); padding: 0.75rem 0; border-bottom: 1px solid hsl(var(--border)); display: flex; flex-direction: column; gap: 0.5rem; }
+  .pg-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; align-items: start; }
+  .pg-col { display: flex; flex-direction: column; gap: 0.75rem; }
+  .pg-label { font-weight: 700; font-size: 0.9375rem; }
+  .pg-state { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); margin: 0.25rem 0 0; }
+  .pg select { min-height: 2.75rem; padding: 0 0.75rem; border-radius: 0.5rem; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); }
+
+  /* Tela vazia */
+  .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.75rem; padding: 1.5rem 1rem; }
+  .empty svg.art { width: 7.5rem; height: auto; display: block; }
+  .empty .fag { display: block; height: 6.5rem; }
+  .empty .fag svg { height: 100%; width: auto; }
+  .empty p { margin: 0; font-size: 0.9375rem; max-width: 18rem; }
+  .empty .empty-title { font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+  .empty .btn-neon { margin-top: 0.25rem; }
+  /* Movimento leve (some com "reduzir movimento") */
+  .empty .bob { animation: empty-bob 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
+  .empty .twinkle { animation: empty-twinkle 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes empty-bob { 50% { transform: translateY(-3px); } }
+  @keyframes empty-twinkle { 50% { opacity: 0.35; transform: scale(0.8); } }
+</style>
+</head>
+<body>
+<div class="pg">
+  <div class="pg-bar">
+    <h1 style="font-size:1.125rem;margin:0">Telas vazias: escolha o desenho</h1>
+    <p class="small muted" style="margin:0">Três estilos, nas três telas que podem ficar vazias (Tarefas, Rotina e Recompensas). A coluna D mostra como é hoje. Troque o tema para ver em todos.</p>
+    <label class="small">Tema: <select id="tema" aria-label="Tema da página">
+      <option value="papel">Papel</option><option value="grafite">Grafite</option><option value="neon">Neon</option>
+      <option value="forest">Floresta</option><option value="sunset">Pôr do Sol</option><option value="ocean">Oceano</option><option value="midnight">Meia-Noite</option><option value="silver">Prata</option><option value="gold">Ouro</option></select></label>
+  </div>
+  <div class="pg-cols" id="cols"></div>
+</div>
+
+<script type="module">
+import { icon } from '../js/icons.js';
+import { fagulhaSVG } from '../js/pet-art.js';
+document.getElementById('tema').addEventListener('change', (e) => document.documentElement.setAttribute('data-theme', e.target.value));
+
+// Dois jeitos de desenhar a mesma cena: só contorno (A) ou formas cheias e suaves (B).
+const STYLES = {
+  A: {
+    body: 'fill="none" stroke="hsl(var(--muted-foreground))" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"',
+    soft: 'fill="none" stroke="hsl(var(--muted-foreground))" stroke-width="2.5" stroke-linecap="round"',
+    path: 'fill="none" stroke="hsl(var(--muted-foreground))" stroke-width="2.5" stroke-linecap="round"',
+    acc: 'fill="none" stroke="hsl(var(--accent))" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"',
+    line: (x1, x2, y, s) => `<path d="M${x1} ${y}H${x2}" ${s}/>`,
+  },
+  B: {
+    body: 'fill="hsl(var(--foreground) / 0.15)"',
+    soft: 'fill="hsl(var(--foreground) / 0.34)"',
+    path: 'fill="none" stroke="hsl(var(--foreground) / 0.34)" stroke-width="5" stroke-linecap="round"',
+    acc: 'fill="hsl(var(--accent))"',
+    line: (x1, x2, y, s) => `<rect x="${x1}" y="${y - 2.5}" width="${x2 - x1}" height="5" rx="2.5" ${s}/>`,
+  },
+};
+
+// Brilhos pequenos (as fagulhas do app), com movimento leve.
+const spark = (x, y, r, st, delay) => `<path class="twinkle" style="animation-delay:${delay}s" d="M${x} ${y - r}L${x + r * 0.28} ${y - r * 0.28}L${x + r} ${y}L${x + r * 0.28} ${y + r * 0.28}L${x} ${y + r}L${x - r * 0.28} ${y + r * 0.28}L${x - r} ${y}L${x - r * 0.28} ${y - r * 0.28}Z" ${st.acc}/>`;
+
+const SCENES = {
+  tarefas: (st) => `<g class="bob">
+      <rect x="30" y="12" width="60" height="74" rx="9" ${st.body}/>
+      <rect x="44" y="7" width="32" height="12" rx="6" ${st.body}/>
+      <circle cx="45" cy="38" r="6.5" ${st.acc}/><path d="M42 38l2.4 2.6 4.4-5" fill="none" stroke="${st === STYLES.A ? 'hsl(var(--accent))' : 'hsl(var(--background))'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      ${st.line(57, 78, 38, st.soft)}
+      <circle cx="45" cy="60" r="6.5" ${st.body}/>${st.line(57, 72, 60, st.soft)}
+    </g>${spark(95, 22, 6, st, 0)}${spark(24, 66, 4, st, 1.2)}`,
+  rotina: (st) => `<g class="bob">
+      <rect x="22" y="18" width="76" height="66" rx="10" ${st.body}/>
+      <path d="M22 36H98" ${st.path}/>
+      <path d="M42 12v13M78 12v13" ${st.path}/>
+      ${st.line(34, 56, 50, st.soft)}${st.line(34, 48, 64, st.soft)}
+      <rect x="62" y="44" width="26" height="16" rx="5" ${st.acc}/>
+      ${st.line(62, 80, 72, st.soft)}
+    </g>${spark(102, 30, 5, st, 0.4)}`,
+  recompensas: (st) => `<g class="bob">
+      <rect x="26" y="40" width="68" height="44" rx="8" ${st.body}/>
+      <rect x="20" y="28" width="80" height="16" rx="6" ${st.body}/>
+      <path d="M60 28V84" ${st.acc}/>
+      <path d="M60 28c-4-14-20-14-20-6 0 6 12 6 20 6zM60 28c4-14 20-14 20-6 0 6-12 6-20 6z" ${st.acc}/>
+    </g>${spark(100, 16, 7, st, 0)}${spark(18, 20, 4, st, 0.9)}${spark(104, 62, 3.5, st, 1.7)}`,
+};
+
+const TEXTOS = {
+  tarefas: { titulo: 'Nenhuma tarefa por aqui', texto: 'Quando você criar uma tarefa, ela aparece aqui. Toque em + para começar.', rotulo: 'Nova tarefa' },
+  rotina: { titulo: 'Dia livre por enquanto', texto: 'Nenhum bloco para hoje. Toque em + para adicionar um compromisso ou uma pausa.', rotulo: 'Novo bloco' },
+  recompensas: { titulo: 'Nada na lista ainda', texto: 'Crie recompensas para se motivar! Você troca por pontos quando quiser.', rotulo: 'Nova recompensa' },
+};
+const NOMES = { tarefas: 'Tarefas', rotina: 'Rotina', recompensas: 'Recompensas' };
+const POSE = { tarefas: 'sleep', rotina: 'idle', recompensas: 'cheer' };
+const HOJE = { tarefas: 'Nenhuma tarefa pendente. Toque em + para criar.', rotina: 'Nenhum bloco para hoje. Toque em + para adicionar.', recompensas: 'Crie recompensas para se motivar!' };
+const HOJE_ICO = { tarefas: 'clock', rotina: 'clock', recompensas: 'sparkles' };
+
+const card = (inner) => `<div class="glass-card empty" role="status">${inner}</div>`;
+const texto = (k) => `<p class="empty-title">${TEXTOS[k].titulo}</p><p class="muted">${TEXTOS[k].texto}</p><button class="btn-neon btn-sm" type="button">${icon('plus', 16, 'ico')} ${TEXTOS[k].rotulo}</button>`;
+const svg = (k, st) => `<svg class="art" viewBox="0 0 120 96" aria-hidden="true">${SCENES[k](st)}</svg>`;
+
+const COLS = [
+  ['A · Só contorno (traço fino)', (k) => card(svg(k, STYLES.A) + texto(k))],
+  ['B · Formas cheias e suaves', (k) => card(svg(k, STYLES.B) + texto(k))],
+  ['C · A Fagulha faz companhia', (k) => card(`<span class="fag">${fagulhaSVG({ pose: POSE[k], stage: 'flame', size: 104, label: null })}</span>` + texto(k))],
+  ['D · Como é hoje (para comparar)', (k) => `<div class="center muted small" style="padding:2rem 0"><span style="display:inline-flex;opacity:0.5;margin-bottom:0.5rem">${icon(HOJE_ICO[k], 24)}</span><br>${HOJE[k]}</div>`],
+];
+document.getElementById('cols').innerHTML = COLS.map(([t, f]) =>
+  `<div class="pg-col"><span class="pg-label">${t}</span>${Object.keys(SCENES).map((k) => `<p class="pg-state">${NOMES[k]}</p>${f(k)}`).join('')}</div>`).join('');
+</script>
+</body>
+</html>

@@ -1,11 +1,11 @@
 // A interface usa os ícones do app (js/icons.js) e não emoji. Este teste avisa se um emoji voltar a entrar no código.
-// Exceção: os 6 pets antigos da Loja ainda usam emoji (js/themes.js) até chegarem os desenhos do grupo.
+// Sem exceções: os 6 pets da Loja agora são desenhos em SVG (js/pet-drawings.js).
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { icon } from '../js/icons.js';
 import { CATEGORY_LABELS, CATEGORY_ICON, categoryIcon } from '../js/categories.js';
 const ok = (c, m) => { console.log((c ? 'OK   ' : 'FALHA'), m); if (!c) process.exitCode = 1; };
 const root = new URL('../', import.meta.url);
-const ALLOWED = new Set(['js/themes.js']);
+const ALLOWED = new Set();
 const walk = (dir, out = []) => {
   for (const name of readdirSync(new URL(dir, root))) {
     const rel = dir + name;

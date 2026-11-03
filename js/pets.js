@@ -9,6 +9,8 @@
 import { addPetBond } from './db.js';
 import { getActivePet, ALL_PETS } from './themes.js';
 import { fagulhaSVG, fagulhaStage, FAGULHA_STAGE_NAMES } from './pet-art.js';
+import { petDrawingSVG } from './pet-drawings.js';
+import { icon } from './icons.js';
 
 // Vínculo (tarefas concluídas) necessário para ENTRAR em cada nível. Nível 1 = 0.
 // Com 3 tarefas por dia: nível 2 em ~2 dias, 3 em ~5, 4 em ~12 e 5 em ~23. Números ajustáveis.
@@ -49,9 +51,9 @@ export function petLevelUpMessage({ petId, level, before }) {
   return `${name} subiu para o nível ${level} de vínculo!`;
 }
 
-// Rosto do pet: desenho em SVG quando existe (Fagulha), senão o emoji de antes.
+// Rosto do pet: desenho em SVG (a Fagulha muda de forma com o vínculo; os outros 6 ficam em js/pet-drawings.js).
 // pose: idle | work | sleep | cheer. bond: vínculo atual (define a forma da Fagulha).
 export function petFaceHTML(pet, { bond = 0, pose = 'idle', size = 64 } = {}) {
   if (pet.id === 'fagulha') return fagulhaSVG({ pose, stage: fagulhaStage(bondLevel(bond)), style: 'flat', size });
-  return `<span style="font-size:${Math.round(size * 0.55)}px;line-height:1" aria-hidden="true">${pet.emoji}</span>`;
+  return petDrawingSVG(pet.id, { pose, size }) || icon('paw-print', Math.round(size * 0.55));
 }
