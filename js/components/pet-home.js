@@ -1,12 +1,11 @@
 // Cartão do pet na Home: carinha, mensagem do dia e, para o Robô, a missão do dia.
-import { petFaceHTML, bondLevel } from '../pets.js';
+import { petFaceHTML, bondLevel, petFormName } from '../pets.js';
 import { icon } from '../icons.js';
 import { getActivePet, ALL_PETS } from '../themes.js';
 import { getUserPetBonds } from '../db.js';
 import { streakInfo, dayKey } from '../progress.js';
 import { getStreakExtra, robotMission } from '../pet-powers.js';
 import { dailyMessage } from '../pet-messages.js';
-import { fagulhaStage, FAGULHA_STAGE_NAMES } from '../pet-art.js';
 import { escapeHtml } from '../ui.js';
 
 export async function mountPetHome(slot, userId, tasks, now = Date.now()) {
@@ -17,7 +16,8 @@ export async function mountPetHome(slot, userId, tasks, now = Date.now()) {
   const hour = new Date(now).getHours();
   const pose = streak.doneToday ? 'cheer' : hour >= 22 || hour < 5 ? 'sleep' : 'idle';
   const level = bondLevel(bond);
-  const form = pet.id === 'fagulha' ? ` · ${FAGULHA_STAGE_NAMES[fagulhaStage(level)]}` : '';
+  const formName = petFormName(pet.id, level);
+  const form = formName ? ` · ${formName}` : '';
   const message = dailyMessage({ hour, doneToday: streak.doneToday, streak: streak.current, seed: `${dayKey(now)}:${userId}` });
   const mission = await robotMission(userId, tasks, now);
   const missionHTML = mission ? `

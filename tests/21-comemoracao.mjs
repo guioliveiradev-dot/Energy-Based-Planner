@@ -70,13 +70,13 @@ ok(/hsl\(var\(--accent\)/.test(rule('.celebrate-spark {')) && /hsl\(var\(--accen
 
 // ---------- conclusão de tarefa: visto que se desenha, pontos contando, linhas que aparecem ----------
 clear();
-const m = showCongratsModal({ taskTitle: 'Ler capítulo', points: 65, petBonus: { message: 'Fagulha ajudou: +5 pontos' }, petNote: 'Fênix Estelar reacendeu 2 dias da sua sequência!', streak: 4 });
+const m = showCongratsModal({ taskTitle: 'Ler capítulo', points: 65, petBonus: { message: 'Fagulha ajudou: +5 pontos' }, petNote: 'Coruja Lunar reacendeu 2 dias da sua sequência!', streak: 4 });
 const panel = document.querySelector('.congrats-panel');
 ok(!!panel.querySelector('.congrats-check[aria-hidden="true"] svg .cc-ring') && !!panel.querySelector('.cc-tick') && !!panel.querySelector('.cc-fill') && !!panel.querySelector('.cc-pulse'), 'Tarefa: círculo, "visto" e anel de luz (escondidos do leitor de tela)');
 ok(!/🎉/.test(panel.textContent) && !panel.querySelector('.congrats-emoji'), 'Tarefa: o emoji pulando saiu');
 ok(panel.querySelector('[data-count]').textContent === '65' && /\+65 Pontos Planner/.test(panel.querySelector('.congrats-points .sr-only').textContent) && panel.querySelector('.congrats-points > span').getAttribute('aria-hidden') === 'true', 'Tarefa: os pontos sobem contando, mas o leitor de tela lê o valor final');
 const rev = [...panel.querySelectorAll('.congrats-reveal')].map((x) => x.style.getPropertyValue('--i'));
-ok(rev.join() === '0,1,2' && /Fagulha ajudou/.test(panel.textContent) && /Fênix Estelar reacendeu/.test(panel.textContent) && /4 dias seguidos/.test(panel.textContent), 'Tarefa: bônus, nota e sequência aparecem em ordem (um após o outro)');
+ok(rev.join() === '0,1,2' && /Fagulha ajudou/.test(panel.textContent) && /Coruja Lunar reacendeu/.test(panel.textContent) && /4 dias seguidos/.test(panel.textContent), 'Tarefa: bônus, nota e sequência aparecem em ordem (um após o outro)');
 ok(document.activeElement === panel.querySelector('[data-role="ok"]'), 'Tarefa: foco no "Continuar"');
 m.close();
 

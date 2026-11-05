@@ -3,12 +3,12 @@
 // Regras gerais:
 //  - Só o pet ATIVO usa o poder. Sem pet, ou com a regra não cumprida, nada muda (sem punição).
 //  - Bônus de pontos entram no saldo (Pontos Planner), mas NÃO no nível do usuário: o nível vem só dos pontos-base.
-//  - Poderes de sequência (Cão e Fênix) usam o estado guardado em js/pet-state.js.
+//  - Poderes de sequência (Cão e Coruja) usam o estado guardado em js/pet-state.js.
 //
 //  Fagulha  : +% em toda tarefa                       Gato    : +% em tarefa sem pausar o cronômetro
 //  Dragão   : +% em tarefa de energia 8 ou mais       Robô    : +% na tarefa da "missão do dia"
 //  Unicórnio: baú de pontos na 1ª tarefa do dia       Cão     : escudos semanais que protegem a sequência
-//  Fênix    : reacende parte da sequência quebrada (1 vez a cada 30 dias)
+//  Coruja   : reacende parte da sequência quebrada (1 vez a cada 30 dias)
 
 import { getUserPetBonds } from './db.js';
 import { getActivePet, ALL_PETS } from './themes.js';
@@ -29,8 +29,8 @@ export const PET_POWERS = {
     how: 'Dá pontos extras nas tarefas pesadas, de energia 8 ou mais. Nas leves, a tarefa vale os pontos de sempre.' },
   dog: { title: 'Escudo da sequência', kind: 'shield', per: [1, 1, 1, 2, 2],
     how: 'Protege a sua sequência de dias. Se você perder um dia, o escudo entra sozinho e a sequência continua. Só protege quando a sequência já tem pelo menos 2 dias.' },
-  phoenix: { title: 'Renascimento', kind: 'phoenix', pct: [50, 55, 60, 65, 70],
-    how: 'Se a sua sequência quebrar, a Fênix reacende parte dela quando você concluir a próxima tarefa. Vale uma vez a cada 30 dias.' },
+  phoenix: { title: 'Luz da lua', kind: 'phoenix', pct: [50, 55, 60, 65, 70],
+    how: 'Se a sua sequência quebrar, a Coruja reacende parte dela, sob a luz da lua, quando você concluir a próxima tarefa. Vale uma vez a cada 30 dias.' },
   unicorn: { title: 'Baú-surpresa', kind: 'chest', min: [10, 10, 15, 15, 20], max: [40, 45, 50, 55, 60],
     how: 'Todo dia, ao concluir a primeira tarefa, abre um baú-surpresa com pontos extras. O valor é sorteado e cresce com o vínculo.' },
   robot: { title: 'Missão do dia', kind: 'mission', pct: [30, 35, 40, 45, 50],
@@ -52,7 +52,7 @@ const pick = (arr, level) => arr[Math.min(Math.max(level, 1), arr.length) - 1];
 export const hasPower = (petId) => !!PET_POWERS[petId];
 export const powerHow = (petId) => PET_POWERS[petId]?.how ?? '';
 
-// Percentual do pet no nível dado (Fagulha, Gato, Dragão, Fênix e Robô). null para os outros.
+// Percentual do pet no nível dado (Fagulha, Gato, Dragão, Coruja e Robô). null para os outros.
 export const powerPct = (petId, level) => (PET_POWERS[petId] && PET_POWERS[petId].pct ? pick(PET_POWERS[petId].pct, level) : null);
 export const shieldsPerWeek = (level) => pick(PET_POWERS.dog.per, level);
 export const chestRange = (level) => ({ min: pick(PET_POWERS.unicorn.min, level), max: pick(PET_POWERS.unicorn.max, level) });
@@ -161,7 +161,7 @@ export async function robotMission(userId, tasks, now = Date.now()) {
 // ---------- ao concluir uma tarefa ----------
 // tasksBefore: as tarefas ANTES de concluir esta. Devolve { bonus, note }:
 //   bonus: { amount, petName, message } pontos extras (ou null)
-//   note:  frase extra para a janela de parabéns, como a da Fênix (ou null)
+//   note:  frase extra para a janela de parabéns, como a da Coruja (ou null)
 export async function applyPetPowers({ userId, task, basePoints, tasksBefore, completedAt = Date.now(), rng = Math.random }) {
   const none = { bonus: null, note: null };
   const petId = getActivePet(userId);

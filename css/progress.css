@@ -14,15 +14,15 @@
 /* Cartão da sequência: chama quente, número grande e os últimos 7 dias */
 .streak-card { display: flex; flex-direction: column; gap: 0.75rem; }
 .streak-top { display: flex; align-items: center; gap: 0.75rem; }
-.streak-flame { width: 3.25rem; height: 3.25rem; flex-shrink: 0; border-radius: 1rem; display: grid; place-items: center; background: hsl(var(--warning) / 0.16); color: hsl(var(--warning)); border: 1px solid hsl(var(--warning) / 0.45); }
+.streak-flame { width: min(3.25rem, 56px); height: min(3.25rem, 56px); flex-shrink: 0; border-radius: 1rem; display: grid; place-items: center; background: hsl(var(--warning) / 0.16); color: hsl(var(--warning)); border: 1px solid hsl(var(--warning) / 0.45); }
 .streak-flame svg { fill: currentColor; fill-opacity: 0.3; }
 .streak-flame.off { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border-color: hsl(var(--border)); }
 .streak-flame.off svg { fill-opacity: 0; }
-.streak-big { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1.15; }
+.streak-big { overflow-wrap: anywhere; font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1.15; }
 .streak-hint { font-size: 0.8125rem; color: hsl(var(--muted-foreground)); }
-.week-dots { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; }
-.week-dots > div { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
-.week-dots i { width: 1.75rem; height: 1.75rem; border-radius: 50%; display: grid; place-items: center; background: hsl(var(--muted)); box-shadow: inset 0 0 0 1px hsl(var(--border)); color: hsl(var(--background)); }
+.week-dots { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.25rem; }
+.week-dots > div { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+.week-dots i { width: min(1.75rem, 100%); height: auto; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: hsl(var(--muted)); box-shadow: inset 0 0 0 1px hsl(var(--border)); color: hsl(var(--background)); }
 .week-dots i.done { background: hsl(var(--warning)); box-shadow: none; }
 .week-dots i.today { outline: 2px solid hsl(var(--foreground)); outline-offset: 2px; }
 .week-dots b { font-weight: 700; color: hsl(var(--foreground)); }
@@ -61,8 +61,10 @@
 .goal-pick { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .goal-pick .chip { min-width: 3rem; justify-content: center; }
 .ch-card { display: flex; flex-direction: column; gap: 0.5rem; }
+.ch-row > div { min-width: 0; }
+.ch-title { overflow-wrap: anywhere; }
 .ch-row { display: flex; align-items: center; gap: 0.75rem; }
-.ch-ico { width: 2.5rem; height: 2.5rem; flex-shrink: 0; border-radius: 0.625rem; display: grid; place-items: center; background: hsl(var(--primary) / 0.14); color: hsl(var(--primary)); }
+.ch-ico { width: min(2.5rem, 44px); height: min(2.5rem, 44px); flex-shrink: 0; border-radius: 0.625rem; display: grid; place-items: center; background: hsl(var(--primary) / 0.14); color: hsl(var(--primary)); }
 .ch-ico.done { background: hsl(var(--success) / 0.16); color: hsl(var(--success)); }
 .ch-title { font-weight: 600; font-size: 0.9375rem; }
 .ch-bonus { margin-left: auto; font-size: 0.8125rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 999px; background: hsl(var(--muted)); border: 1px solid hsl(var(--border)); white-space: nowrap; display: inline-flex; gap: 0.25rem; align-items: center; }

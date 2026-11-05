@@ -64,7 +64,7 @@ export const keyToIndex = (key) => {
 // doneToday: já concluiu alguma tarefa hoje
 // extra (poderes dos pets, opcional):
 //   covered: dias ("2026-10-16") protegidos pelo escudo do Cão: contam como dias da sequência
-//   bonuses: [{ start: "2026-10-17", extra: 4 }] dias reacendidos pela Fênix, somados à sequência que COMEÇA em start
+//   bonuses: [{ start: "2026-10-17", extra: 4 }] dias reacendidos pela Coruja, somados à sequência que COMEÇA em start
 export function streakInfo(tasks, now = Date.now(), extra = {}) {
   const real = new Set(tasks.filter((t) => t.completed && t.completedAt).map((t) => dayIndex(t.completedAt)));
   const days = new Set([...real, ...(extra.covered || []).map(keyToIndex)]);

@@ -40,7 +40,7 @@ export async function renderShop(container) {
         <p class="balance"><span id="balance">${xp()}</span> <span class="balance-unit">Pontos</span></p>
       </div>
 
-      <div class="tabs tabs-4" role="tablist">
+      <div class="tabs tabs-4" role="tablist" data-roving="tabs">
         ${TABS.map((t) => `<button class="tab ${t.id === activeTab ? 'active' : ''}" role="tab" aria-selected="${t.id === activeTab}" data-tab="${t.id}">${icon(t.icon, 16, 'ico')} ${t.label}</button>`).join('')}
       </div>
 

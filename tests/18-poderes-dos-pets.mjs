@@ -30,7 +30,7 @@ const task = (o = {}) => ({ id: 't', energyCost: 5, durationMinutes: 30, pausedA
 ok(W.bonusFor('fagulha', 0, task(), 100).amount === 8 && W.bonusFor('fagulha', 70, task(), 100).amount === 12, 'Fagulha: +8% no nível 1 e +12% no nível 5, em qualquer tarefa');
 ok(W.bonusFor('cat', 0, task(), 100).amount === 25 && W.bonusFor('cat', 0, task({ pauseOffset: 60000 }), 100) === null && W.bonusFor('cat', 0, task({ pausedAt: 5 }), 100) === null, 'Gato: +25% só se o cronômetro nunca foi pausado');
 ok(W.bonusFor('dragon', 0, task({ energyCost: 8 }), 100).amount === 40 && W.bonusFor('dragon', 0, task({ energyCost: 7 }), 100) === null && W.bonusFor('dragon', 15, task({ energyCost: 10 }), 100).amount === 50, 'Dragão: +40% só em energia 8 ou mais (e sobe com o vínculo)');
-ok(W.bonusFor('dog', 99, task(), 100) === null && W.bonusFor('unicorn', 99, task(), 100) === null && W.bonusFor('phoenix', 99, task(), 100) === null, 'Cão, Unicórnio e Fênix não dão bônus percentual');
+ok(W.bonusFor('dog', 99, task(), 100) === null && W.bonusFor('unicorn', 99, task(), 100) === null && W.bonusFor('phoenix', 99, task(), 100) === null, 'Cão, Unicórnio e Coruja não dão bônus percentual');
 ok(W.bonusFor('fagulha', 0, task(), 6) === null && W.bonusFor('fagulha', 0, task(), 7).amount === 1, 'Arredondamento: bônus menor que 1 ponto não aparece');
 const b = W.bonusFor('cat', 20, task(), 80);
 ok(b.amount === 25 && b.pct === 31 && b.level === 3 && b.petName === 'Gato Cósmico' && /Gato Cósmico ajudou: \+25 pontos/.test(b.message), 'Bônus: valor, percentual, nível, nome e mensagem');
@@ -90,7 +90,7 @@ ok(/Foco: \+25% .*cresce com o vínculo/.test(root.textContent) && /Baú-surpres
 
 // ---------- economia: o pet se paga em 2 a 4 semanas ----------
 const prices = Object.fromEntries(T.SHOP_PETS.map((p) => [p.id, p.cost]));
-ok(prices.cat === 500 && prices.dragon === 500 && prices.unicorn === 500 && prices.robot === 500 && prices.dog === 800 && prices.phoenix === 1000, 'Preços: Gato, Dragão, Unicórnio e Robô 500; Cão 800; Fênix 1000');
+ok(prices.cat === 500 && prices.dragon === 500 && prices.unicorn === 500 && prices.robot === 500 && prices.dog === 800 && prices.phoenix === 1000, 'Preços: Gato, Dragão, Unicórnio e Robô 500; Cão 800; Coruja 1000');
 ok(T.SHOP_PETS.map((p) => p.cost).every((c, i, a) => i === 0 || c >= a[i - 1]), 'Loja: pets em ordem de preço');
 // 3 tarefas/dia de 65 pontos; Gato: 60% sem pausar; Dragão: 0,75 tarefa/dia de energia 8+ (105 pontos); Unicórnio: baú médio; Robô: 1 tarefa/dia
 const perDay = {

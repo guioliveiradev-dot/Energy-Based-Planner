@@ -29,7 +29,7 @@ const PET_MESSAGES = {
   cat:     ['Miau! Continue!', 'Purrfecto!', 'Foco, humano!', 'Ronron...'],
   dog:     ['Au au! Vai lá!', 'Bom garoto!', 'Você consegue!', 'Woof!'],
   dragon:  ['Fogo total!', 'Poder máximo!', 'Dracarys!', 'Imbatível!'],
-  phoenix: ['Renasça!', 'Brilhe forte!', 'Asas ao alto!', 'Imortal!'],
+  phoenix: ['Uhu! Foco!', 'Olho vivo!', 'Sabedoria!', 'Noite produtiva!'],
   robot:   ['Processando...', 'Eficiência 100%!', 'Modo turbo!', 'Beep boop!'],
   unicorn: ['Magia pura!', 'Arco-íris!', 'Brilhante!', 'Encantador!'],
 };

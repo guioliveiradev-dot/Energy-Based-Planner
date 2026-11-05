@@ -20,6 +20,7 @@ import { addEnergyLog } from '../energy-log.js';
 import { createTaskTimer } from '../components/task-timer.js';
 import { showCongratsModal } from '../components/congrats-modal.js';
 import { mountBackupReminder } from '../components/backup-reminder.js';
+import { settingsButtonHTML, settingsDrawerHTML, mountSettingsMenu } from '../components/settings-menu.js';
 
 // Atalhos de tempo da Home
 const TIME_CHOICES = [
@@ -51,9 +52,12 @@ export async function renderHome(container) {
 
   container.innerHTML = `
     <section class="page">
-      <div>
-        <p class="muted small">${getGreeting()},</p>
-        <h1 class="page-title">${escapeHtml(user.name || 'Usuário')}</h1>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem">
+        <div style="min-width:0">
+          <p class="muted small">${getGreeting()},</p>
+          <h1 class="page-title">${escapeHtml(user.name || 'Usuário')}</h1>
+        </div>
+        ${settingsButtonHTML()}
       </div>
 
       <div id="backup-slot"></div>
@@ -67,7 +71,7 @@ export async function renderHome(container) {
 
       <section class="glass-card pad-lg stack" aria-labelledby="step-time">
         <h2 class="step-title" id="step-time"><span class="step-n" aria-hidden="true">2</span> Quanto tempo você tem?</h2>
-        <div class="quick" role="group" aria-label="Tempo disponível">
+        <div class="quick" role="group" aria-label="Tempo disponível" data-roving="buttons">
           ${TIME_CHOICES.map((c, i) => `<button type="button" class="chip${i === 2 ? ' active' : ''}" aria-pressed="${i === 2}" data-time="${i}">${c.label}</button>`).join('')}
           <button type="button" class="chip" aria-pressed="false" data-time="other">Outro</button>
         </div>
@@ -92,6 +96,7 @@ export async function renderHome(container) {
       <div id="goal-slot"></div>
 
       <div id="pet-slot"></div>
+      ${settingsDrawerHTML()}
     </section>`;
 
   const $ = (sel) => container.querySelector(sel);
@@ -300,7 +305,7 @@ export async function renderHome(container) {
           <div class="row text-primary">${icon('sparkles', 16)}<span class="mission-label">Missão Sugerida</span>
             ${candidates.length > 1 ? `<span class="muted xs" style="margin-left:auto">${missionIndex + 1} de ${candidates.length}</span>` : ''}</div>
           <h3 class="mission-title">${escapeHtml(mission.title)}</h3>
-          <div class="row muted xs" style="gap:0.75rem">
+          <div class="row muted xs" style="gap:0.75rem;flex-wrap:wrap">
             <span class="badge category-${mission.category}">${CATEGORY_LABELS[mission.category] || ''}</span>
             <span class="ico-line">${icon('zap', 14, 'ico')} ${mission.energyCost}</span>
             <span class="ico-line">${icon('clock', 14, 'ico')} ${formatDuration(mission.durationMinutes)}</span>
@@ -343,6 +348,8 @@ export async function renderHome(container) {
     } catch (e) { console.error(e); }
   });
 
+  const unmountSettings = await mountSettingsMenu(container);
+
   // Ao sair da tela
-  return () => { unsubscribe(); offData(); resetTimer(); };
+  return () => { unsubscribe(); offData(); resetTimer(); unmountSettings(); };
 }

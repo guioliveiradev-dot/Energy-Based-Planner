@@ -26,7 +26,7 @@ export async function renderRoutine(container) {
   container.innerHTML = `
     <section class="page" style="gap:1rem">
       <h1 style="font-size:1.125rem;font-weight:700">Rotina Semanal</h1>
-      <div class="chips" id="days">
+      <div class="chips" id="days" data-roving="buttons">
         ${DAYS.map((d) => `<button class="day-pill" data-day="${d.value}">${d.label}</button>`).join('')}
       </div>
       <div id="list" class="stack" style="gap:1rem"></div>

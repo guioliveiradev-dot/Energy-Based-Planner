@@ -25,7 +25,7 @@ export async function buildBackup(userId) {
   data.inventory = getInventory(userId);
   data.activeTheme = getActiveTheme(userId);
   data.activePet = getActivePet(userId);
-  data.petState = await getPetState(userId);   // escudos, baú e Fênix
+  data.petState = await getPetState(userId);   // escudos, baú e Coruja
   data.goalState = await getGoalState(userId); // meta da semana e recompensas já recebidas
   data.energyLogs = await getEnergyLogs(userId); // registros de energia ao longo do dia
   return data;

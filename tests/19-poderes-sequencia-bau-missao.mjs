@@ -1,4 +1,4 @@
-// Poderes de sequência e sorte: escudo do Cão, Fênix, baú do Unicórnio, missão do Robô, Home, descrições e painel admin.
+// Poderes de sequência e sorte: escudo do Cão, Coruja, baú do Unicórnio, missão do Robô, Home, descrições e painel admin.
 import 'fake-indexeddb/auto';
 import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<!doctype html><html><head><title>Base</title></head><body><div id="app"></div><div id="toasts"></div></body></html>', { url: 'http://localhost/' });
@@ -36,7 +36,7 @@ const uid = auth.state.user.id;
 // ---------- sequência com dias protegidos e reacendidos ----------
 ok(streakInfo(done(range(2, 6)), NOW).current === 0, 'Sequência: sem escudo, perder ontem zera');
 ok(streakInfo(done(range(2, 6)), NOW, { covered: [key(1)] }).current === 6, 'Sequência: o dia protegido pelo escudo mantém e conta na sequência');
-ok(streakInfo(done([0]), NOW, { bonuses: [{ start: key(0), extra: 3 }] }).current === 4, 'Sequência: dias reacendidos pela Fênix somam à sequência que começa hoje');
+ok(streakInfo(done([0]), NOW, { bonuses: [{ start: key(0), extra: 3 }] }).current === 4, 'Sequência: dias reacendidos pela Coruja somam à sequência que começa hoje');
 ok(streakInfo(done([0]), NOW, { bonuses: [{ start: key(5), extra: 3 }] }).current === 1, 'Sequência: bônus de outra sequência não vale');
 ok(streakInfo(done(range(2, 4)), NOW, { bonuses: [{ start: key(4), extra: 2 }] }).best === 5, 'Sequência: o melhor recorde também conta os dias reacendidos');
 ok(streakInfo(done(range(0, 3)), NOW).current === 4 && streakInfo([], NOW).current === 0, 'Sequência: sem poderes continua igual a antes');
@@ -62,25 +62,25 @@ await S.clearPetState(uid);
 T.setActivePetStorage(uid, 'cat');
 ok((await W.applyShield(uid, done(range(2, 6)), NOW)) === null, 'Escudo: só funciona com o Cão ativo');
 
-// ---------- Fênix: reacende parte da sequência ----------
+// ---------- Coruja: reacende parte da sequência ----------
 T.addToInventory(uid, 'phoenix');
 T.setActivePetStorage(uid, 'phoenix');
 const task = { id: 'novo', energyCost: 5, durationMinutes: 30 };
 const phoenix = (before, extra = {}) => W.applyPetPowers({ userId: uid, task, basePoints: 65, tasksBefore: before, completedAt: NOW, ...extra });
 let fx = await phoenix(done(range(4, 8)));
-ok(/reacendeu 2 dias da sua sequência/.test(fx.note) && fx.bonus === null, 'Fênix: sequência de 5 dias quebrou, na próxima tarefa reacende 50% = 2 dias');
+ok(/reacendeu 2 dias da sua sequência/.test(fx.note) && fx.bonus === null, 'Coruja: sequência de 5 dias quebrou, na próxima tarefa reacende 50% = 2 dias');
 st = await S.getPetState(uid);
-ok(st.phoenix.join() === key(0) && st.bonuses[0].start === key(0) && st.bonuses[0].extra === 2, 'Fênix: registra o uso e os dias reacendidos');
+ok(st.phoenix.join() === key(0) && st.bonuses[0].start === key(0) && st.bonuses[0].extra === 2, 'Coruja: registra o uso e os dias reacendidos');
 const after = [...done(range(4, 8)), { id: 'novo', completed: true, completedAt: NOW }];
-ok(streakInfo(after, NOW, await W.getStreakExtra(uid)).current === 3, 'Fênix: a sequência recomeça em 1 + 2 = 3 dias');
-ok((await phoenix(done(range(4, 8)))).note === null, 'Fênix: só uma vez a cada 30 dias');
+ok(streakInfo(after, NOW, await W.getStreakExtra(uid)).current === 3, 'Coruja: a sequência recomeça em 1 + 2 = 3 dias');
+ok((await phoenix(done(range(4, 8)))).note === null, 'Coruja: só uma vez a cada 30 dias');
 await S.clearPetState(uid);
-ok((await phoenix(done(range(1, 5)))).note === null, 'Fênix: se ontem teve tarefa, a sequência não quebrou (não usa)');
-ok((await phoenix(done([4]))).note === null, 'Fênix: sequência perdida de 1 dia não rende nada');
-ok((await phoenix([...done(range(4, 8)), { id: 'h', completed: true, completedAt: at(0) }])).note === null, 'Fênix: só vale na primeira tarefa do dia');
+ok((await phoenix(done(range(1, 5)))).note === null, 'Coruja: se ontem teve tarefa, a sequência não quebrou (não usa)');
+ok((await phoenix(done([4]))).note === null, 'Coruja: sequência perdida de 1 dia não rende nada');
+ok((await phoenix([...done(range(4, 8)), { id: 'h', completed: true, completedAt: at(0) }])).note === null, 'Coruja: só vale na primeira tarefa do dia');
 await db.addPetBond(uid, 'phoenix', 70);
 fx = await phoenix(done(range(4, 8)));
-ok(/reacendeu 3 dias/.test(fx.note), 'Fênix nível 5: reacende 70% (5 dias → 3)');
+ok(/reacendeu 3 dias/.test(fx.note), 'Coruja nível 5: reacende 70% (5 dias → 3)');
 await S.clearPetState(uid);
 
 // ---------- Unicórnio: baú ----------
@@ -153,7 +153,7 @@ ok(/Cão Guardião protegeu a sua sequência/.test(document.getElementById('toas
 ok(/6\s*dias/.test(root.querySelector('#chips-slot').textContent) && (await S.getPetState(uid)).shields.length === 1, 'Home: a faixa mostra a sequência de 6 dias e o escudo ficou registrado');
 root.innerHTML = '';
 
-// ---------- Fênix ao concluir tarefa de verdade ----------
+// ---------- Coruja ao concluir tarefa de verdade ----------
 await S.clearPetState(uid);
 await db.resetUserData(uid);
 await seed(range(4, 8));
@@ -162,7 +162,7 @@ await db.createTask({ id: 'fx', userId: uid, title: 'Voltar à rotina', energyCo
 const cleanup = await renderTasks(root);
 root.querySelector('[data-action="collect"]').click(); await wait(300);
 const modal = document.querySelector('.congrats-panel')?.textContent || '';
-ok(/Fênix Estelar reacendeu 2 dias da sua sequência/.test(modal) && /3/.test(modal), 'Tarefas: a janela de parabéns avisa que a Fênix reacendeu a sequência (3 dias)');
+ok(/Coruja Lunar reacendeu 2 dias da sua sequência/.test(modal) && /3/.test(modal), 'Tarefas: a janela de parabéns avisa que a Coruja reacendeu a sequência (3 dias)');
 cleanup?.(); root.innerHTML = '';
 
 // ---------- descrições dos pets ----------
@@ -218,7 +218,7 @@ await S.savePetState(uid, { ...(await S.getPetState(uid)), shields: [key(1)], ch
 await AT.releaseTodayChest(uid);
 ok((await S.getPetState(uid)).chestDate === null && (await S.getPetState(uid)).shields.length === 1, 'Admin: liberar o baú não mexe nos escudos');
 await AT.resetPetPowers(uid);
-ok((await S.getPetState(uid)).shields.length === 0, 'Admin: zerar poderes limpa escudos, baú, Fênix e missão');
+ok((await S.getPetState(uid)).shields.length === 0, 'Admin: zerar poderes limpa escudos, baú, Coruja e missão');
 
 // painel na tela
 const { openAdminPanel } = await import(base + 'components/admin-panel.js');
@@ -240,7 +240,7 @@ p.close();
 // ---------- backup e importação do estado dos poderes ----------
 await S.savePetState(uid, { shields: [key(1)], phoenix: [key(9)], bonuses: [{ start: key(0), extra: 2 }], chestDate: key(0), robot: { date: key(0), taskId: 'x' } });
 const backup = await B.buildBackup(uid);
-ok(backup.petState.shields.length === 1 && backup.petState.bonuses[0].extra === 2, 'Backup: leva o estado dos poderes (escudos, Fênix, baú, missão)');
+ok(backup.petState.shields.length === 1 && backup.petState.bonuses[0].extra === 2, 'Backup: leva o estado dos poderes (escudos, Coruja, baú, missão)');
 const parsed = parseImport(JSON.stringify({ tasks: [], petState: { shields: ['2026-10-01', 'lixo', 5], bonuses: [{ start: '2026-10-02', extra: 3 }, { start: 'x', extra: 9 }, { start: '2026-10-03', extra: -1 }], chestDate: 'ontem', robot: { date: '2026-10-01' } } }));
 ok(parsed.petState.shields.join() === '2026-10-01' && parsed.petState.bonuses.length === 1 && parsed.petState.chestDate === null && parsed.petState.robot === null, 'Importar: descarta estado dos poderes inválido');
 await S.clearPetState(uid);

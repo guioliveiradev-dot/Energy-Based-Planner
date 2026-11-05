@@ -77,7 +77,7 @@ export function openAdminPanel() {
         <button class="glass-card card-btn" data-act="streak-shield"><span class="text-primary">${icon('shield', 18)}</span>
           <span style="flex:1"><span class="card-title">Perdi ontem (testa o Cão Guardião)</span><span class="card-sub">5 dias e 1 dia perdido. Com o Cão ativo, abra a Home</span></span></button>
         <button class="glass-card card-btn" data-act="streak-broken"><span class="text-warning">${icon('flame', 18)}</span>
-          <span style="flex:1"><span class="card-title">Sequência quebrada (testa a Fênix)</span><span class="card-sub">7 dias e 2 perdidos. Com a Fênix ativa, conclua uma tarefa</span></span></button>
+          <span style="flex:1"><span class="card-title">Sequência quebrada (testa a Coruja)</span><span class="card-sub">7 dias e 2 perdidos. Com a Coruja ativa, conclua uma tarefa</span></span></button>
         <button class="glass-card card-btn" data-act="tasks-test"><span class="text-success">${icon('plus', 18)}</span>
           <span style="flex:1"><span class="card-title">Criar 3 tarefas de teste</span><span class="card-sub">Energia 3, 5 e 9, prontas para coletar pontos</span></span></button>
         <button class="glass-card card-btn" data-act="tasks-clear"><span class="text-warning">${icon('trash', 18)}</span>
@@ -85,7 +85,7 @@ export function openAdminPanel() {
         <button class="glass-card card-btn" data-act="chest-reset"><span class="text-primary">${icon('sparkles', 18)}</span>
           <span style="flex:1"><span class="card-title">Liberar o baú de hoje</span><span class="card-sub">Para o Unicórnio abrir outro baú</span></span></button>
         <button class="glass-card card-btn" data-act="powers-reset"><span class="text-warning">${icon('rotate-ccw', 18)}</span>
-          <span style="flex:1"><span class="card-title">Zerar poderes dos pets</span><span class="card-sub">Escudos, baú, Fênix e missão do Robô</span></span></button>
+          <span style="flex:1"><span class="card-title">Zerar poderes dos pets</span><span class="card-sub">Escudos, baú, Coruja e missão do Robô</span></span></button>
         <h3 class="section-title">Conta</h3>
         <button class="glass-card card-btn" data-act="tutorial"><span class="text-primary">${icon('book-open', 18)}</span>
           <span style="flex:1"><span class="card-title">Resetar Tutorial</span><span class="card-sub">Ver o tutorial novamente</span></span></button>
@@ -138,7 +138,7 @@ export function openAdminPanel() {
       toast('Baú de hoje liberado.', 'success');
     } else if (name === 'powers-reset') {
       await tools.resetPetPowers(user.id);
-      toast('Poderes dos pets zerados (escudos, baú, Fênix e missão).', 'success');
+      toast('Poderes dos pets zerados (escudos, baú, Coruja e missão).', 'success');
     } else if (name === 'tutorial') {
       localStorage.removeItem('energy-planner-onboarded');
       toast('Tutorial resetado! Recarregue a página.', 'success');

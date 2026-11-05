@@ -10,7 +10,7 @@ import { BOND_THRESHOLDS, MAX_BOND_LEVEL } from './pets.js';
 export const STREAK_SCENARIOS = {
   alive:  { days: 5, endsDaysAgo: 1, title: 'Sequência de 5 dias (até ontem)', sub: 'Sequência viva: conclua uma tarefa hoje para ver ela subir para 6.' },
   shield: { days: 5, endsDaysAgo: 2, title: 'Perdi ontem (testa o Cão Guardião)', sub: '5 dias seguidos e um dia perdido. Com o Cão ativo, abra a Home: o escudo protege.' },
-  broken: { days: 7, endsDaysAgo: 3, title: 'Sequência quebrada (testa a Fênix)', sub: '7 dias seguidos e 2 dias perdidos. Com a Fênix ativa, conclua uma tarefa: ela reacende parte.' },
+  broken: { days: 7, endsDaysAgo: 3, title: 'Sequência quebrada (testa a Coruja)', sub: '7 dias seguidos e 2 dias perdidos. Com a Coruja ativa, conclua uma tarefa: ela reacende parte.' },
 };
 
 const atNoon = (now, daysAgo) => {
@@ -79,7 +79,7 @@ export async function resetBond(userId) {
   return { petId, before, after: 0 };
 }
 
-export const resetPetPowers = (userId) => clearPetState(userId);       // escudos, baú, Fênix e missão do Robô
+export const resetPetPowers = (userId) => clearPetState(userId);       // escudos, baú, Coruja e missão do Robô
 export async function releaseTodayChest(userId) {                      // libera o baú do Unicórnio de novo hoje
   const state = await getPetState(userId);
   await savePetState(userId, { ...state, chestDate: null });

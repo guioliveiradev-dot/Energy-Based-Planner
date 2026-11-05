@@ -32,7 +32,7 @@ ok(I({ petId: 'cat', before: 4, after: 5 }).to === 2 && I({ petId: 'cat', before
 ok(I({ petId: 'cat', before: 5, after: 6 }) === null && I({ petId: 'cat', before: 0, after: 4 }) === null && I({ petId: 'nada', before: 0, after: 99 }) === null && I(null) === null, 'Nível: sem subir (ou pet inexistente), não há comemoração');
 ok(I({ petId: 'cat', before: 0, after: 70 }).to === 5, 'Nível: pode pular vários níveis de uma vez');
 ok(I({ petId: 'fagulha', before: 14, after: 15 }).formChanged === true && I({ petId: 'fagulha', before: 4, after: 5 }).formChanged === false && I({ petId: 'fagulha', before: 69, after: 70 }).form === 'Aura', 'Fagulha: muda de forma ao chegar nos níveis 3 e 5');
-ok(I({ petId: 'cat', before: 14, after: 15 }).formChanged === false && I({ petId: 'cat', before: 4, after: 5 }).power === 'em breve' === false && /\+28%/.test(I({ petId: 'cat', before: 4, after: 5 }).power), 'Gato: não muda de forma e mostra o poder do novo nível (+28%)');
+ok(I({ petId: 'cat', before: 14, after: 15 }).formChanged === true && I({ petId: 'cat', before: 14, after: 15 }).form === 'Gato' && I({ petId: 'cat', before: 4, after: 5 }).formChanged === false && I({ petId: 'cat', before: 69, after: 70 }).form === 'Gato Estelar' && /\+28%/.test(I({ petId: 'cat', before: 4, after: 5 }).power), 'Gato: muda de forma nos níveis 3 (Gato) e 5 (Gato Estelar) e mostra o poder do novo nível (+28%)');
 
 // ---------- janela de comemoração ----------
 const html = L.petLevelUpHTML(I({ petId: 'cat', before: 4, after: 5 }));

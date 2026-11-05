@@ -34,7 +34,7 @@ const CHECK = `
 
 // levelUp (opcional): { level, title } quando a tarefa fez o nível subir
 // streak (opcional): sequência de dias atual, mostrada se for 1 ou mais
-// petBonus: { message } quando o poder do pet deu pontos extras. petNote: frase extra (ex.: Fênix reacendeu a sequência).
+// petBonus: { message } quando o poder do pet deu pontos extras. petNote: frase extra (ex.: Coruja reacendeu a sequência).
 // petLevelUp: { petId, before, after } quando o vínculo do pet subiu de nível com esta tarefa
 export function showCongratsModal({ taskTitle, points, petBonus = null, petNote = null, petLevelUp = null, goalRewards = [], levelUp = null, streak = 0 }) {
   const petUp = levelUpInfo(petLevelUp);

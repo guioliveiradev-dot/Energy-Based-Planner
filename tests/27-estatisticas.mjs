@@ -120,4 +120,4 @@ cleanup?.();
 
 // ---------- CSS ----------
 const css = readFileSync(new URL('../css/style.css', import.meta.url), 'utf8');
-ok(/\.week-bars \{[^}]*grid-template-columns: repeat\(7, 1fr\)/.test(css) && /\.stat-tiles \{[^}]*repeat\(3, 1fr\)/.test(css) && !/\.heat/.test(css), 'CSS: colunas da semana (7), números em 3 colunas, e o mapa de calor saiu');
+ok(/\.week-bars \{[^}]*grid-template-columns: repeat\(7, (minmax\(0, 1fr\)|1fr)\)/.test(css) && /\.stat-tiles \{[^}]*repeat\(3, 1fr\)/.test(css) && !/\.heat/.test(css), 'CSS: colunas da semana (7), números em 3 colunas, e o mapa de calor saiu');

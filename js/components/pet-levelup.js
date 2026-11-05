@@ -1,11 +1,11 @@
 // Comemoração de quando o pet sobe de nível de vínculo: pet animado, brilhos, nome do nível e o poder novo.
-// A Fagulha, quando muda de forma (Faísca, Chama, Aura), "evolui" na tela.
+// O pet, quando muda de forma (níveis 3 e 5), "evolui" na tela.
 
 import { createModal } from './modal.js';
-import { petFaceHTML, bondLevel, MAX_BOND_LEVEL } from '../pets.js';
+import { petFaceHTML, bondLevel, petFormName, MAX_BOND_LEVEL } from '../pets.js';
 import { ALL_PETS } from '../themes.js';
 import { PET_POWERS, levelText } from '../pet-powers.js';
-import { fagulhaStage, FAGULHA_STAGE_NAMES } from '../pet-art.js';
+import { fagulhaStage } from '../pet-art.js';
 import { escapeHtml } from '../ui.js';
 import { celebrate } from '../celebrate.js';
 
@@ -15,10 +15,10 @@ export function levelUpInfo(result) {
   if (!pet) return null;
   const from = bondLevel(result.before), to = bondLevel(result.after);
   if (to <= from) return null;
-  const formChanged = pet.id === 'fagulha' && fagulhaStage(from) !== fagulhaStage(to);
+  const formChanged = !!petFormName(pet.id, to) && fagulhaStage(from) !== fagulhaStage(to);
   return {
     pet, from, to, before: result.before, after: result.after, formChanged,
-    form: pet.id === 'fagulha' ? FAGULHA_STAGE_NAMES[fagulhaStage(to)] : null,
+    form: petFormName(pet.id, to),
     power: PET_POWERS[pet.id] ? levelText(pet.id, to) : null,
   };
 }
@@ -26,7 +26,7 @@ export function levelUpInfo(result) {
 const SPARKS = [[-70, -50], [70, -55], [-85, 5], [85, 0], [-45, 60], [50, 62]];
 
 // Bloco da comemoração (usado na janela própria e dentro da janela de parabéns).
-// Para a Fagulha que vai mudar de forma, mostra a forma antiga primeiro (a troca acontece em showPetLevelUp).
+// Para o pet que vai mudar de forma, mostra a forma antiga primeiro (a troca acontece em showPetLevelUp).
 export function petLevelUpHTML(info, { size = 112, evolving = false } = {}) {
   const bond = evolving ? info.before : info.after;
   const name = escapeHtml(info.pet.name);
@@ -59,7 +59,7 @@ export function showPetLevelUp(result) {
   modal.open();
   modal.panel.querySelector('[data-role="ok"]').focus();
   celebrate('level', { origin: { x: 0.5, y: 0.42 } });
-  if (info.formChanged) {   // a Fagulha evolui: troca a forma antiga pela nova depois de um instante
+  if (info.formChanged) {   // o pet evolui: troca a forma antiga pela nova depois de um instante
     setTimeout(() => {
       if (!modal.isOpen) return;
       const pet = modal.panel.querySelector('[data-role="pet"]');

@@ -17,7 +17,7 @@ export function renderLogin(root) {
           <p class="muted small" style="margin-top:0.25rem">Gerencie tarefas pelo seu nível de energia</p>
         </div>
 
-        <div class="tabs" role="tablist" data-mode="login" style="margin-bottom:1.5rem">
+        <div class="tabs" role="tablist" data-roving="tabs" data-mode="login" style="margin-bottom:1.5rem">
           <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="login">Login</button>
           <button type="button" class="tab" role="tab" aria-selected="false" data-tab="register">Cadastro</button>
         </div>

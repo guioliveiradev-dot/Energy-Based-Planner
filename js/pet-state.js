@@ -1,7 +1,7 @@
 // Estado dos poderes dos pets, por usuário (guardado na tabela 'meta' do banco, sem mudar a versão do banco).
 //   shields:  dias ("2026-10-16") que o escudo do Cão protegeu. Também serve de registro para o limite semanal.
-//   bonuses:  [{ start, extra }] dias que a Fênix reacendeu na sequência que começou em `start`
-//   phoenix:  dias em que a Fênix foi usada (limite: 1 vez a cada 30 dias)
+//   bonuses:  [{ start, extra }] dias que a Coruja reacendeu na sequência que começou em `start`
+//   phoenix:  dias em que a Coruja foi usada (limite: 1 vez a cada 30 dias)
 //   chestDate: último dia em que o Unicórnio abriu o baú
 //   robot:    { date, taskId } missão do dia escolhida pelo Robô
 // Entra no backup e na importação (união: nunca perde o que a conta já tem).

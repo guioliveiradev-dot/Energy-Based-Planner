@@ -122,7 +122,7 @@ export function statsHTML(s, section = 'resumo') {
     habitos: () => habits(s.habits),
   };
   return `
-    <div class="tabs tabs-4 stats-tabs" role="tablist" aria-label="Estatísticas">
+    <div class="tabs tabs-4 stats-tabs" role="tablist" aria-label="Estatísticas" data-roving="tabs">
       ${STATS_SECTIONS.map((x) => `<button type="button" class="tab ${x.id === id ? 'active' : ''}" role="tab" id="stab-${x.id}" aria-selected="${x.id === id}" aria-controls="stats-panel" data-stats-tab="${x.id}">${x.label}</button>`).join('')}
     </div>
     <div id="stats-panel" class="stack" role="tabpanel" aria-labelledby="stab-${id}">${bodies[id]()}</div>`;

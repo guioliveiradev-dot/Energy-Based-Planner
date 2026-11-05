@@ -35,7 +35,7 @@ ok(faceLabel(0) === 'Fagulha (Faísca), parada' && faceLabel(5) === 'Fagulha (Fa
 ok(faceLabel(10, 'cheer') === 'Fagulha (Faísca), comemorando', 'Pose: o rosto aceita a pose pedida');
 ok(/<svg/.test(P.petFaceHTML(T.SHOP_PETS[0], { size: 40 })) && !/\p{Extended_Pictographic}/u.test(P.petFaceHTML(T.SHOP_PETS[0])), 'Pets da Loja: desenhados em SVG, sem emoji');
 ok(/virou Chama/.test(P.petLevelUpMessage({ petId: 'fagulha', level: 3, before: 14 })) && /virou Aura/.test(P.petLevelUpMessage({ petId: 'fagulha', level: 5, before: 34 })), 'Aviso: ao mudar de forma, diz "virou Chama" ou "virou Aura"');
-ok(!/virou/.test(P.petLevelUpMessage({ petId: 'fagulha', level: 2, before: 4 })) && !/virou/.test(P.petLevelUpMessage({ petId: 'cat', level: 3, before: 14 })), 'Aviso: sem mudança de forma (ou outro pet), só o nível');
+ok(!/virou/.test(P.petLevelUpMessage({ petId: 'fagulha', level: 2, before: 4 })) && !/virou/.test(P.petLevelUpMessage({ petId: 'cat', level: 2, before: 4 })) && /virou Gato\b/.test(P.petLevelUpMessage({ petId: 'cat', level: 3, before: 14 })), 'Aviso: sem mudança de forma, só o nível; os outros pets também "viram" a nova forma (ex.: Gato no nível 3)');
 const r = await P.recordTaskForPet(uid);
 ok(r.petId === 'fagulha' && r.after === 1, 'Vínculo: tarefa concluída com a Fagulha soma ao vínculo dela');
 

@@ -16,7 +16,7 @@ const bar = (p, label) => `<div class="progress" role="progressbar" aria-label="
 // Opções prontas e "Outro": com "Outro" aparece um campo para digitar qualquer número de 1 a GOAL_MAX.
 function picker(selected, custom) {
   const chips = GOAL_TARGETS.map((n) => { const on = !custom && n === selected; return `<button type="button" class="chip${on ? ' active' : ''}" aria-pressed="${on}" data-goal-pick="${n}">${n}</button>`; }).join('');
-  return `<div class="goal-pick" role="group" aria-label="Quantas tarefas por semana">${chips}<button type="button" class="chip${custom ? ' active' : ''}" aria-pressed="${custom}" data-goal-pick="other">Outro</button></div>
+  return `<div class="goal-pick" role="group" aria-label="Quantas tarefas por semana" data-roving="buttons">${chips}<button type="button" class="chip${custom ? ' active' : ''}" aria-pressed="${custom}" data-goal-pick="other">Outro</button></div>
     <div class="goal-custom" ${custom ? '' : 'hidden'}>
       <label class="label muted xs" for="goal-custom">Quantas tarefas por semana? (de 1 a ${GOAL_MAX})</label>
       <input class="input" id="goal-custom" type="number" inputmode="numeric" min="1" max="${GOAL_MAX}" value="${custom && isValidTarget(selected) ? selected : ''}" data-goal-custom aria-describedby="goal-error">

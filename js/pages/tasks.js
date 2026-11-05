@@ -364,7 +364,7 @@ export async function renderTasks(container) {
       : `${pending.length} pendentes${overdueCount ? ` · ${overdueCount} com prazo passado` : ''}`;
 
     const chips = pending.length > 0 ? `
-      <div class="chips">
+      <div class="chips" data-roving="buttons">
         <button class="chip ${!filterCategory && !filterOverdue ? 'active' : ''}" data-filter="" aria-pressed="${!filterCategory && !filterOverdue}">Todas</button>
         ${overdueCount ? `<button class="chip ${filterOverdue ? 'active' : ''}" data-overdue="1" aria-pressed="${filterOverdue}">${icon('calendar', 12)} Prazo passou (${overdueCount})</button>` : ''}
         ${categories.map((c) => `<button class="chip ${filterCategory === c ? `category-${c}` : ''}" data-filter="${c}" aria-pressed="${filterCategory === c}">${categoryIcon(c, 14)} ${CATEGORY_LABELS[c]}</button>`).join('')}

@@ -3,6 +3,8 @@
 import * as auth from './auth.js';
 import { getDB, onDatabaseReplaced } from './db.js';
 import { autoRequestPersistence } from './backup.js';
+import { enableArrowNav } from './keyboard-nav.js';
+import { applyTextSize } from './settings.js';
 import { applyTheme, getActiveTheme, getLastTheme, migrateThemes } from './themes.js';
 import { startRouter, stopRouter } from './router.js';
 import { spinnerHTML } from './ui.js';
@@ -20,7 +22,10 @@ import { renderShop } from './pages/shop.js';
 import { renderGoals } from './pages/goals.js';
 import { renderProfile } from './pages/profile.js';
 
+applyTextSize();   // tamanho do texto escolhido em Perfil (vale também na tela de login)
+
 const root = document.getElementById('app');
+enableArrowNav(root);   // setas do teclado nas abas e filtros (login, telas e menu)
 
 const ROUTES = {
   '/': renderHome,
