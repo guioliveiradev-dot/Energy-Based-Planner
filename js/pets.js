@@ -9,11 +9,7 @@
 import { addPetBond } from './db.js';
 import { getActivePet, ALL_PETS } from './themes.js';
 import { fagulhaSVG, fagulhaStage, FAGULHA_STAGE_NAMES } from './pet-art.js';
-<<<<<<< HEAD
-import { petDrawingSVG } from './pet-drawings.js';
-=======
 import { petDrawingSVG, PET_STAGE_NAMES } from './pet-drawings.js';
->>>>>>> 764af62 (acess)
 import { icon } from './icons.js';
 
 // Vínculo (tarefas concluídas) necessário para ENTRAR em cada nível. Nível 1 = 0.
@@ -62,17 +58,9 @@ export function petLevelUpMessage({ petId, level, before }) {
   return `${name} subiu para o nível ${level} de vínculo!`;
 }
 
-<<<<<<< HEAD
-// Rosto do pet: desenho em SVG (a Fagulha muda de forma com o vínculo; os outros 6 ficam em js/pet-drawings.js).
-// pose: idle | work | sleep | cheer. bond: vínculo atual (define a forma da Fagulha).
-export function petFaceHTML(pet, { bond = 0, pose = 'idle', size = 64 } = {}) {
-  if (pet.id === 'fagulha') return fagulhaSVG({ pose, stage: fagulhaStage(bondLevel(bond)), style: 'flat', size });
-  return petDrawingSVG(pet.id, { pose, size }) || icon('paw-print', Math.round(size * 0.55));
-=======
 // Rosto do pet: desenho em SVG (a Fagulha em js/pet-art.js; os outros 6 em js/pet-drawings.js). Todos mudam de forma com o vínculo.
 // pose: idle | work | sleep | cheer. bond: vínculo atual (define a forma: níveis 1-2, 3-4 e 5).
 export function petFaceHTML(pet, { bond = 0, pose = 'idle', size = 64 } = {}) {
   if (pet.id === 'fagulha') return fagulhaSVG({ pose, stage: fagulhaStage(bondLevel(bond)), style: 'flat', size });
   return petDrawingSVG(pet.id, { pose, stage: fagulhaStage(bondLevel(bond)), size }) || icon('paw-print', Math.round(size * 0.55));
->>>>>>> 764af62 (acess)
 }

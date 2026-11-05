@@ -33,12 +33,8 @@ export const SHOP_PETS = [
   { id: 'unicorn', name: 'Unicórnio Mágico',  cost: 500, type: 'pet', description: 'Espalha magia e arco-íris' },
   { id: 'robot',   name: 'Robô Quântico',     cost: 500, type: 'pet', description: 'Calcula seu sucesso' },
   { id: 'dog',     name: 'Cão Guardião',      cost: 800, type: 'pet', description: 'Te encoraja a continuar' },
-<<<<<<< HEAD
-  { id: 'phoenix', name: 'Fênix Estelar',     cost: 1000, type: 'pet', description: 'Renasce das cinzas com você' },
-=======
   // id 'phoenix' é de quando o pet era a Fênix: continua o mesmo para não perder o que já está salvo (inventário, vínculo, backups).
   { id: 'phoenix', name: 'Coruja Lunar',      cost: 1000, type: 'pet', description: 'Guarda a sua luz até amanhã' },
->>>>>>> 764af62 (acess)
 ];
 
 export const ALL_PETS = [...FREE_PETS, ...SHOP_PETS];
