@@ -28,3 +28,23 @@ export function notifyTimerDone() {
   try { navigator.vibrate?.([200, 100, 200, 100, 400]); } catch { /* sem vibração */ }
   try { beeps(); } catch { /* sem áudio */ }
 }
+
+// Aviso suave quando o ciclo troca de fase (foco <-> descanso): uma vibração curta e um bipe só.
+export function notifyPhaseChange() {
+  if (!getSetting('alerts')) return;
+  try { navigator.vibrate?.([120]); } catch { /* sem vibração */ }
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator(), gain = ctx.createGain(), t = ctx.currentTime;
+    osc.type = 'sine'; osc.frequency.value = 660;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.2, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.4);
+    setTimeout(() => ctx.close(), 800);
+  } catch { /* sem áudio */ }
+}

@@ -267,6 +267,7 @@ export async function renderTasks(container) {
     if (existing) {
       // sem repetição = não fica mais agendada para depois
       await updateTask({ ...existing, ...fields, availableFrom: fields.repeat ? (existing.availableFrom ?? null) : null });
+      dropTimer(existing.id);   // o cronômetro guardado seria de antes da edição (etapas, nota)
       toast('Tarefa atualizada!', 'success');
     } else {
       await createTask({
@@ -409,6 +410,13 @@ export async function renderTasks(container) {
         pauseOffset: task.pauseOffset || 0,
         onUpdate: (times) => saveTimes(task.id, times),
         onComplete: () => handleCollect(task.id),
+        energyCost: task.energyCost,
+        category: task.category,
+        subtasks: task.subtasks || [],
+        notes: task.notes || '',
+        cycle: task.cycle || null,
+        onSubtasksChange: (list) => savePatch(task.id, { subtasks: list }),
+        onCycleChange: (c) => savePatch(task.id, { cycle: c }),
       });
       timers.set(task.id, t);
     }
@@ -419,6 +427,15 @@ export async function renderTasks(container) {
     const current = tasks.find((t) => t.id === id);
     if (!current || current.completed) return;
     const updated = { ...current, pausedAt: times.pausedAt, pauseOffset: times.pauseOffset };
+    tasks = tasks.map((t) => (t.id === id ? updated : t));
+    await updateTask(updated);
+  }
+
+  // Guarda etapas marcadas e a escolha de ciclos feitas dentro do cronômetro
+  async function savePatch(id, patch) {
+    const current = tasks.find((t) => t.id === id);
+    if (!current || current.completed) return;
+    const updated = { ...current, ...patch };
     tasks = tasks.map((t) => (t.id === id ? updated : t));
     await updateTask(updated);
   }
@@ -520,6 +537,7 @@ export async function renderTasks(container) {
     const task = tasks.find((t) => t.id === box.dataset.id);
     if (!task) return;
     await updateTask({ ...task, subtasks: toggleSubtask(task.subtasks, box.dataset.sub) });
+    dropTimer(task.id);   // o cronômetro guardado teria as etapas antigas
     await load();
     listEl.querySelector(`[data-sub="${box.dataset.sub}"]`)?.focus();
   });

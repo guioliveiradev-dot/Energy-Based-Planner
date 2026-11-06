@@ -75,6 +75,7 @@ export function nextInstance(task, completedAt = Date.now(), newId = () => crypt
     availableFrom,
     notes: task.notes || '',                       // notas e etapas se repetem (etapas desmarcadas)
     subtasks: resetSubtasks(task.subtasks, newId),
+    cycle: task.cycle || null,                     // a escolha de ciclos de foco e descanso também se repete
   };
 }
 

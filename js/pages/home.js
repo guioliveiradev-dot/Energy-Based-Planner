@@ -172,6 +172,14 @@ export async function renderHome(container) {
     await updateTask(mission);
   }
 
+  // Guarda etapas marcadas e a escolha de ciclos feitas dentro do cronômetro
+  async function savePatch(patch) {
+    if (!mission) return;
+    mission = { ...mission, ...patch };
+    candidates[missionIndex] = mission;
+    await updateTask(mission);
+  }
+
   function ensureTimer() {
     if (!timer) {
       timer = createTaskTimer({
@@ -183,6 +191,13 @@ export async function renderHome(container) {
         pauseOffset: mission.pauseOffset || 0,
         onUpdate: saveTimes,
         onComplete: handleCollect,
+        energyCost: mission.energyCost,
+        category: mission.category,
+        subtasks: mission.subtasks || [],
+        notes: mission.notes || '',
+        cycle: mission.cycle || null,
+        onSubtasksChange: (list) => savePatch({ subtasks: list }),
+        onCycleChange: (c) => savePatch({ cycle: c }),
       });
     }
     return timer;

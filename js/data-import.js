@@ -8,6 +8,7 @@ import { cleanPetState } from './pet-state.js';
 import { cleanGoalState } from './goals.js';
 import { cleanEnergyLogs } from './energy-log.js';
 import { cleanNotes, cleanSubtasks } from './subtasks.js';
+import { cleanCycle } from './cycles.js';
 
 const MAX_CHARS = 5 * 1024 * 1024;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -57,7 +58,7 @@ export function parseImport(text) {
       pausedAt: isNum(t.pausedAt) ? t.pausedAt : null, pauseOffset: isNum(t.pauseOffset) && t.pauseOffset >= 0 ? t.pauseOffset : 0,
       repeat: cleanRepeat(t.repeat), availableFrom: isNum(t.availableFrom) ? t.availableFrom : null,
       createdAt: isNum(t.createdAt) ? t.createdAt : Date.now(),
-      notes: cleanNotes(t.notes), subtasks: cleanSubtasks(t.subtasks),
+      notes: cleanNotes(t.notes), subtasks: cleanSubtasks(t.subtasks), cycle: cleanCycle(t.cycle),
     };
   });
 
