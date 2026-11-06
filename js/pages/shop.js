@@ -1,15 +1,14 @@
-// Loja: recompensas, temas e pets, conquistas e histórico. Porte de Shop.tsx.
+// Loja: recompensas, temas e pets e histórico (as conquistas ficam no Perfil). Porte de Shop.tsx.
 
 import * as auth from '../auth.js';
 import { emptyState } from '../components/empty-state.js';
 import {
-  getUserRewards, createReward, deleteReward, getUserTasks,
+  getUserRewards, createReward, deleteReward,
   getUserRedemptionHistory, addRedemptionRecord, updateReward,
 } from '../db.js';
 import { icon } from '../icons.js';
 import { escapeHtml, toast, formatDateTime } from '../ui.js';
 import { SHOP_THEMES, SHOP_PETS, getInventory, addToInventory } from '../themes.js';
-import { ACHIEVEMENTS, getUnlocked, loadPetContext } from '../achievements.js';
 import { celebrate } from '../celebrate.js';
 import { createModal } from '../components/modal.js';
 import { powerSummary } from '../pet-powers.js';
@@ -19,7 +18,6 @@ import { petInfoHTML } from '../components/pet-info.js';
 const TABS = [
   { id: 'rewards', icon: 'gift', label: 'Recompensas' },
   { id: 'store', icon: 'shopping-cart', label: 'Loja' },
-  { id: 'achievements', icon: 'trophy', label: 'Conquistas' },
   { id: 'history', icon: 'scroll-text', label: 'Histórico' },
 ];
 
@@ -27,7 +25,7 @@ export async function renderShop(container) {
   const user = auth.state.user;
   const xp = () => auth.state.user?.xp || 0;
 
-  let rewards = [], history = [], tasks = [], inventory = [], petContext = { owned: [], bonds: {} };
+  let rewards = [], history = [], inventory = [];
   let activeTab = 'rewards';
 
   container.innerHTML = `
@@ -40,7 +38,7 @@ export async function renderShop(container) {
         <p class="balance"><span id="balance">${xp()}</span> <span class="balance-unit">Pontos</span></p>
       </div>
 
-      <div class="tabs tabs-4" role="tablist" data-roving="tabs">
+      <div class="tabs tabs-3" role="tablist" data-roving="tabs">
         ${TABS.map((t) => `<button class="tab ${t.id === activeTab ? 'active' : ''}" role="tab" aria-selected="${t.id === activeTab}" data-tab="${t.id}">${icon(t.icon, 16, 'ico')} ${t.label}</button>`).join('')}
       </div>
 
@@ -176,24 +174,6 @@ export async function renderShop(container) {
         </div>`;
     }
 
-    else if (activeTab === 'achievements') {
-      const unlockedIds = new Set(getUnlocked(tasks, history, petContext).map((a) => a.id));
-      content.innerHTML = `
-        <p class="muted xs center">${unlockedIds.size}/${ACHIEVEMENTS.length} desbloqueadas</p>
-        ${ACHIEVEMENTS.map((a) => {
-          const on = unlockedIds.has(a.id);
-          return `
-          <div class="glass-card pad row ${on ? '' : 'locked'}" style="gap:0.75rem">
-            <div class="achv-tile" style="${on ? `background:color-mix(in srgb, ${a.color} 13%, transparent);color:${a.color}` : ''}">${icon(a.icon, 20)}</div>
-            <div style="flex:1;min-width:0">
-              <p style="font-weight:600;font-size:0.875rem">${a.title}</p>
-              <p class="muted xs">${a.description}</p>
-            </div>
-            ${on ? `<span class="badge-ok">${icon('check', 12, 'ico')}</span>` : ''}
-          </div>`;
-        }).join('')}`;
-    }
-
     else if (activeTab === 'history') {
       content.innerHTML = history.length === 0
         ? `<div class="center muted small" style="padding:2rem 0"><span style="display:inline-flex;opacity:0.5;margin-bottom:0.5rem">${icon('clock', 24)}</span><br>Nenhum resgate realizado ainda.</div>`
@@ -209,12 +189,11 @@ export async function renderShop(container) {
   }
 
   async function load() {
-    [rewards, history, tasks] = await Promise.all([
-      getUserRewards(user.id), getUserRedemptionHistory(user.id), getUserTasks(user.id),
+    [rewards, history] = await Promise.all([
+      getUserRewards(user.id), getUserRedemptionHistory(user.id),
     ]);
     history.sort((a, b) => b.redeemedAt - a.redeemedAt);
     inventory = getInventory(user.id);
-    petContext = await loadPetContext(user.id);
     renderTab();
   }
 

@@ -12,7 +12,7 @@ const T = await import(base + 'themes.js');
 const A = await import(base + 'achievements.js');
 const { icon } = await import(base + 'icons.js');
 const { startAchievementWatcher } = await import(base + 'components/achievement-notification.js');
-const { renderShop } = await import(base + 'pages/shop.js');
+const { renderProfile } = await import(base + 'pages/profile.js');
 const ok = (c, m) => { console.log((c ? 'OK   ' : 'FALHA'), m); if (!c) process.exitCode = 1; };
 const wait = (ms = 100) => new Promise((r) => setTimeout(r, ms));
 
@@ -58,12 +58,12 @@ ok(/Vínculo Eterno/.test(document.querySelector('.achv-panel')?.textContent || 
 stop();
 document.querySelectorAll('.modal-overlay').forEach((o) => o.remove());
 
-// ---------- Loja ----------
+// ---------- Perfil ----------
 const root = document.getElementById('app');
-const cleanup = await renderShop(root); await wait();
+const cleanup = await renderProfile(root); await wait();
 root.querySelector('[data-tab="achievements"]').click(); await wait();
 const text = root.textContent;
-ok(/\/24 desbloqueadas/.test(text) && PET_IDS.every((id) => text.includes(A.ACHIEVEMENTS.find((a) => a.id === id).title)), 'Loja: aba de conquistas mostra "/24" e as 5 de pets');
+ok(/\/24 desbloqueadas/.test(text) && PET_IDS.every((id) => text.includes(A.ACHIEVEMENTS.find((a) => a.id === id).title)), 'Perfil: aba de conquistas mostra "/24" e as 5 de pets');
 const lockedTitles = [...root.querySelectorAll('.locked')].map((x) => x.textContent);
-ok(!lockedTitles.some((t) => /Novo Amigo|Matilha|Laço Criado|Vínculo Eterno/.test(t)) && lockedTitles.some((t) => /Zoológico Estelar/.test(t)), 'Loja: as conquistas de pets que você já tem saem do cinza; "Zoológico Estelar" (faltam pets) continua bloqueada');
+ok(!lockedTitles.some((t) => /Novo Amigo|Matilha|Laço Criado|Vínculo Eterno/.test(t)) && lockedTitles.some((t) => /Zoológico Estelar/.test(t)), 'Perfil: as conquistas de pets que você já tem saem do cinza; "Zoológico Estelar" (faltam pets) continua bloqueada');
 cleanup?.();

@@ -9,6 +9,7 @@ const base = new URL('../js/', import.meta.url).href;
 const auth = await import(base + 'auth.js');
 const db = await import(base + 'db.js');
 const { renderShop } = await import(base + 'pages/shop.js');
+const { renderProfile } = await import(base + 'pages/profile.js');
 const { startAchievementWatcher } = await import(base + 'components/achievement-notification.js');
 const { ACHIEVEMENTS, getUnlocked, totalPointsEarned } = await import(base + 'achievements.js');
 const themes = await import(base + 'themes.js');
@@ -70,12 +71,20 @@ root.querySelector('[data-action="buy"][data-id="sunset"]').click(); await wait(
 ok(auth.state.user.xp === 200 && themes.getInventory(uid).includes('sunset'), 'Loja: comprou tema (xp 1000→200, inventário ok)');
 ok(root.textContent.includes('Obtido'), 'Loja: mostra "Obtido"');
 
-// conquistas + histórico
-root.querySelector('[data-tab="achievements"]').click();
-ok(root.textContent.includes('1/24 desbloqueadas'), 'Loja: conquistas 1/24 (Merecido pelo resgate)');
-ok(root.querySelectorAll('.locked').length === 23, 'Loja: 23 conquistas bloqueadas (cinza)');
+// a Loja não tem mais a aba de conquistas (ela ficou no Perfil)
+ok(!root.querySelector('[data-tab="achievements"]') && root.querySelectorAll('.tabs .tab').length === 3, 'Loja: só 3 abas (Recompensas, Loja, Histórico), sem Conquistas');
+// histórico
 root.querySelector('[data-tab="history"]').click();
 ok(/Jogar <b>Video<\/b>game/.test(root.textContent) && /\d\d\/\d\d\/\d{4} \d\d:\d\d · -500 Pontos/.test(root.textContent), 'Loja: histórico com data e custo');
+cleanup(); root.innerHTML = '';
+
+// conquistas no Perfil, depois do Inventário
+cleanup = await renderProfile(root); await wait(200);
+const ptabs = [...root.querySelectorAll('.profile-tabs .tab')].map((b) => b.dataset.tab).join();
+ok(ptabs === 'profile,stats,inventory,achievements', 'Perfil: a aba Conquistas vem depois do Inventário');
+root.querySelector('[data-tab="achievements"]').click();
+ok(root.textContent.includes('1/24 desbloqueadas'), 'Perfil: conquistas 1/24 (Merecido pelo resgate)');
+ok(root.querySelectorAll('.locked').length === 23, 'Perfil: 23 conquistas bloqueadas (cinza)');
 cleanup(); root.innerHTML = '';
 
 // ---------- Aviso de conquista ----------

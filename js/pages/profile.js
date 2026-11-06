@@ -1,8 +1,8 @@
-// Perfil: dados da conta, estatísticas, gráfico semanal, inventário (equipar tema/pet),
+// Perfil: dados da conta, estatísticas, gráfico semanal, inventário (equipar tema/pet), conquistas,
 // exportar e importar dados. Porte de Profile.tsx (+ importação de JSON).
 
 import * as auth from '../auth.js';
-import { getUserTasks, getUserPetBonds } from '../db.js';
+import { getUserTasks, getUserPetBonds, getUserRedemptionHistory } from '../db.js';
 import { bondProgress, petFaceHTML } from '../pets.js';
 import { powerText, getStreakExtra } from '../pet-powers.js';
 import { petInfoHTML } from '../components/pet-info.js';
@@ -12,7 +12,7 @@ import { computeStats } from '../stats.js';
 import { statsHTML } from '../components/stats-view.js';
 import { icon } from '../icons.js';
 import { escapeHtml, toast } from '../ui.js';
-import { totalPointsEarned } from '../achievements.js';
+import { totalPointsEarned, ACHIEVEMENTS, getUnlocked, loadPetContext } from '../achievements.js';
 import { settingsButtonHTML, settingsDrawerHTML, mountSettingsMenu } from '../components/settings-menu.js';
 import { progressCardHTML } from '../components/progress-card.js';
 import { totalPoints, levelInfo, streakInfo } from '../progress.js';
@@ -59,7 +59,7 @@ function chartSVG(data) {
 
 export async function renderProfile(container) {
   const user = () => auth.state.user;
-  let tasks = [], inventory = [], activeTheme = DEFAULT_THEME, activePet = null;
+  let tasks = [], history = [], petContext = { owned: [], bonds: {} }, inventory = [], activeTheme = DEFAULT_THEME, activePet = null;
   let petBonds = {}, streakExtra = {}, energyLogs = [];
   let activeTab = 'profile';
   let statsSection = 'resumo';
@@ -70,8 +70,8 @@ export async function renderProfile(container) {
         <h1 style="font-size:1.125rem;font-weight:700">Perfil</h1>
         ${settingsButtonHTML()}
       </div>
-      <div class="tabs tabs-3 profile-tabs" role="tablist" data-roving="tabs">
-        ${[['profile', 'user', 'Perfil'], ['stats', 'bar-chart-3', 'Estatísticas'], ['inventory', 'backpack', 'Inventário']].map(([id, ic, label]) => `<button class="tab ${id === activeTab ? 'active' : ''}" role="tab" aria-selected="${id === activeTab}" data-tab="${id}">${icon(ic, 16, 'ico')} ${label}</button>`).join('')}
+      <div class="tabs tabs-4 profile-tabs" role="tablist" data-roving="tabs">
+        ${[['profile', 'user', 'Perfil'], ['stats', 'bar-chart-3', 'Estatísticas'], ['inventory', 'backpack', 'Inventário'], ['achievements', 'trophy', 'Conquistas']].map(([id, ic, label]) => `<button class="tab ${id === activeTab ? 'active' : ''}" role="tab" aria-selected="${id === activeTab}" data-tab="${id}">${icon(ic, 16, 'ico')} ${label}</button>`).join('')}
       </div>
       <div id="tab-content" class="stack" style="gap:1.25rem"></div>
       ${settingsDrawerHTML()}
@@ -158,15 +158,35 @@ export async function renderProfile(container) {
       </div>`;
   }
 
+  function renderAchievementsTab() {
+    const unlockedIds = new Set(getUnlocked(tasks, history, petContext).map((a) => a.id));
+    content.innerHTML = `
+      <p class="muted xs center">${unlockedIds.size}/${ACHIEVEMENTS.length} desbloqueadas</p>
+      ${ACHIEVEMENTS.map((a) => {
+        const on = unlockedIds.has(a.id);
+        return `
+        <div class="glass-card pad row ${on ? '' : 'locked'}" style="gap:0.75rem">
+          <div class="achv-tile" style="${on ? `background:color-mix(in srgb, ${a.color} 13%, transparent);color:${a.color}` : ''}">${icon(a.icon, 20)}</div>
+          <div style="flex:1;min-width:0">
+            <p style="font-weight:600;font-size:0.875rem">${a.title}</p>
+            <p class="muted xs">${a.description}</p>
+          </div>
+          ${on ? `<span class="badge-ok">${icon('check', 12, 'ico')}</span>` : ''}
+        </div>`;
+      }).join('')}`;
+  }
+
   function renderStatsTab() {
     content.innerHTML = statsHTML({ ...computeStats(tasks, Date.now(), streakExtra), energy: energyByPeriod(energyLogs) }, statsSection);
   }
 
-  const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : activeTab === 'stats' ? renderStatsTab() : renderInventoryTab());
+  const renderTab = () => (activeTab === 'profile' ? renderProfileTab() : activeTab === 'stats' ? renderStatsTab() : activeTab === 'achievements' ? renderAchievementsTab() : renderInventoryTab());
 
   async function load() {
     const u = user();
     tasks = await getUserTasks(u.id);
+    history = await getUserRedemptionHistory(u.id);
+    petContext = await loadPetContext(u.id);
     inventory = getInventory(u.id);
     activeTheme = getActiveTheme(u.id);
     activePet = getActivePet(u.id);

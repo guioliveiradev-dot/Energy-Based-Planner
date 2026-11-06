@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cronômetro: B + C + D juntos</title>
+<meta name="robots" content="noindex">
+<script>document.documentElement.setAttribute('data-theme', 'papel');</script>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/progress.css">
+<style>
+  .pg { max-width: 76rem; margin: 0 auto; padding: 1rem 1rem 4rem; display: flex; flex-direction: column; gap: 2rem; }
+  .pg-bar { position: sticky; top: 0; z-index: 60; background: hsl(var(--background)); padding: 0.75rem 0; border-bottom: 1px solid hsl(var(--border)); display: flex; flex-direction: column; gap: 0.5rem; }
+  .pg-cols { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: flex-start; }
+  .pg-col { display: flex; flex-direction: column; gap: 0.5rem; width: 22.5rem; max-width: 100%; }
+  .pg-label { font-weight: 700; font-size: 0.9375rem; }
+  .pg-note { font-size: 0.8125rem; color: hsl(var(--muted-foreground)); }
+  .pg select { min-height: 2.75rem; padding: 0 0.75rem; border-radius: 0.5rem; background: hsl(var(--secondary)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); }
+  .pg ul.rules { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.375rem; font-size: 0.875rem; }
+  .phone { border: 2px solid hsl(var(--border)); border-radius: 1.5rem; background: hsl(var(--background)); overflow: hidden; padding: 1rem 0.875rem; display: flex; flex-direction: column; gap: 0.875rem; }
+
+  /* peças novas (só deste protótipo; se você escolher uma, elas vão para o css/style.css) */
+  .tm-head { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; text-align: center; }
+  .tm-sub { font-size: 0.8125rem; color: hsl(var(--muted-foreground)); }
+  .tm-row { display: flex; gap: 0.5rem; }
+  .tm-row > * { flex: 1; min-width: 0; }
+  .tm-mini { display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem; min-height: 2.75rem; padding: 0 0.5rem; border-radius: 0.75rem; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--foreground)); font: inherit; font-size: 0.875rem; font-weight: 600; }
+  .tm-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.375rem; }
+  .tm-chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.625rem; border-radius: 9999px; background: hsl(var(--muted)); font-size: 0.75rem; font-weight: 600; color: hsl(var(--foreground)); }
+  .tm-dots { display: flex; justify-content: center; gap: 0.5rem; }
+  .tm-dots i { width: 0.75rem; height: 0.75rem; border-radius: 50%; border: 2px solid hsl(var(--primary)); }
+  .tm-dots i.on { background: hsl(var(--primary)); }
+  .tm-dots i.now { box-shadow: 0 0 0 3px hsl(var(--primary) / 0.25); }
+  .tm-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem; padding: 0.25rem; border-radius: 0.75rem; background: hsl(var(--muted)); }
+  .tm-seg span { text-align: center; padding: 0.375rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: hsl(var(--muted-foreground)); }
+  .tm-seg span.on { background: hsl(var(--card)); color: hsl(var(--foreground)); }
+  .tm-steps { display: flex; flex-direction: column; gap: 0.375rem; text-align: left; }
+  .tm-step { display: flex; align-items: center; gap: 0.625rem; min-height: 2.75rem; padding: 0 0.75rem; border-radius: 0.75rem; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); font-size: 0.875rem; }
+  .tm-step .box { width: 1.25rem; height: 1.25rem; border-radius: 0.375rem; border: 2px solid hsl(var(--primary)); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: hsl(var(--primary-foreground)); }
+  .tm-step.done .box { background: hsl(var(--primary)); }
+  .tm-step.done .txt { text-decoration: line-through; color: hsl(var(--muted-foreground)); }
+  .tm-note { text-align: left; font-size: 0.8125rem; padding: 0.625rem 0.75rem; border-radius: 0.75rem; background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+  .tm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center; }
+  .tm-stat { padding: 0.5rem 0.25rem; border-radius: 0.75rem; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); }
+  .tm-stat b { display: block; font-family: var(--font-display); font-size: 1rem; }
+  .tm-stat span { font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+  .tm-breath { width: 6rem; height: 6rem; margin: 0 auto; border-radius: 50%; background: hsl(var(--primary) / 0.18); border: 2px solid hsl(var(--primary) / 0.6); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; }
+  @media (prefers-reduced-motion: no-preference) { .tm-breath { animation: tm-breath 8s ease-in-out infinite; } }
+  @keyframes tm-breath { 0%, 100% { transform: scale(0.8); } 50% { transform: scale(1.08); } }
+
+  .phone { min-height: 36rem; align-items: stretch; }
+  #rest { align-items: center; text-align: center; }
+  #rest > * { max-width: 100%; }
+  #rest .tm-seg, #rest .tm-row { align-self: stretch; }
+  .tm-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; padding: 0.25rem; border-radius: 0.75rem; background: hsl(var(--muted)); margin-top: auto; }
+  .tm-tabs span { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.125rem; min-height: 2.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; color: hsl(var(--muted-foreground)); text-align: center; line-height: 1.15; }
+  .tm-tabs span.on { background: hsl(var(--card)); color: hsl(var(--foreground)); }
+  .tm-strip { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.375rem 0.5rem 0.375rem 0.875rem; border-radius: 0.875rem; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); }
+  .tm-strip b { font-family: var(--font-display); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+  .tm-strip small { display: block; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+  .tm-fold { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 2.75rem; padding: 0 0.75rem; border-radius: 0.75rem; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); font-size: 0.875rem; font-weight: 600; text-align: left; }
+  .tm-sheet { margin: auto -0.875rem -1rem; padding: 0.5rem 0.875rem 1rem; border-radius: 1.25rem 1.25rem 0 0; background: hsl(var(--card)); border-top: 1px solid hsl(var(--border)); box-shadow: 0 -8px 24px hsl(var(--foreground) / 0.08); display: flex; flex-direction: column; gap: 0.625rem; }
+  .tm-grip { width: 2.5rem; height: 0.25rem; border-radius: 9999px; background: hsl(var(--border)); margin: 0 auto; }
+  .tm-h { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); text-align: left; }
+  .tm-pet-row { display: flex; align-items: center; gap: 0.75rem; text-align: left; }
+  .tm-pet-row .grow { flex: 1; min-width: 0; }
+  .tm-ring-s .timer-ring { width: 8.5rem !important; height: 8.5rem !important; }
+  .tm-ring-s .timer-time { font-size: 1.75rem !important; }
+  .tm-two { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+  .tm-lbl { font-size: 0.8125rem; font-weight: 600; text-align: center; color: hsl(var(--muted-foreground)); }
+</style>
+</head>
+<body>
+<main class="pg">
+  <div class="pg-bar">
+    <h1 style="font-size:1.125rem;font-weight:700">Cronômetro: ciclos (B) + etapas e notas (C) + informação (D) juntos</h1>
+    <p class="pg-note">Para não encher a tela, a regra é: <b>na tela principal fica só o essencial</b> (tempo, fase do ciclo, pet e Pausar). Etapas, notas e números ficam um toque adiante. Abaixo, 3 jeitos de organizar isso. É só um desenho: nada muda no app ainda.</p>
+    <label class="pg-note" for="tema">Tema para ver:
+      <select id="tema"><option value="papel">Papel (claro)</option><option value="grafite">Grafite (escuro)</option><option value="neon">Neon</option></select>
+    </label>
+  </div>
+
+  <section class="stack" style="gap:0.75rem">
+    <h2 class="pg-label">1 · Abas dentro do cronômetro (a que eu recomendo)</h2>
+    <p class="pg-note">Três abas embaixo: Foco, Etapas e Detalhes. A aba Foco fica quase igual à de hoje. Nas outras abas, uma faixa no topo mantém o tempo e o botão de pausa sempre à vista.</p>
+    <div class="tm-two">
+      <div class="pg-col"><p class="tm-lbl">Aba Foco</p><div class="phone" id="o1a"></div></div>
+      <div class="pg-col"><p class="tm-lbl">Aba Etapas</p><div class="phone" id="o1b"></div></div>
+      <div class="pg-col"><p class="tm-lbl">Aba Detalhes</p><div class="phone" id="o1c"></div></div>
+    </div>
+    <ul class="rules"><li>Cada coisa tem o seu lugar: nada disputa espaço.</li><li>Tarefa sem etapas e sem nota: a aba Etapas some e ficam só Foco e Detalhes.</li><li>Em tela estreita ou com texto grande, cada aba rola sozinha; os botões continuam do tamanho confortável.</li></ul>
+  </section>
+
+  <section class="stack" style="gap:0.75rem">
+    <h2 class="pg-label">2 · Tela única com blocos que abrem</h2>
+    <p class="pg-note">Uma tela só, com o anel menor. Embaixo, dois blocos fechados ("Etapas" e "Detalhes") que abrem com um toque.</p>
+    <div class="tm-two">
+      <div class="pg-col"><p class="tm-lbl">Blocos fechados</p><div class="phone" id="o2a"></div></div>
+      <div class="pg-col"><p class="tm-lbl">Bloco Etapas aberto</p><div class="phone" id="o2b"></div></div>
+    </div>
+    <ul class="rules"><li>Tudo numa tela, sem trocar de aba.</li><li>Com o bloco aberto o anel precisa ficar pequeno: a tela fica mais apertada que a opção 1.</li></ul>
+  </section>
+
+  <section class="stack" style="gap:0.75rem">
+    <h2 class="pg-label">3 · Folha que sobe de baixo</h2>
+    <p class="pg-note">A tela principal fica limpa, com o anel grande. Um puxador embaixo ("Etapas 1/3 · Detalhes") abre uma folha com tudo.</p>
+    <div class="tm-two">
+      <div class="pg-col"><p class="tm-lbl">Folha fechada</p><div class="phone" id="o3a"></div></div>
+      <div class="pg-col"><p class="tm-lbl">Folha aberta</p><div class="phone" id="o3b"></div></div>
+    </div>
+    <ul class="rules"><li>É a tela principal mais bonita e calma.</li><li>A folha junta etapas, nota e números numa lista só: é a que mais mistura informação.</li></ul>
+  </section>
+
+  <section class="stack" style="gap:0.75rem">
+    <h2 class="pg-label">Em qualquer opção: a pausa de descanso</h2>
+    <p class="pg-note">Quando o bloco de foco acaba, o descanso troca a tela por uma respiração guiada (sem animação se o aparelho pedir menos movimento). Ciclos são opcionais: sem ciclos, a tela é a de hoje. Nada cobra nem pune se você pular o descanso.</p>
+    <div class="tm-two"><div class="pg-col"><div class="phone" id="rest" style="min-height:0"></div></div></div>
+  </section>
+</main>
+
+<script type="module">
+import { icon } from '../js/icons.js';
+import { petFaceHTML } from '../js/pets.js';
+document.getElementById('tema').addEventListener('change', (e) => document.documentElement.setAttribute('data-theme', e.target.value));
+const pet = (s = 56) => petFaceHTML({ id: 'fagulha', name: 'Fagulha' }, { bond: 12, pose: 'work', size: s });
+const set = (id, h) => { document.getElementById(id).innerHTML = h; };
+const ring = (time, pct) => `<div class="timer-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="54" pathLength="100"/><circle class="ring-arc" cx="60" cy="60" r="54" pathLength="100" stroke-dasharray="100" stroke-dashoffset="${100 - pct}"/></svg><p class="timer-time" style="position:relative;font-size:2.5rem">${time}</p></div>`;
+const head = (sub) => `<div class="tm-head"><h2 class="timer-title" style="font-size:1rem">Estudar inglês</h2>${sub ? `<p class="tm-sub">${sub}</p>` : ''}</div>`;
+const phase = (on = 0) => `<div class="tm-seg" role="group" aria-label="Fase atual"><span class="${on === 0 ? 'on' : ''}">Foco 2 de 4</span><span class="${on === 1 ? 'on' : ''}">Descanso 5 min</span></div>`;
+const dots = `<div class="tm-dots" role="img" aria-label="Ciclo 2 de 4"><i class="on"></i><i class="on now"></i><i></i><i></i></div>`;
+const pause = `<button class="btn-ghost btn-block row-center" type="button">${icon('pause', 16)} Pausar</button>`;
+const petLine = `<div class="tm-pet-row">${pet(48)}<p class="tm-sub grow">Fagulha está te ajudando!</p></div>`;
+const tabs = (on) => `<div class="tm-tabs" role="tablist">${['Foco', 'Etapas 1/3', 'Detalhes'].map((t, i) => `<span class="${i === on ? 'on' : ''}" role="tab" aria-selected="${i === on}">${icon(['timer', 'list-todo', 'sparkles'][i], 16)}${t}</span>`).join('')}</div>`;
+const strip = `<div class="tm-strip"><span><b>27:14</b><small>Foco 2 de 4</small></span><button class="tm-mini" type="button">${icon('pause', 14)} Pausar</button></div>`;
+const steps = `<div class="tm-steps"><div class="tm-step done"><span class="box">${icon('check', 12)}</span><span class="txt">Revisar vocabulário</span></div><div class="tm-step"><span class="box"></span><span class="txt">Ler o capítulo 4</span></div><div class="tm-step"><span class="box"></span><span class="txt">Fazer os exercícios</span></div></div>`;
+const note = `<p class="tm-note"><b>Nota:</b> o capítulo 4 tem as frases com "would".</p>`;
+const chips = `<div class="tm-chips"><span class="tm-chip">${icon('battery-medium', 14)} Energia 6</span><span class="tm-chip">${icon('book-open', 14)} Estudo</span></div>`;
+const stats = `<div class="tm-stats"><div class="tm-stat"><b>12:46</b><span>já passou</span></div><div class="tm-stat"><b>40 min</b><span>planejado</span></div><div class="tm-stat"><b>+80</b><span>pontos ao concluir</span></div></div>`;
+
+// 1 · abas
+set('o1a', `${head()}${phase()}${ring('27:14', 40)}${dots}${petLine}${pause}${tabs(0)}`);
+set('o1b', `${strip}<h3 class="tm-h">Etapas · 1 de 3</h3>${steps}${note}${tabs(1)}`);
+set('o1c', `${strip}${chips}${stats}<p class="tm-sub" style="text-align:center">Um passo de cada vez. Está indo bem.</p><div class="tm-pet-row">${pet(48)}<p class="tm-sub grow">Fagulha está te ajudando!</p></div>${tabs(2)}`);
+
+// 2 · blocos
+const fold = (t, open, extra = '') => `<div class="tm-fold"><span>${t}</span><span style="display:inline-flex;transform:rotate(${open ? -90 : 90}deg)">${icon('chevron-right', 16)}</span></div>${extra}`;
+set('o2a', `${head()}${chips}<div class="tm-ring-s">${ring('27:14', 40)}</div>${dots}${petLine}${pause}${fold('Etapas · 1 de 3', false)}${fold('Detalhes · +80 pontos', false)}`);
+set('o2b', `${head()}<div class="tm-ring-s">${ring('27:14', 40)}</div>${pause}${fold('Etapas · 1 de 3', true, steps + note)}${fold('Detalhes · +80 pontos', false)}`);
+
+// 3 · folha
+set('o3a', `${head('Foco 2 de 4')}${ring('27:14', 40)}${dots}${petLine}${pause}<div class="tm-sheet"><div class="tm-grip"></div><div class="tm-fold" style="background:transparent;border:0;padding:0"><span>Etapas 1/3 · Detalhes</span><span style="display:inline-flex;transform:rotate(-90deg)">${icon('chevron-right', 16)}</span></div></div>`);
+set('o3b', `${head('Foco 2 de 4')}<div class="tm-ring-s">${ring('27:14', 40)}</div><div class="tm-sheet"><div class="tm-grip"></div><h3 class="tm-h">Etapas · 1 de 3</h3>${steps}${note}<h3 class="tm-h">Detalhes</h3>${chips}${stats}</div>`);
+
+set('rest', `${head()}${phase(1)}<div class="tm-breath" aria-hidden="true">Respire</div><p class="timer-time" style="font-size:2.5rem">03:12</p><p class="tm-sub">Inspire por 4, solte por 6. Sem pressa.</p><div class="tm-row"><button class="tm-mini" type="button">Pular descanso</button><button class="btn-neon" type="button" style="min-height:2.75rem">Continuar foco</button></div>`);
+</script>
+</body>
+</html>
