@@ -109,7 +109,7 @@ export function createTaskTimer({
   let activeTab = 'focus';
   let lastPhaseKey = null;   // fase do ciclo na última batida do relógio (para avisar só quando troca)
   const hasSteps = () => steps.length > 0 || !!noteText;
-  const planned = durationMinutes >= 60 && durationMinutes % 60 === 0 ? `${durationMinutes / 60} h` : `${durationMinutes} min`;
+  const planned = durationMinutes >= 60 ? `${Math.floor(durationMinutes / 60)} h${durationMinutes % 60 ? ` ${durationMinutes % 60} min` : ''}` : `${durationMinutes} min`;
 
   let focusOn = false;
   const modal = createModal({ className: 'timer-panel center stack', onRequestClose: () => { if (focusOn) setFocus(false); else close(); } });
@@ -176,10 +176,11 @@ export function createTaskTimer({
   const status = modal.panel.querySelector('.pet-status');
   const faceEl = modal.panel.querySelector('.pet-face');
   let petBond = 0, facePose = 'work', faceBond = 0;   // a arte só é redesenhada quando a pose ou a forma mudam
-  const POSE_BY_STATE = { running: 'work', paused: 'sleep', done: 'cheer' };
+  const POSE_BY_STATE = { running: 'work', paused: 'sleep', resting: 'sleep', done: 'cheer' };
   function paintFace(state) {
-    if (!faceEl || pet.id !== 'fagulha') return;
-    const pose = POSE_BY_STATE[state];
+    if (!faceEl) return;
+    // A Fagulha muda de pose em todos os estados; os outros pets dormem quando o cronômetro está pausado ou em descanso.
+    const pose = pet.id === 'fagulha' ? POSE_BY_STATE[state] : (state === 'resting' || state === 'paused' ? 'sleep' : 'work');
     if (pose === facePose && petBond === faceBond) return;
     facePose = pose; faceBond = petBond;
     faceEl.innerHTML = petFaceHTML(pet, { bond: petBond, pose, size: 76 });
@@ -209,7 +210,8 @@ export function createTaskTimer({
     const shown = isPaused ? remaining : (isDone ? 0 : remaining);
     const progress = total > 0 ? Math.max(0, 1 - shown / total) : 1;
 
-    timeEl.textContent = isDone ? '00:00' : `${pad2(Math.floor(shown / 60))}:${pad2(Math.floor(shown % 60))}`;
+    timeEl.textContent = isDone ? '00:00' : clock(shown);   // a partir de 1 hora: h:mm:ss
+    timeEl.dataset.long = String(!isDone && shown >= 3600);   // tempo comprido: o CSS diminui um pouco a letra para caber no anel
     timeEl.dataset.state = state;
     if (modal.isOpen) {
       document.title = isDone ? `Tempo esgotado · ${taskTitle}` : `${timeEl.textContent}${isPaused ? ' (pausado)' : ''} · ${taskTitle}`;
@@ -220,20 +222,26 @@ export function createTaskTimer({
     pausedEl.hidden = !(isPaused && !isDone);
     paintActions();
 
+    // ciclos: em que fase estamos (o pet dorme durante o descanso)
+    const elapsed = isDone ? total : Math.max(0, total - shown);
+    const info = cyclePhase(curCycle, elapsed, total);
+    const resting = !isDone && info?.phase === 'rest';
+
     if (stage) {
-      stage.dataset.state = state;
-      paintFace(state);
-      stage.dataset.hot = String(progress > 0.75 && !isDone);
-      stage.dataset.particles = String((progress > 0.5 || isDone) && !isPaused);
+      const petState = resting ? 'resting' : state;
+      stage.dataset.state = petState;
+      if (resting) bubble?.classList.remove('show');
+      paintFace(petState);
+      stage.dataset.hot = String(progress > 0.75 && !isDone && !resting);
+      stage.dataset.particles = String((progress > 0.5 || isDone) && !isPaused && !resting);
       status.textContent = isDone
         ? `${pet.name} está comemorando!`
+        : resting ? `${pet.name} está dormindo. Descanse também!`
         : isPaused ? `${pet.name} está esperando...`
         : `${pet.name} está te ajudando!`;
     }
 
-    // ciclos, faixa de tempo e detalhes
-    const elapsed = isDone ? total : Math.max(0, total - shown);
-    const info = cyclePhase(curCycle, elapsed, total);
+    // faixa de tempo e detalhes
     paintCycle(info, state);
     paintStrip(info, state);
     paintDetails(elapsed, state);
@@ -247,19 +255,17 @@ export function createTaskTimer({
       put(phaseEl, 'phase', ''); put(dotsEl, 'dots', '');
       restEl.hidden = true;
       ringBoxEl.hidden = false;
-      if (stage) stage.hidden = false;
       return;
     }
     const rest = info.phase === 'rest';
-    put(phaseEl, 'phase', `<div class="tm-seg" role="group" aria-label="Fase atual"><span class="${rest ? '' : 'on'}"${rest ? '' : ' aria-current="step"'}>Foco ${info.index} de ${info.count}</span><span class="${rest ? 'on' : ''}"${rest ? ' aria-current="step"' : ''}>Descanso ${info.restMinutes} min</span></div>`);
+    put(phaseEl, 'phase', `<div class="tm-seg" role="group" aria-label="Fase atual"><button type="button" class="${rest ? '' : 'on'}" data-phase-go="focus" aria-pressed="${!rest}">Foco ${info.index} de ${info.count}</button><button type="button" class="${rest ? 'on' : ''}" data-phase-go="rest" aria-pressed="${rest}">Descanso de ${info.restMinutes} min</button></div>`);
     put(dotsEl, 'dots', info.count <= 8
       ? `<div class="tm-dots" role="img" aria-label="Ciclo ${info.index} de ${info.count}">${[...Array(info.count)].map((_, i) => `<i class="${i < info.index ? 'on' : ''}${i === info.index - 1 ? ' now' : ''}"></i>`).join('')}</div>` : '');
     restEl.hidden = !rest;
     restEl.dataset.state = state;
     restTimeEl.textContent = clock(info.phaseRemaining);
     restTotalEl.textContent = timeEl.textContent;
-    ringBoxEl.hidden = rest;   // no descanso o anel sai de cena: ficam só a respiração e o tempo do descanso
-    if (stage) stage.hidden = rest;
+    ringBoxEl.hidden = rest;   // no descanso o anel sai de cena: ficam a respiração, o tempo do descanso e o pet dormindo
   }
 
   // Faixa do topo das abas Etapas e Detalhes: tempo, fase e o botão de pausa.
@@ -340,7 +346,7 @@ export function createTaskTimer({
 
   // Balão de fala do pet: primeira vez em 1,5 s e depois a cada 6 s.
   function showBubble() {
-    if (!pet) return;
+    if (!pet || stage?.dataset.state === 'resting') return;   // pet dormindo não fala
     const msgs = PET_MESSAGES[pet.id] || PET_MESSAGES.cat;
     bubble.textContent = msgs[Math.floor(Math.random() * msgs.length)];
     bubble.classList.add('show');
@@ -428,6 +434,7 @@ export function createTaskTimer({
     tick();
   }
 
+  modal.panel.addEventListener('selectstart', (e) => e.preventDefault());   // nada de selecionar texto no cronômetro
   modal.panel.addEventListener('click', (e) => {
     const action = e.target.closest('[data-action]')?.dataset.action;
     if (action === 'pause') pause();
@@ -439,6 +446,8 @@ export function createTaskTimer({
     else if (e.target.closest('[data-role="strip-action"]')) {
       const kind = e.target.closest('[data-role="strip-action"]').dataset.kind;
       if (kind === 'pause') pause(); else if (kind === 'resume') resume(); else onComplete();
+    } else if (e.target.closest('[data-phase-go]')) {
+      goPhase(e.target.closest('[data-phase-go]').dataset.phaseGo);
     } else if (e.target.closest('[data-cycle]')) {
       const id = e.target.closest('[data-cycle]').dataset.cycle;
       const next = cleanCycle(CYCLE_OPTIONS.find((o) => `${o.focus}-${o.rest}` === id));
@@ -450,6 +459,21 @@ export function createTaskTimer({
       modal.panel.querySelector(`[data-cycle="${id}"]`)?.focus();
     }
   });
+
+  // Troca de fase na mão: "Descanso de 5 min" começa o descanso agora; "Foco" volta ao foco agora.
+  // O relógio dos ciclos recomeça dali (anchor); o tempo total da tarefa não muda.
+  function goPhase(go) {
+    if (!curCycle || isDone) return;
+    const elapsedNow = Math.max(0, Math.round(total - (isPaused ? remaining : computeRemaining())));
+    const info = cyclePhase(curCycle, elapsedNow, total);
+    if (!info || info.phase === go) return;   // já está nessa fase
+    curCycle = { focus: curCycle.focus, rest: curCycle.rest, anchor: go === 'rest' ? elapsedNow - curCycle.focus * 60 : elapsedNow };
+    lastPhaseKey = null;   // troca feita por você: sem aviso sonoro
+    onCycleChange({ ...curCycle });
+    remaining = isPaused ? remaining : computeRemaining();
+    paint();
+    modal.panel.querySelector(`[data-phase-go="${go}"]`)?.focus();
+  }
 
   // Marcar e desmarcar etapas (guarda na hora e mantém o foco no mesmo quadradinho)
   modal.panel.addEventListener('change', (e) => {

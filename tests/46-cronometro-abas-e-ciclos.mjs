@@ -26,6 +26,15 @@ ok(at(35).phaseRemaining === 5 * 60 && at(39.9).phase === 'focus', 'Ciclos: o ú
 ok(cyclePhase(C, 40 * 60, 40 * 60) === null && cyclePhase(null, 10, 600) === null, 'Ciclos: tempo acabado ou sem ciclos devolve null');
 ok(cyclePhase({ focus: 50, rest: 10 }, 55 * 60, 120 * 60).phase === 'rest', 'Ciclos: 50 + 10 também funciona');
 
+// troca de fase na mão (anchor)
+const A = { focus: 25, rest: 5 };
+ok(cleanCycle({ ...A, anchor: -600 }).anchor === -600 && cleanCycle({ ...A, anchor: 0 }).anchor === undefined && cleanCycle({ ...A, anchor: 'x' }).anchor === undefined, 'Ciclos: anchor é guardado só quando é um número diferente de 0');
+const rest10 = cyclePhase({ ...A, anchor: 10 * 60 - 25 * 60 }, 10 * 60, 60 * 60);
+ok(rest10.phase === 'rest' && rest10.phaseRemaining === 5 * 60 && rest10.index === 1, 'Ciclos: "Descanso agora" aos 10 min começa 5 min de descanso');
+const back = cyclePhase({ ...A, anchor: 12 * 60 }, 12 * 60, 60 * 60);
+ok(back.phase === 'focus' && back.phaseRemaining === 25 * 60, 'Ciclos: "Foco agora" aos 12 min começa 25 min de foco');
+ok(sameCycle({ ...A, anchor: 5 }, A), 'Ciclos: o anchor não muda qual opção está marcada');
+
 // ---------- importação guarda a escolha de ciclos ----------
 const imp = parseImport(JSON.stringify({ tasks: [
   { id: 'a', title: 'A', energyCost: 3, durationMinutes: 30, category: 'work', cycle: { focus: 25, rest: 5 } },
@@ -90,10 +99,61 @@ t.destroy();
 
 // descanso: tarefa de 40 min com 25 + 5, já passaram 26 min
 t = make({ startedAt: Date.now() - 26 * 60000, cycle: { focus: 25, rest: 5 } }); t.open(); await wait();
-ok(!panel().querySelector('[data-role="rest"]').hidden && panel().textContent.includes('Descanso 5 min') && panel().textContent.includes('Respire'), 'Descanso: aos 26 min aparece o cartão com a respiração');
+ok(!panel().querySelector('[data-role="rest"]').hidden && panel().textContent.includes('Descanso de 5 min') && panel().textContent.includes('Respire'), 'Descanso: aos 26 min aparece o cartão com a respiração');
 ok(/^0[34]:\d\d$/.test(panel().querySelector('[data-role="rest-time"]').textContent), 'Descanso: mostra o tempo que falta do descanso (perto de 4 min)');
-ok(panel().querySelector('.pet-stage')?.hidden !== false, 'Descanso: o pet some durante a respiração');
+const stageEl = panel().querySelector('.pet-stage');
+ok(stageEl && !stageEl.hidden && stageEl.dataset.state === 'resting' && stageEl.querySelector('.pet-status').textContent.includes('dormindo'), 'Descanso: o pet continua na tela, dormindo');
+ok(!stageEl.querySelector('.pet-bubble').classList.contains('show'), 'Descanso: o pet dormindo não mostra balão de fala');
+ok(/pet-stage\[data-state="resting"\] \.pet-z/.test(readFileSync(new URL('../css/style.css', import.meta.url), 'utf8')) && /pet-sleep/.test(readFileSync(new URL('../css/style.css', import.meta.url), 'utf8')), 'Descanso: o CSS mostra os Z e a respiração do pet dormindo');
+ok(/focus-mode \[data-role="actions"\] \{[^}]*margin-inline: auto/.test(readFileSync(new URL('../css/style.css', import.meta.url), 'utf8')), 'Modo foco: o botão Pausar/Continuar fica centralizado');
 t.destroy();
+
+// trocar de fase tocando no campo da fase
+t = make({ cycle: { focus: 25, rest: 5 } }); t.open(); await wait();
+const phaseBtns = () => [...panel().querySelectorAll('[data-phase-go]')];
+ok(phaseBtns().length === 2 && phaseBtns()[1].textContent === 'Descanso de 5 min' && phaseBtns()[0].getAttribute('aria-pressed') === 'true', 'Fase: "Foco" e "Descanso de 5 min" são botões (Foco marcado)');
+const before = calls.cycles.length;
+phaseBtns()[1].click(); await wait();
+ok(calls.cycles.length === before + 1 && calls.cycles.at(-1).focus === 25 && Number.isFinite(calls.cycles.at(-1).anchor) && calls.cycles.at(-1).anchor < 0, 'Fase: tocar em Descanso guarda a nova fase na tarefa');
+ok(!panel().querySelector('[data-role="rest"]').hidden && /^0[45]:\d\d$/.test(panel().querySelector('[data-role="rest-time"]').textContent), 'Fase: o descanso começa na hora (cerca de 5 min)');
+ok(document.activeElement?.dataset.phaseGo === 'rest', 'Fase: o foco do teclado fica no botão tocado');
+phaseBtns()[0].click(); await wait();
+ok(panel().querySelector('[data-role="rest"]').hidden && calls.cycles.at(-1).anchor > 0, 'Fase: tocar em Foco volta ao foco');
+phaseBtns()[0].click(); await wait();
+ok(calls.cycles.length === before + 2, 'Fase: tocar na fase que já está ativa não faz nada');
+const sel = new w.Event('selectstart', { bubbles: true, cancelable: true }); panel().querySelector('.timer-title').dispatchEvent(sel);
+ok(sel.defaultPrevented, 'Cronômetro: não deixa selecionar texto');
+t.destroy();
+
+// tempo com horas e "planejado" com horas
+t = make({ durationMinutes: 300, startedAt: Date.now() - 1000 }); t.open(); await wait();
+ok(/^4:5\d:\d\d$/.test(panel().querySelector('.timer-time').textContent), 'Tempo: 5 h de tarefa aparece como 4:59:xx (horas, não 299 min)');
+tab('details').click(); await wait();
+ok(panel().querySelector('[data-panel="details"]').textContent.includes('5 h'), 'Detalhes: planejado em horas (5 h)');
+t.destroy();
+t = make({ durationMinutes: 90, startedAt: Date.now() - 1000 }); t.open(); await wait(); tab('details').click(); await wait();
+ok(panel().querySelector('[data-panel="details"]').textContent.includes('1 h 30 min'), 'Detalhes: 90 min aparece como 1 h 30 min');
+t.destroy();
+t = make({ durationMinutes: 40, startedAt: Date.now() - 1000 }); t.open(); await wait();
+ok(/^39:5\d$/.test(panel().querySelector('.timer-time').textContent), 'Tempo: abaixo de 1 hora continua mm:ss');
+t.destroy();
+
+// pausado: o pet fecha os olhos (qualquer pet, não só a Fagulha)
+{
+  const { setActivePetStorage } = await import(base + 'themes.js');
+  const faceLabel = () => panel().querySelector('.pet-face svg')?.getAttribute('aria-label') || '';
+  for (const petId of ['fagulha', 'unicorn', 'dragon']) {
+    setActivePetStorage('u1', petId);
+    t = make({ startedAt: Date.now() - 60000 }); t.open(); await wait();
+    const awake = faceLabel();
+    panel().querySelector('[data-action="pause"]').click(); await wait();
+    ok(awake !== faceLabel() && /dormindo|dorme|sleep/i.test(faceLabel()), `Pausado: o pet (${petId}) fecha os olhos`);
+    panel().querySelector('[data-action="resume"]').click(); await wait();
+    ok(faceLabel() === awake, `Continuar: o pet (${petId}) acorda`);
+    t.destroy();
+  }
+  setActivePetStorage('u1', 'fagulha');
+}
 
 // ---------- sem etapas nem nota: a aba some ----------
 t = make({ subtasks: [], notes: '' }); t.open(); await wait();

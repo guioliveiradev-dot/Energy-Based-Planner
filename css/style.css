@@ -402,6 +402,8 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .pet-body { position: relative; width: 100%; height: 100%; animation: pet-run 1.5s ease-in-out infinite; }
 .pet-stage[data-hot="true"] .pet-body { animation: pet-hot 0.8s ease-in-out infinite; }
 .pet-stage[data-state="paused"] .pet-body { animation: pet-paused 3s ease-in-out infinite; }
+.pet-stage[data-state="resting"] .pet-body { animation: pet-sleep 4s ease-in-out infinite; }
+@keyframes pet-sleep { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 .pet-stage[data-state="done"] .pet-body { animation: pet-done 0.7s ease-in-out infinite; }
 @keyframes pet-run { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-6px) rotate(2deg); } }
 @keyframes pet-hot { 0%, 100% { transform: translateY(0) rotate(0); } 33% { transform: translateY(-12px) rotate(5deg); } 66% { transform: translateY(-6px) rotate(-5deg); } }
@@ -420,7 +422,7 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 @keyframes chip { 0%, 100% { transform: scale(0.9); } 50% { transform: scale(1.1); } }
 
 .pet-z { display: none; position: absolute; font-weight: 700; color: hsl(var(--muted-foreground)); right: calc(-10px - var(--i) * 8px); top: calc(-5px - var(--i) * 12px); font-size: calc(10px + var(--i) * 4px); animation: zzz 2s ease-in-out infinite; animation-delay: calc(var(--i) * 0.6s); }
-.pet-stage[data-state="paused"] .pet-z { display: block; }
+.pet-stage[data-state="paused"] .pet-z, .pet-stage[data-state="resting"] .pet-z { display: block; }
 @keyframes zzz { 0% { opacity: 0; transform: translateY(0); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-20px); } }
 
 .pet-celebrate { display: none; position: absolute; inset: 0; pointer-events: none; }
@@ -797,7 +799,7 @@ html[data-theme="gold"] { --pet-body: #666462; --pet-base: #504E4C; --pet-face: 
 .timer-panel.focus-mode .timer-ring { width: min(70vmin, 26rem); height: min(70vmin, 26rem); }
 .timer-panel.focus-mode .timer-ring .timer-time { font-size: clamp(3rem, 14vmin, 7rem); }
 .timer-panel.focus-mode .timer-title { font-size: 1.125rem; }
-.timer-panel.focus-mode [data-role="actions"] { width: min(24rem, 100%); }
+.timer-panel.focus-mode [data-role="actions"] { width: min(24rem, 100%); margin-inline: auto; }
 
 /* ---------- Cronômetro: abas Foco / Etapas / Detalhes, ciclos ---------- */
 .timer-panels { display: flex; flex-direction: column; gap: 1rem; text-align: center; }
@@ -811,8 +813,12 @@ html[data-theme="gold"] { --pet-body: #666462; --pet-base: #504E4C; --pet-face: 
 .tm-sub { font-size: 0.8125rem; color: hsl(var(--muted-foreground)); }
 .tm-h { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); text-align: left; }
 .tm-seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(7rem, 100%), 1fr)); gap: 0.25rem; padding: 0.25rem; border-radius: 0.75rem; background: hsl(var(--muted)); }
-.tm-seg span { text-align: center; padding: 0.375rem 0.25rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: hsl(var(--muted-foreground)); overflow-wrap: break-word; }
-.tm-seg span.on { background: hsl(var(--card)); color: hsl(var(--foreground)); }
+.tm-seg button { text-align: center; min-height: 2.75rem; padding: 0.375rem 0.25rem; border: 0; border-radius: 0.5rem; background: transparent; font: inherit; font-size: 0.8125rem; font-weight: 600; color: hsl(var(--muted-foreground)); overflow-wrap: break-word; cursor: pointer; }
+.tm-seg button.on { background: hsl(var(--card)); color: hsl(var(--foreground)); }
+.timer-panel, .timer-panel * { -webkit-user-select: none; user-select: none; }   /* o cronômetro não deixa selecionar texto nem os campos escondidos das etapas */
+.timer-panel ::selection { background: transparent; }
+.timer-ring .timer-time[data-long="true"] { font-size: min(1.875rem, 12cqw); }
+.timer-panel.focus-mode .timer-ring .timer-time[data-long="true"] { font-size: clamp(2.25rem, 10vmin, 5rem); }
 .tm-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
 .tm-dots i { width: 0.75rem; height: 0.75rem; border-radius: 50%; border: 2px solid hsl(var(--primary)); }
 .tm-dots i.on { background: hsl(var(--primary)); }
